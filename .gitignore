@@ -1,0 +1,17 @@
+﻿# Dependencies
+node_modules/
+
+# Environment & Secrets (보안 필수)
+.env
+*.pem
+*.key
+
+# Build & System
+dist/
+build/
+.gradle/
+.DS_Store
+
+# IDE Settings
+.idea/
+.vscode/
