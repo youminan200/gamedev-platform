@@ -1,0 +1,4 @@
+package com.devground.app
+
+fun sayHello(to: String): String =
+    "Hello, $to!"
