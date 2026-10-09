@@ -53,10 +53,26 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack }) => {
     );
   }
 
+  const handleToggleLike = async () => {
+    try {
+      const res = await ApiClient.toggleLikeDevLog(id);
+      setDevlog((prev: any) => prev ? { ...prev, likes: res.likes, is_liked: res.liked } : prev);
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
   const renderHeader = () => (
     <View style={styles.postContent}>
       <Text style={styles.title}>{devlog.title}</Text>
-      <Text style={styles.author}>by {devlog.author} • {new Date(devlog.created_at).toLocaleDateString()}</Text>
+      <View style={styles.authorRow}>
+        <Text style={styles.author}>by {devlog.author} • {devlog.created_at ? new Date(devlog.created_at).toLocaleDateString() : ''}</Text>
+        <TouchableOpacity style={[styles.likeButton, devlog.is_liked && styles.likedButton]} onPress={handleToggleLike}>
+          <Text style={[styles.likeButtonText, devlog.is_liked && styles.likedButtonText]}>
+            {devlog.is_liked ? '❤️' : '🤍'} {devlog.likes || 0}
+          </Text>
+        </TouchableOpacity>
+      </View>
       <Text style={styles.body}>{devlog.content}</Text>
       <View style={styles.divider} />
       <Text style={styles.commentsTitle}>Comments ({devlog.comments?.length || 0})</Text>

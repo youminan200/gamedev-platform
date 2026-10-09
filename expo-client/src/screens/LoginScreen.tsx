@@ -12,8 +12,10 @@ interface Props {
   onGoToSignup: () => void;
 }
 
+import { Platform } from 'react-native';
+
 const KAKAO_REST_API_KEY = '3561b2d56ccfedbef1d54c2172b29aa5';
-const BACKEND_CALLBACK_URL = 'http://192.168.0.5:3000/api/auth/kakao/callback';
+const BACKEND_CALLBACK_URL = 'http://172.16.11.203:3001/api/auth/kakao/callback';
 
 export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup }) => {
   const [username, setUsername] = useState('');

@@ -22,11 +22,10 @@ object ApiClient {
         }
     }
     
-    // 안드로이드 에뮬레이터 환경에 따라 10.0.2.2가 작동하지 않는 경우가 있어 확실한 호스트 PC의 로컬 IP(192.168.0.5)를 사용합니다.
     private val BASE_URL = if (getPlatform().name.contains("Android")) {
-        "http://192.168.0.5:3000/api"
+        "http://172.16.11.203:3001/api"
     } else {
-        "http://127.0.0.1:3000/api"
+        "http://127.0.0.1:3001/api"
     }
 
     suspend fun getDevLogs(): List<DevLog> {

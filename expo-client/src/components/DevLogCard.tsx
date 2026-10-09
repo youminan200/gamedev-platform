@@ -4,6 +4,8 @@ import { DevLog } from '../models/DevLog';
 import { Theme } from '../theme';
 import { NeumorphView } from './NeumorphView';
 
+import { formatRelativeTime } from '../utils/time';
+
 interface DevLogCardProps {
   devLog: DevLog;
   onClick: () => void;
@@ -23,7 +25,7 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({ devLog, onClick }) => {
           <Text style={styles.title}>{devLog.title}</Text>
           
           <View style={styles.metaRow}>
-            <Text style={styles.metaText}>By {devLog.author}</Text>
+            <Text style={styles.metaText}>By {devLog.author} • {formatRelativeTime(devLog.created_at)}</Text>
             <Text style={styles.metaText}>♥ {devLog.likes}</Text>
           </View>
 

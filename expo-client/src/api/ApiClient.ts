@@ -1,7 +1,9 @@
 import { DevLog, DevLogCreateRequest } from '../models/DevLog';
 import { Platform } from 'react-native';
 
-const BASE_URL = 'http://192.168.0.5:3000/api';
+const BASE_URL = Platform.OS === 'web'
+  ? 'http://localhost:3001/api'
+  : 'http://172.16.11.203:3001/api';
 
 let authToken: string | null = null;
 
@@ -57,8 +59,13 @@ export const ApiClient = {
     return data;
   },
 
-  getDevLogs: async (): Promise<DevLog[]> => {
-    const response = await fetch(`${BASE_URL}/devlogs`, { headers: ApiClient.getHeaders() });
+  getDevLogs: async (search?: string, tag?: string): Promise<DevLog[]> => {
+    const params = new URLSearchParams();
+    if (search) params.append('search', search);
+    if (tag) params.append('tag', tag);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    const response = await fetch(`${BASE_URL}/devlogs${queryString}`, { headers: ApiClient.getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch devlogs');
     return response.json();
   },
@@ -79,6 +86,15 @@ export const ApiClient = {
     return response.json();
   },
 
+  toggleLikeDevLog: async (id: string): Promise<{ liked: boolean; likes: number }> => {
+    const response = await fetch(`${BASE_URL}/devlogs/${id}/like`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to toggle like');
+    return response.json();
+  },
+
   postComment: async (devlogId: string, content: string): Promise<any> => {
     const response = await fetch(`${BASE_URL}/devlogs/${devlogId}/comments`, {
       method: 'POST',
@@ -86,6 +102,51 @@ export const ApiClient = {
       body: JSON.stringify({ content }),
     });
     if (!response.ok) throw new Error('Failed to post comment');
+    return response.json();
+  },
+
+  // Asset API
+  getAssets: async (category?: string, search?: string): Promise<any[]> => {
+    const params = new URLSearchParams();
+    if (category) params.append('category', category);
+    if (search) params.append('search', search);
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    const response = await fetch(`${BASE_URL}/assets${queryString}`, { headers: ApiClient.getHeaders() });
+    if (!response.ok) throw new Error('Failed to fetch assets');
+    return response.json();
+  },
+
+  getAssetDetails: async (id: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/assets/${id}`, { headers: ApiClient.getHeaders() });
+    if (!response.ok) throw new Error('Failed to fetch asset details');
+    return response.json();
+  },
+
+  postAsset: async (assetData: any): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/assets`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+      body: JSON.stringify(assetData),
+    });
+    if (!response.ok) throw new Error('Failed to post asset');
+    return response.json();
+  },
+
+  postAssetFeedback: async (assetId: string, feedbackData: any): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/assets/${assetId}/feedbacks`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+      body: JSON.stringify(feedbackData),
+    });
+    if (!response.ok) throw new Error('Failed to submit asset feedback');
+    return response.json();
+  },
+
+  // Profile API
+  getUserProfile: async (username: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/users/${username}`, { headers: ApiClient.getHeaders() });
+    if (!response.ok) throw new Error('Failed to fetch user profile');
     return response.json();
   }
 };

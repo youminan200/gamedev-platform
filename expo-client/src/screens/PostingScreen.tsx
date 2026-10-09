@@ -10,10 +10,21 @@ interface Props {
   onPostSuccess: () => void;
 }
 
+const PRESET_TAGS = ['Unity', 'Unreal', 'Godot', 'C#', 'Graphics', 'BugFix', 'Release'];
+
 export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSuccess }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>(['Unity']);
   const [isPosting, setIsPosting] = useState(false);
+
+  const toggleTag = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
 
   const handlePost = async () => {
     if (!title.trim()) return;
@@ -22,7 +33,7 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
       await ApiClient.postDevLog({
         title,
         content,
-        tags: ['New']
+        tags: selectedTags.length > 0 ? selectedTags : ['DevLog']
       });
       onPostSuccess();
     } catch (e) {
@@ -66,6 +77,24 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
             placeholderTextColor={Theme.colors.textLight}
           />
         </NeumorphView>
+
+        <Text style={styles.label}>Select Tags</Text>
+        <View style={styles.tagsRow}>
+          {PRESET_TAGS.map((tag) => {
+            const isSelected = selectedTags.includes(tag);
+            return (
+              <TouchableOpacity
+                key={tag}
+                style={[styles.tagPill, isSelected && styles.activeTagPill]}
+                onPress={() => toggleTag(tag)}
+              >
+                <Text style={[styles.tagPillText, isSelected && styles.activeTagPillText]}>
+                  #{tag}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
 
         <TouchableOpacity style={styles.postButtonContainer} onPress={handlePost} disabled={isPosting} activeOpacity={0.8}>
           <NeumorphView radius={12} style={styles.postButton}>
@@ -140,5 +169,29 @@ const styles = StyleSheet.create({
     color: Theme.colors.primary,
     fontWeight: '700',
     fontSize: 16,
-  }
+  },
+  tagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
+  },
+  tagPill: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    backgroundColor: '#E2E8F0',
+  },
+  activeTagPill: {
+    backgroundColor: Theme.colors.primary,
+  },
+  tagPillText: {
+    fontSize: 13,
+    color: Theme.colors.textLight,
+    fontWeight: '600',
+  },
+  activeTagPillText: {
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
 });

@@ -15,3 +15,5 @@ build/
 # IDE Settings
 .idea/
 .vscode/
+local.properties
+.kotlin/
