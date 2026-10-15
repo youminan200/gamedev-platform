@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "DevGround",
+    "slug": "devground-webview",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#12141a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.devground.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/android-icon-foreground.png",
+        "backgroundImage": "./assets/android-icon-background.png",
+        "backgroundColor": "#12141a"
+      },
+      "package": "com.devground.app"
+    }
+  }
+}

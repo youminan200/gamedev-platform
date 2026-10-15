@@ -1,9 +1,9 @@
 import { DevLog, DevLogCreateRequest } from '../models/DevLog';
 import { Platform } from 'react-native';
 
-const BASE_URL = Platform.OS === 'web'
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'web'
   ? 'http://localhost:3001/api'
-  : 'http://172.16.11.203:3001/api';
+  : 'http://172.16.11.203:3001/api');
 
 let authToken: string | null = null;
 
