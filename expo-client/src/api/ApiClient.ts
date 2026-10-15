@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'web'
   ? 'http://localhost:3001/api'
-  : 'http://172.16.11.203:3001/api');
+  : 'http://192.168.0.5:3001/api');
 
 let authToken: string | null = null;
 
