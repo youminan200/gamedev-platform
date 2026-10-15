@@ -551,11 +551,15 @@ app.get('/api/auth/kakao/callback', async (req: any, res: any) => {
 
   try {
     // 1. Exchange code for Kakao access token
+    const host = req.get('host');
+    const protocol = req.headers['x-forwarded-proto'] || req.protocol;
+    const dynamicRedirectUri = `${protocol}://${host}/api/auth/kakao/callback`;
+
     const tokenResponse = await axios.post('https://kauth.kakao.com/oauth/token', null, {
       params: {
         grant_type: 'authorization_code',
         client_id: '3561b2d56ccfedbef1d54c2172b29aa5',
-        redirect_uri: 'http://172.16.11.203:3001/api/auth/kakao/callback',
+        redirect_uri: dynamicRedirectUri,
         code,
       },
       headers: {
@@ -595,8 +599,8 @@ app.get('/api/auth/kakao/callback', async (req: any, res: any) => {
     // 4. Generate JWT
     const jwtToken = jwt.sign({ id: userId, username }, JWT_SECRET, { expiresIn: '7d' });
 
-    // 5. Redirect back to Expo Go app with token
-    const returnUrl = req.query.state || 'exp://172.16.11.203:8081/--/login';
+    // 5. Redirect back to app or web with token
+    const returnUrl = req.query.state || `https://gamedev-platform-expo-client.vercel.app`;
     const separator = returnUrl.includes('?') ? '&' : '?';
     res.redirect(`${returnUrl}${separator}token=${jwtToken}`);
   } catch (error: any) {
