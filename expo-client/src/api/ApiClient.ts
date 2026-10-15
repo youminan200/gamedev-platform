@@ -1,9 +1,7 @@
 import { DevLog, DevLogCreateRequest } from '../models/DevLog';
 import { Platform } from 'react-native';
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'web'
-  ? 'http://localhost:3001/api'
-  : 'http://192.168.0.5:3001/api');
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://gamedev-platform.onrender.com/api';
 
 let authToken: string | null = null;
 

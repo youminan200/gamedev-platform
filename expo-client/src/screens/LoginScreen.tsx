@@ -15,9 +15,7 @@ interface Props {
 import { Platform } from 'react-native';
 
 const KAKAO_REST_API_KEY = '3561b2d56ccfedbef1d54c2172b29aa5';
-const BACKEND_CALLBACK_URL = Platform.OS === 'web'
-  ? 'http://localhost:3001/api/auth/kakao/callback'
-  : 'http://192.168.0.5:3001/api/auth/kakao/callback';
+const BACKEND_CALLBACK_URL = 'https://gamedev-platform.onrender.com/api/auth/kakao/callback';
 
 export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup }) => {
   const [username, setUsername] = useState('');
