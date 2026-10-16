@@ -8,10 +8,41 @@ interface Props {
 }
 
 export const NeumorphView: React.FC<Props> = ({ children, style, radius = 16 }) => {
+  const flatStyle = (StyleSheet.flatten(style) || {}) as any;
+  const {
+    padding,
+    paddingHorizontal,
+    paddingVertical,
+    paddingTop,
+    paddingBottom,
+    paddingLeft,
+    paddingRight,
+    alignItems,
+    justifyContent,
+    flexDirection,
+    gap,
+    ...outerStyle
+  } = flatStyle;
+
+  const innerContentStyle: ViewStyle = {
+    borderRadius: radius,
+    ...(padding !== undefined ? { padding } : {}),
+    ...(paddingHorizontal !== undefined ? { paddingHorizontal } : {}),
+    ...(paddingVertical !== undefined ? { paddingVertical } : {}),
+    ...(paddingTop !== undefined ? { paddingTop } : {}),
+    ...(paddingBottom !== undefined ? { paddingBottom } : {}),
+    ...(paddingLeft !== undefined ? { paddingLeft } : {}),
+    ...(paddingRight !== undefined ? { paddingRight } : {}),
+    ...(alignItems !== undefined ? { alignItems } : {}),
+    ...(justifyContent !== undefined ? { justifyContent } : {}),
+    ...(flexDirection !== undefined ? { flexDirection } : {}),
+    ...(gap !== undefined ? { gap } : {}),
+  };
+
   return (
-    <View style={[styles.outerShadow, { borderRadius: radius }, style]}>
+    <View style={[styles.outerShadow, { borderRadius: radius }, outerStyle]}>
       <View style={[styles.innerShadow, { borderRadius: radius }]}>
-        <View style={[styles.content, { borderRadius: radius }]}>
+        <View style={[styles.content, innerContentStyle]}>
           {children}
         </View>
       </View>
