@@ -800,6 +800,7 @@ app.get('/api/users/:username', (req, res) => {
 });
 
 const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY || '3561b2d56ccfedbef1d54c2172b29aa5';
+const KAKAO_CLIENT_SECRET = process.env.KAKAO_CLIENT_SECRET || 'A5nhmU4K7cvzDgapPKvAYYkiLk1WNZ7b';
 
 app.get('/api/auth/kakao/login', (req: any, res: any) => {
   const returnUrl = req.query.state || 'https://gamedev-platform-expo-client.vercel.app';
@@ -830,7 +831,8 @@ app.get('/api/auth/kakao/callback', async (req: any, res: any) => {
 
     const formBody = new URLSearchParams({
       grant_type: 'authorization_code',
-      client_id: '3561b2d56ccfedbef1d54c2172b29aa5',
+      client_id: KAKAO_REST_API_KEY,
+      client_secret: KAKAO_CLIENT_SECRET,
       redirect_uri: dynamicRedirectUri,
       code: String(code),
     }).toString();
