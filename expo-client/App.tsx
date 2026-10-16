@@ -39,7 +39,8 @@ export default function App() {
       const urlToken = params.get('token');
       if (urlToken) {
         ApiClient.setToken(urlToken);
-        const decodedUsername = ApiClient.decodeTokenUsername(urlToken) || 'Creator';
+        const paramUsername = params.get('username');
+        const decodedUsername = paramUsername || ApiClient.decodeTokenUsername(urlToken) || 'Creator';
         ApiClient.setUsername(decodedUsername);
         setUsername(decodedUsername);
         window.history.replaceState({}, document.title, window.location.pathname);
@@ -195,9 +196,9 @@ export default function App() {
   const showTabBar = ['MainFeed', 'AssetHub', 'Profile'].includes(currentScreen.type);
 
   return (
-    <SafeAreaProvider style={Platform.OS === 'web' ? { height: '100vh' as any, width: '100vw' as any } : undefined}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: Theme.colors.background, minHeight: Platform.OS === 'web' ? ('100vh' as any) : undefined }}>
-        <View style={{ flex: 1 }}>
+    <SafeAreaProvider style={Platform.OS === 'web' ? { height: '100vh' as any, width: '100vw' as any, overflow: 'hidden' as any } : undefined}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: Theme.colors.background, height: Platform.OS === 'web' ? ('100vh' as any) : undefined, maxHeight: Platform.OS === 'web' ? ('100vh' as any) : undefined }}>
+        <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {content}
         </View>
         {showTabBar && (

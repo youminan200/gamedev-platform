@@ -79,26 +79,28 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
   };
 
   const renderAssetCard = ({ item }: { item: Asset }) => (
-    <NeumorphView radius={16} style={styles.card}>
-      <View style={styles.cardHeader}>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>{item.category}</Text>
+    <View style={styles.cardWrapper}>
+      <NeumorphView radius={18} style={styles.card}>
+        <View style={styles.cardHeader}>
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryBadgeText}>{item.category}</Text>
+          </View>
+          <Text style={styles.ratingText}>⭐ {item.avg_rating || '5.0'} ({item.feedback_count || 0})</Text>
         </View>
-        <Text style={styles.ratingText}>⭐ {item.avg_rating || '5.0'} ({item.feedback_count || 0})</Text>
-      </View>
 
-      <Text style={styles.assetTitle}>{item.title}</Text>
-      <Text style={styles.assetDesc} numberOfLines={2}>{item.description || 'No description provided.'}</Text>
+        <Text style={styles.assetTitle}>{item.title}</Text>
+        <Text style={styles.assetDesc}>{item.description || 'No description provided.'}</Text>
 
-      <View style={styles.cardFooter}>
-        <Text style={styles.authorText}>by {item.author}</Text>
-        <Text style={styles.likesText}>❤️ {item.likes || 0}</Text>
-      </View>
-    </NeumorphView>
+        <View style={styles.cardFooter}>
+          <Text style={styles.authorText}>by {item.author}</Text>
+          <Text style={styles.likesText}>❤️ {item.likes || 0}</Text>
+        </View>
+      </NeumorphView>
+    </View>
   );
 
-  return (
-    <View style={styles.container}>
+  const renderListHeader = () => (
+    <View style={styles.headerSection}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🎨 Asset Hub</Text>
@@ -133,24 +135,31 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
       <View style={styles.categoryRow}>
         {CATEGORIES.map(renderCategoryPill)}
       </View>
+    </View>
+  );
 
-      {/* Asset List */}
-      {loading ? (
-        <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={Theme.colors.primary} />
-        </View>
-      ) : assets.length === 0 ? (
-        <View style={styles.centerContainer}>
-          <Text style={styles.emptyText}>No assets found.</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={assets}
-          keyExtractor={(item) => item.id}
-          renderItem={renderAssetCard}
-          contentContainerStyle={styles.listContent}
-        />
-      )}
+  return (
+    <View style={styles.container}>
+      <FlatList
+        data={assets}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderListHeader}
+        renderItem={renderAssetCard}
+        contentContainerStyle={styles.listContent}
+        ListEmptyComponent={
+          loading ? (
+            <View style={styles.centerContainer}>
+              <ActivityIndicator size="large" color={Theme.colors.primary} />
+            </View>
+          ) : (
+            <View style={styles.centerContainer}>
+              <Text style={styles.emptyText}>No assets found.</Text>
+            </View>
+          )
+        }
+        onRefresh={fetchAssets}
+        refreshing={loading}
+      />
 
       {/* Upload Asset Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
@@ -202,31 +211,33 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: Theme.colors.background },
+  container: { flex: 1, minHeight: 0, backgroundColor: Theme.colors.background },
+  headerSection: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingHorizontal: 20, paddingTop: 16, paddingBottom: 8,
+    marginBottom: 12, flexWrap: 'wrap', gap: 8,
   },
   headerTitle: { fontSize: 24, fontWeight: '800', color: Theme.colors.primary },
   uploadButton: { backgroundColor: Theme.colors.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
   uploadButtonText: { color: '#FFF', fontWeight: '700', fontSize: 13 },
-  searchContainer: { paddingHorizontal: 20, marginVertical: 8 },
+  searchContainer: { marginBottom: 12 },
   searchBox: { width: '100%' },
   searchInput: { paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: Theme.colors.text },
-  categoryRow: { flexDirection: 'row', paddingHorizontal: 20, marginVertical: 8, gap: 8 },
-  pill: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: '#E2E8F0' },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 4, gap: 8 },
+  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, backgroundColor: '#E2E8F0' },
   activePill: { backgroundColor: Theme.colors.primary },
   pillText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
   activePillText: { color: '#FFF', fontWeight: '700' },
-  listContent: { padding: 20 },
-  card: { padding: 16, marginBottom: 16 },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  categoryBadge: { backgroundColor: '#E2E8F0', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 },
+  listContent: { paddingBottom: 110 },
+  cardWrapper: { paddingHorizontal: 16, marginBottom: 20 },
+  card: { padding: 20, width: '100%' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  categoryBadge: { backgroundColor: '#D1D9E6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   categoryBadgeText: { fontSize: 12, fontWeight: '700', color: Theme.colors.accent },
   ratingText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
-  assetTitle: { fontSize: 18, fontWeight: '700', color: Theme.colors.text, marginBottom: 4 },
-  assetDesc: { fontSize: 14, color: Theme.colors.textLight, marginBottom: 12 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 1, borderTopColor: '#EEE', paddingTop: 8 },
+  assetTitle: { fontSize: 18, fontWeight: '700', color: Theme.colors.text, marginBottom: 8, lineHeight: 24 },
+  assetDesc: { fontSize: 14, color: Theme.colors.textLight, marginBottom: 14, lineHeight: 20 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#D1D9E6', paddingTop: 10 },
   authorText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
   likesText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 40 },
@@ -236,7 +247,7 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: '800', color: Theme.colors.text, marginBottom: 16 },
   modalInput: { backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 12, fontSize: 15 },
   modalLabel: { fontSize: 14, fontWeight: '700', color: Theme.colors.text, marginBottom: 8 },
-  categorySelectRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  categorySelectRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
   catSelectBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: '#E2E8F0' },
   activeCatSelectBadge: { backgroundColor: Theme.colors.primary },
   catSelectText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },

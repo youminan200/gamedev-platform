@@ -17,6 +17,7 @@ import { Platform } from 'react-native';
 
 const KAKAO_REST_API_KEY = '3561b2d56ccfedbef1d54c2172b29aa5';
 const BACKEND_CALLBACK_URL = 'https://gamedev-platform.onrender.com/api/auth/kakao/callback';
+const NAVER_LOGIN_URL = 'https://gamedev-platform.onrender.com/api/auth/naver/login';
 
 export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup, onSkipLogin }) => {
   const [username, setUsername] = useState('');
@@ -31,13 +32,13 @@ export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup, onS
 
       if (Platform.OS === 'web' && typeof window !== 'undefined') {
         const returnUrl = window.location.origin;
-        const authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${BACKEND_CALLBACK_URL}&response_type=code&state=${encodeURIComponent(returnUrl)}`;
+        const authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(BACKEND_CALLBACK_URL)}&response_type=code&state=${encodeURIComponent(returnUrl)}`;
         window.location.href = authUrl;
         return;
       }
 
       const returnUrl = Linking.createURL('login');
-      const authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${BACKEND_CALLBACK_URL}&response_type=code&state=${encodeURIComponent(returnUrl)}`;
+      const authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(BACKEND_CALLBACK_URL)}&response_type=code&state=${encodeURIComponent(returnUrl)}`;
       
       const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
       
@@ -52,10 +53,43 @@ export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup, onS
           setError('Failed to get token from login. URL: ' + result.url);
         }
       } else {
-         setError('Login cancelled or failed: ' + result.type);
+        setError('Login cancelled or failed: ' + result.type);
       }
     } catch (e: any) {
       setError(e.message || 'Kakao login failed');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleNaverLogin = async () => {
+    try {
+      setIsLoading(true);
+      setError('');
+
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const returnUrl = window.location.origin;
+        window.location.href = `${NAVER_LOGIN_URL}?state=${encodeURIComponent(returnUrl)}`;
+        return;
+      }
+
+      const returnUrl = Linking.createURL('login');
+      const authUrl = `${NAVER_LOGIN_URL}?state=${encodeURIComponent(returnUrl)}`;
+      const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
+
+      if (result.type === 'success' && result.url) {
+        const token = result.url.split('token=')[1]?.split('&')[0];
+        if (token) {
+          ApiClient.setToken(token);
+          const decodedUser = ApiClient.decodeTokenUsername(token) || 'Naver User';
+          ApiClient.setUsername(decodedUser);
+          onLoginSuccess(decodedUser);
+        } else {
+          setError('Failed to get token from Naver login');
+        }
+      }
+    } catch (e: any) {
+      setError(e.message || 'Naver login failed');
     } finally {
       setIsLoading(false);
     }
@@ -138,7 +172,8 @@ export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup, onS
 
           <TouchableOpacity 
             style={[styles.socialButton, { backgroundColor: '#03C75A' }]} 
-            onPress={() => console.log('Naver login')}
+            onPress={handleNaverLogin}
+            disabled={isLoading}
             activeOpacity={0.8}
           >
             <Text style={[styles.socialButtonText, { color: '#FFFFFF' }]}>네이버 로그인</Text>
