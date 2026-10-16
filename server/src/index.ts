@@ -872,99 +872,77 @@ app.get('/api/auth/kakao/callback', async (req: any, res: any) => {
   }
 });
 
+const NAVER_CLIENT_ID = process.env.NAVER_CLIENT_ID || 'yF0dOdVNbAfFQitfKcYv';
+const NAVER_CLIENT_SECRET = process.env.NAVER_CLIENT_SECRET || 'VRLVlIVRdE';
+
 app.get('/api/auth/naver/login', (req: any, res: any) => {
   const returnUrl = req.query.state || 'https://gamedev-platform-expo-client.vercel.app';
-  const naverClientId = process.env.NAVER_CLIENT_ID;
   const host = req.get('host');
   const rawProto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
   const protocol = rawProto.split(',')[0].trim();
-  const callbackUrl = `${protocol}://${host}/api/auth/naver/callback`;
+  const callbackUrl = host?.includes('onrender.com')
+    ? 'https://gamedev-platform.onrender.com/api/auth/naver/callback'
+    : `${protocol}://${host}/api/auth/naver/callback`;
 
-  if (naverClientId && process.env.NAVER_CLIENT_SECRET) {
-    const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${naverClientId}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(returnUrl)}`;
-    return res.redirect(authUrl);
-  }
-
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.send(`<!DOCTYPE html>
-<html lang="ko">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>네이버 아이디로 로그인 - DevGround</title>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f5f6f7; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; box-sizing: border-box; }
-    .box { background: #fff; width: 100%; max-width: 380px; border-radius: 16px; padding: 32px 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); text-align: center; }
-    .logo { color: #03C75A; font-size: 32px; font-weight: 900; letter-spacing: -1px; margin-bottom: 8px; }
-    .desc { color: #666; font-size: 14px; margin-bottom: 24px; }
-    input { width: 100%; padding: 14px 16px; border: 1px solid #dadada; border-radius: 10px; font-size: 15px; margin-bottom: 14px; box-sizing: border-box; outline: none; }
-    input:focus { border-color: #03C75A; }
-    button { width: 100%; background: #03C75A; color: #fff; border: none; padding: 15px; border-radius: 10px; font-size: 16px; font-weight: 800; cursor: pointer; }
-    .cancel { display: inline-block; margin-top: 16px; color: #888; font-size: 13px; text-decoration: none; }
-  </style>
-</head>
-<body>
-  <div class="box">
-    <div class="logo">NAVER</div>
-    <div class="desc">DevGround에 사용할 네이버 아이디(닉네임)를 입력해 주세요.</div>
-    <form action="/api/auth/naver/callback" method="GET">
-      <input type="hidden" name="state" value="${String(returnUrl).replace(/"/g, '&quot;')}" />
-      <input type="text" name="naver_id" placeholder="네이버 아이디 또는 닉네임 입력" required autofocus />
-      <button type="submit">네이버 아이디로 계속하기</button>
-    </form>
-    <a class="cancel" href="${String(returnUrl).replace(/"/g, '&quot;')}">← 돌아가기</a>
-  </div>
-</body>
-</html>`);
+  const authUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${NAVER_CLIENT_ID}&redirect_uri=${encodeURIComponent(callbackUrl)}&state=${encodeURIComponent(returnUrl)}`;
+  return res.redirect(authUrl);
 });
 
 app.get('/api/auth/naver/callback', async (req: any, res: any) => {
-  const { code, state, naver_id } = req.query;
-  const returnUrl = state || 'https://gamedev-platform-expo-client.vercel.app';
+  const { code, state } = req.query;
+  const returnUrl = state ? decodeURIComponent(String(state)) : 'https://gamedev-platform-expo-client.vercel.app';
+
+  if (!code) {
+    return res.redirect(returnUrl);
+  }
 
   try {
-    let providerId = '';
-    let email = '';
+    const tokenRes = await axios.get('https://nid.naver.com/oauth2.0/token', {
+      params: {
+        grant_type: 'authorization_code',
+        client_id: NAVER_CLIENT_ID,
+        client_secret: NAVER_CLIENT_SECRET,
+        code: String(code),
+        state: String(state || ''),
+      }
+    });
 
-    if (code && process.env.NAVER_CLIENT_ID && process.env.NAVER_CLIENT_SECRET) {
-      const tokenRes = await axios.get('https://nid.naver.com/oauth2.0/token', {
-        params: {
-          grant_type: 'authorization_code',
-          client_id: process.env.NAVER_CLIENT_ID,
-          client_secret: process.env.NAVER_CLIENT_SECRET,
-          code,
-          state,
-        }
-      });
-      const accessToken = tokenRes.data.access_token;
-      const profileRes = await axios.get('https://openapi.naver.com/v1/nid/me', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      providerId = String(profileRes.data.response.id);
-      email = profileRes.data.response.email || `naver_${providerId}@devground.local`;
-    } else if (naver_id) {
-      providerId = String(naver_id).trim().replace(/[^a-zA-Z0-9가-힣_-]/g, '') || 'user';
-      email = `${providerId}@naver.com`;
-    } else {
+    const accessToken = tokenRes.data.access_token;
+    if (!accessToken) {
+      console.error('Naver token exchange failed:', tokenRes.data);
       return res.redirect(returnUrl);
     }
 
-    const username = providerId.startsWith('naver_') ? providerId : `naver_${providerId}`;
+    const profileRes = await axios.get('https://openapi.naver.com/v1/nid/me', {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    const naverProfile = profileRes.data?.response || {};
+    const providerId = String(naverProfile.id);
+    const displayName = naverProfile.nickname || naverProfile.name || `naver_${providerId.slice(0, 6)}`;
+    const email = naverProfile.email || `naver_${providerId}@devground.local`;
+
     let oauthAccount: any = db.prepare('SELECT user_id FROM oauth_accounts WHERE provider = ? AND provider_id = ?').get('naver', providerId);
     let userId: any;
+    let username = displayName;
 
     if (!oauthAccount) {
-      const existingUser: any = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
-      if (existingUser) {
-        userId = existingUser.id;
-      } else {
-        const insertUser = db.prepare('INSERT INTO users (username, email) VALUES (?, ?)');
-        const userInfo = insertUser.run(username, email);
-        userId = userInfo.lastInsertRowid;
+      const existingByName: any = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
+      if (existingByName) {
+        username = `${displayName}_${providerId.slice(0, 4)}`;
       }
-      db.prepare('INSERT OR REPLACE INTO oauth_accounts (user_id, provider, provider_id, access_token) VALUES (?, ?, ?, ?)').run(userId, 'naver', providerId, 'naver_oauth');
+      const insertUser = db.prepare('INSERT INTO users (username, email) VALUES (?, ?)');
+      const userInfo = insertUser.run(username, email);
+      userId = userInfo.lastInsertRowid;
+
+      db.prepare('INSERT OR REPLACE INTO oauth_accounts (user_id, provider, provider_id, access_token) VALUES (?, ?, ?, ?)').run(userId, 'naver', providerId, accessToken);
     } else {
       userId = oauthAccount.user_id;
+      const existingUser: any = db.prepare('SELECT username FROM users WHERE id = ?').get(userId);
+      if (existingUser?.username) {
+        username = existingUser.username;
+      }
+      db.prepare('UPDATE oauth_accounts SET access_token = ? WHERE user_id = ? AND provider = ?').run(accessToken, userId, 'naver');
     }
 
     const jwtToken = jwt.sign({ id: userId, username }, JWT_SECRET, { expiresIn: '7d' });
