@@ -96,6 +96,14 @@ db.exec(`
   );
 `);
 
+// Schema migration for image_url
+try {
+  db.exec(`ALTER TABLE devlogs ADD COLUMN image_url TEXT;`);
+} catch {}
+try {
+  db.exec(`ALTER TABLE assets ADD COLUMN image_url TEXT;`);
+} catch {}
+
 // Seed Initial Community Data for Official Launch
 const initializeSeedData = () => {
   try {
@@ -116,7 +124,7 @@ const initializeSeedData = () => {
       const u4 = ensureUser('GodotCrafter', 'godot@devground.io');
 
       const insertDevlog = db.prepare(
-        'INSERT INTO devlogs (user_id, title, content, likes, tags) VALUES (?, ?, ?, ?, ?)'
+        'INSERT INTO devlogs (user_id, title, content, likes, tags, image_url) VALUES (?, ?, ?, ?, ?, ?)'
       );
 
       const d1 = insertDevlog.run(
@@ -124,7 +132,8 @@ const initializeSeedData = () => {
         '[DevLog #12] 2D 로그라이크 던전 보스 패턴 & 타격감 개선기',
         '이번 주에는 보스 페이즈 전환 시 카메라 쉐이크(Camera Shake)와 히트스톱(Hit-stop) 프레임을 0.06초로 조정해 타격감을 대폭 끌어올렸습니다.\n\n특히 패링 성공 시 파티클 이펙트와 사운드 싱크를 맞추니 손맛이 훨씬 좋아졌네요! 모바일 조작감 피드백 환영합니다.',
         24,
-        JSON.stringify(['Unity', 'C#', 'Action', 'Roguelike'])
+        JSON.stringify(['Unity', 'C#', 'Action', 'Roguelike']),
+        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80'
       );
 
       const d2 = insertDevlog.run(
@@ -132,7 +141,8 @@ const initializeSeedData = () => {
         '언리얼 엔진 5 카툰 렌더링(Cel Shader) 외곽선 최적화 공유',
         '모바일/저사양 환경에서도 프레임 드랍 없이 깔끔한 애니메이션풍 외곽선을 표현하기 위해 Post-Process 머티리얼 대신 Inverted Hull 방식과 노멀 맵 보정을 결합했습니다.\n\n드로우콜은 늘어나지만 셰이더 복잡도가 낮아져 평균 60FPS 방어에 성공했습니다!',
         19,
-        JSON.stringify(['Unreal', 'Graphics', 'Shader'])
+        JSON.stringify(['Unreal', 'Graphics', 'Shader']),
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80'
       );
 
       const d3 = insertDevlog.run(
@@ -140,7 +150,8 @@ const initializeSeedData = () => {
         'Godot 4.3으로 1인 개발 중인 픽셀 농장 시뮬레이션 첫 공개!',
         '퇴근 후 2시간씩 반년 동안 만든 힐링 농장 시뮬레이션입니다. 타일맵 오토타일링 시스템과 계절별 날씨 변화(비, 눈, 반딧불이)까지 구현 완료했습니다.\n\n다음 주 데모 빌드 배포 전 UI 배치에 대한 의견을 듣고 싶습니다!',
         31,
-        JSON.stringify(['Godot', 'PixelArt', 'Release'])
+        JSON.stringify(['Godot', 'PixelArt', 'Release']),
+        'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80'
       );
 
       const d4 = insertDevlog.run(
@@ -148,7 +159,8 @@ const initializeSeedData = () => {
         '인디 게임에서 무료로 쓸 수 있는 효과음(SFX) 레이어링 팁 3가지',
         '1. 검 베기 소리는 금속성 마찰음 + 짧은 바람 소리(White Noise Fade)를 겹치면 묵직해집니다.\n2. UI 버튼 클릭음은 피치(Pitch)를 ±5% 랜덤화하면 반복 피로도가 확 줄어듭니다.\n3. Asset Hub에 제가 직접 만든 8비트 효과음 팩도 공유해 두었으니 자유롭게 쓰세요!',
         15,
-        JSON.stringify(['Audio', 'Tip', 'IndieDev'])
+        JSON.stringify(['Audio', 'Tip', 'IndieDev']),
+        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
       );
 
       const insertComment = db.prepare(
@@ -157,6 +169,12 @@ const initializeSeedData = () => {
       insertComment.run(d1.lastInsertRowid, u2, '히트스톱 0.06초 디테일 너무 좋네요! 기대됩니다 🔥');
       insertComment.run(d1.lastInsertRowid, u4, '패링 타이밍 판정 프레임은 몇 프레임 정도로 잡으셨나요?');
       insertComment.run(d3.lastInsertRowid, u1, '색감이 진짜 따뜻하네요. 데모 나오면 꼭 플레이해보겠습니다!');
+    } else {
+      // Backfill sample thumbnails for existing seed posts if image_url is null
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '[DevLog #12]%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80');
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '언리얼 엔진 5%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80');
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE 'Godot 4.3%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80');
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '인디 게임에서 무료로%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80');
     }
 
     const assetCount = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
@@ -167,7 +185,7 @@ const initializeSeedData = () => {
       const u4 = ensureUser('GodotCrafter', 'godot@devground.io');
 
       const insertAsset = db.prepare(
-        'INSERT INTO assets (user_id, title, description, category, file_url, tags, likes) VALUES (?, ?, ?, ?, ?, ?, ?)'
+        'INSERT INTO assets (user_id, title, description, category, file_url, tags, likes, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
       );
 
       insertAsset.run(
@@ -177,7 +195,8 @@ const initializeSeedData = () => {
         '2D',
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['2D', 'PixelArt', 'Tileset']),
-        28
+        28,
+        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80'
       );
 
       insertAsset.run(
@@ -187,7 +206,8 @@ const initializeSeedData = () => {
         '3D',
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['3D', 'LowPoly', 'RPG']),
-        22
+        22,
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80'
       );
 
       insertAsset.run(
@@ -197,7 +217,8 @@ const initializeSeedData = () => {
         'Audio',
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['Audio', 'BGM', 'SFX']),
-        35
+        35,
+        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
       );
 
       insertAsset.run(
@@ -207,7 +228,8 @@ const initializeSeedData = () => {
         'UI',
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['UI', 'HUD', 'Mobile']),
-        17
+        17,
+        'https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?auto=format&fit=crop&w=800&q=80'
       );
 
       insertAsset.run(
@@ -217,7 +239,8 @@ const initializeSeedData = () => {
         'Code',
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['Code', 'Unity', 'C#']),
-        41
+        41,
+        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
       );
     }
   } catch (err) {
@@ -509,7 +532,8 @@ app.post('/api/auth/facebook', (req, res) => {
 app.get('/api/devlogs', optionalAuthenticateToken, (req: any, res: any) => {
   const { search, tag } = req.query;
   let query = `
-    SELECT d.*, u.username as author 
+    SELECT d.*, u.username as author,
+      (SELECT COUNT(*) FROM comments c WHERE c.devlog_id = d.id) as comment_count
     FROM devlogs d 
     LEFT JOIN users u ON d.user_id = u.id 
     WHERE 1=1
@@ -539,6 +563,7 @@ app.get('/api/devlogs', optionalAuthenticateToken, (req: any, res: any) => {
       ...log,
       id: log.id.toString(),
       tags: log.tags ? JSON.parse(log.tags) : [],
+      comment_count: log.comment_count || 0,
       is_liked: isLiked
     };
   });
@@ -548,7 +573,8 @@ app.get('/api/devlogs', optionalAuthenticateToken, (req: any, res: any) => {
 app.get('/api/devlogs/:id', optionalAuthenticateToken, (req: any, res: any) => {
   const devlogId = req.params.id;
   const stmt = db.prepare(`
-    SELECT d.*, u.username as author 
+    SELECT d.*, u.username as author,
+      (SELECT COUNT(*) FROM comments c WHERE c.devlog_id = d.id) as comment_count
     FROM devlogs d 
     LEFT JOIN users u ON d.user_id = u.id 
     WHERE d.id = ?
@@ -584,20 +610,62 @@ app.get('/api/devlogs/:id', optionalAuthenticateToken, (req: any, res: any) => {
 });
 
 app.post('/api/devlogs', authenticateToken, (req: any, res: any) => {
-  const { title, content, tags } = req.body;
+  const { title, content, tags, image_url } = req.body;
   const userId = req.user.id;
-  const stmt = db.prepare('INSERT INTO devlogs (user_id, title, content, tags) VALUES (?, ?, ?, ?)');
+  const stmt = db.prepare('INSERT INTO devlogs (user_id, title, content, tags, image_url) VALUES (?, ?, ?, ?, ?)');
   const tagsString = JSON.stringify(tags || []);
-  const info = stmt.run(userId, title || 'Untitled', content || '', tagsString);
+  const info = stmt.run(userId, title || 'Untitled', content || '', tagsString, image_url || null);
   
   res.status(201).json({
     id: info.lastInsertRowid.toString(),
     title: title || 'Untitled',
     content: content || '',
+    image_url: image_url || null,
     author: req.user.username,
     likes: 0,
+    comment_count: 0,
     tags: tags || []
   });
+});
+
+app.put('/api/devlogs/:id', authenticateToken, (req: any, res: any) => {
+  const devlogId = req.params.id;
+  const { title, content, tags, image_url } = req.body;
+  const existing: any = db.prepare('SELECT * FROM devlogs WHERE id = ?').get(devlogId);
+  if (!existing) return res.status(404).json({ error: 'DevLog not found' });
+  if (Number(existing.user_id) !== Number(req.user.id)) {
+    return res.status(403).json({ error: 'Not authorized to edit this DevLog' });
+  }
+
+  const updatedTitle = title !== undefined ? title : existing.title;
+  const updatedContent = content !== undefined ? content : existing.content;
+  const updatedTags = tags !== undefined ? JSON.stringify(tags) : existing.tags;
+  const updatedImage = image_url !== undefined ? image_url : existing.image_url;
+
+  db.prepare('UPDATE devlogs SET title = ?, content = ?, tags = ?, image_url = ? WHERE id = ?')
+    .run(updatedTitle, updatedContent, updatedTags, updatedImage, devlogId);
+
+  res.json({
+    id: String(devlogId),
+    title: updatedTitle,
+    content: updatedContent,
+    image_url: updatedImage,
+    tags: tags !== undefined ? tags : (existing.tags ? JSON.parse(existing.tags) : [])
+  });
+});
+
+app.delete('/api/devlogs/:id', authenticateToken, (req: any, res: any) => {
+  const devlogId = req.params.id;
+  const existing: any = db.prepare('SELECT * FROM devlogs WHERE id = ?').get(devlogId);
+  if (!existing) return res.status(404).json({ error: 'DevLog not found' });
+  if (Number(existing.user_id) !== Number(req.user.id)) {
+    return res.status(403).json({ error: 'Not authorized to delete this DevLog' });
+  }
+
+  db.prepare('DELETE FROM comments WHERE devlog_id = ?').run(devlogId);
+  db.prepare('DELETE FROM devlog_likes WHERE devlog_id = ?').run(devlogId);
+  db.prepare('DELETE FROM devlogs WHERE id = ?').run(devlogId);
+  res.json({ success: true });
 });
 
 app.post('/api/devlogs/:id/like', authenticateToken, (req: any, res: any) => {
@@ -646,6 +714,17 @@ app.post('/api/devlogs/:id/comments', authenticateToken, (req: any, res: any) =>
     author: req.user.username,
     created_at: new Date().toISOString()
   });
+});
+
+app.delete('/api/devlogs/:id/comments/:commentId', authenticateToken, (req: any, res: any) => {
+  const { commentId } = req.params;
+  const existing: any = db.prepare('SELECT * FROM comments WHERE id = ?').get(commentId);
+  if (!existing) return res.status(404).json({ error: 'Comment not found' });
+  if (Number(existing.user_id) !== Number(req.user.id)) {
+    return res.status(403).json({ error: 'Not authorized to delete this comment' });
+  }
+  db.prepare('DELETE FROM comments WHERE id = ?').run(commentId);
+  res.json({ success: true });
 });
 
 // Asset Hub Routes
@@ -718,13 +797,13 @@ app.get('/api/assets/:id', (req, res) => {
 });
 
 app.post('/api/assets', authenticateToken, (req: any, res: any) => {
-  const { title, description, category, file_url, tags } = req.body;
+  const { title, description, category, file_url, image_url, tags } = req.body;
   const userId = req.user.id;
 
   if (!title) return res.status(400).json({ error: 'Title is required' });
 
-  const stmt = db.prepare('INSERT INTO assets (user_id, title, description, category, file_url, tags) VALUES (?, ?, ?, ?, ?, ?)');
-  const info = stmt.run(userId, title, description || '', category || '2D', file_url || '', JSON.stringify(tags || []));
+  const stmt = db.prepare('INSERT INTO assets (user_id, title, description, category, file_url, image_url, tags) VALUES (?, ?, ?, ?, ?, ?, ?)');
+  const info = stmt.run(userId, title, description || '', category || '2D', file_url || '', image_url || null, JSON.stringify(tags || []));
 
   res.status(201).json({
     id: info.lastInsertRowid.toString(),
@@ -732,12 +811,26 @@ app.post('/api/assets', authenticateToken, (req: any, res: any) => {
     description: description || '',
     category: category || '2D',
     file_url: file_url || '',
+    image_url: image_url || null,
     author: req.user.username,
     tags: tags || [],
     likes: 0,
     avg_rating: 0,
     feedback_count: 0
   });
+});
+
+app.delete('/api/assets/:id', authenticateToken, (req: any, res: any) => {
+  const assetId = req.params.id;
+  const existing: any = db.prepare('SELECT * FROM assets WHERE id = ?').get(assetId);
+  if (!existing) return res.status(404).json({ error: 'Asset not found' });
+  if (Number(existing.user_id) !== Number(req.user.id)) {
+    return res.status(403).json({ error: 'Not authorized to delete this asset' });
+  }
+
+  db.prepare('DELETE FROM asset_feedbacks WHERE asset_id = ?').run(assetId);
+  db.prepare('DELETE FROM assets WHERE id = ?').run(assetId);
+  res.json({ success: true });
 });
 
 app.post('/api/assets/:id/feedbacks', authenticateToken, (req: any, res: any) => {
@@ -777,10 +870,29 @@ app.get('/api/users/:username', (req, res) => {
   const totalLikesStmt = db.prepare('SELECT SUM(likes) as likes FROM devlogs WHERE user_id = ?');
   const totalLikes = (totalLikesStmt.get(user.id) as any).likes || 0;
 
-  const recentDevlogsStmt = db.prepare('SELECT id, title, likes, created_at FROM devlogs WHERE user_id = ? ORDER BY id DESC LIMIT 5');
+  const recentDevlogsStmt = db.prepare(`
+    SELECT d.id, d.title, d.likes, d.image_url, d.created_at,
+      (SELECT COUNT(*) FROM comments c WHERE c.devlog_id = d.id) as comment_count
+    FROM devlogs d
+    WHERE d.user_id = ?
+    ORDER BY d.id DESC
+    LIMIT 20
+  `);
   const recentDevlogs = recentDevlogsStmt.all(user.id).map((d: any) => ({
     ...d,
     id: d.id.toString()
+  }));
+
+  const recentAssetsStmt = db.prepare(`
+    SELECT a.id, a.title, a.category, a.likes, a.image_url, a.file_url, a.created_at
+    FROM assets a
+    WHERE a.user_id = ?
+    ORDER BY a.id DESC
+    LIMIT 20
+  `);
+  const recentAssets = recentAssetsStmt.all(user.id).map((a: any) => ({
+    ...a,
+    id: a.id.toString()
   }));
 
   res.json({
@@ -795,7 +907,8 @@ app.get('/api/users/:username', (req, res) => {
       asset_count: assetCount,
       total_likes: totalLikes
     },
-    recent_devlogs: recentDevlogs
+    recent_devlogs: recentDevlogs,
+    recent_assets: recentAssets
   });
 });
 

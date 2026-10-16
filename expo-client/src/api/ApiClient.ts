@@ -151,6 +151,25 @@ export const ApiClient = {
     return response.json();
   },
 
+  updateDevLog: async (id: string, request: any): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/devlogs/${id}`, {
+      method: 'PUT',
+      headers: ApiClient.getHeaders(),
+      body: JSON.stringify(request),
+    });
+    if (!response.ok) throw new Error('Failed to update devlog');
+    return response.json();
+  },
+
+  deleteDevLog: async (id: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/devlogs/${id}`, {
+      method: 'DELETE',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete devlog');
+    return response.json();
+  },
+
   toggleLikeDevLog: async (id: string): Promise<{ liked: boolean; likes: number }> => {
     const response = await fetch(`${BASE_URL}/devlogs/${id}/like`, {
       method: 'POST',
@@ -167,6 +186,15 @@ export const ApiClient = {
       body: JSON.stringify({ content }),
     });
     if (!response.ok) throw new Error('Failed to post comment');
+    return response.json();
+  },
+
+  deleteComment: async (devlogId: string, commentId: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/devlogs/${devlogId}/comments/${commentId}`, {
+      method: 'DELETE',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete comment');
     return response.json();
   },
 
@@ -198,6 +226,15 @@ export const ApiClient = {
     return response.json();
   },
 
+  deleteAsset: async (id: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/assets/${id}`, {
+      method: 'DELETE',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to delete asset');
+    return response.json();
+  },
+
   postAssetFeedback: async (assetId: string, feedbackData: any): Promise<any> => {
     const response = await fetch(`${BASE_URL}/assets/${assetId}/feedbacks`, {
       method: 'POST',
@@ -206,6 +243,29 @@ export const ApiClient = {
     });
     if (!response.ok) throw new Error('Failed to submit asset feedback');
     return response.json();
+  },
+
+  // Bookmarks (localStorage + in-memory fallback)
+  getBookmarks: (type: 'devlog' | 'asset' = 'devlog'): string[] => {
+    const raw = getStorageItem(`devground_bookmarks_${type}`);
+    if (!raw) return [];
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return [];
+    }
+  },
+
+  toggleBookmark: (id: string, type: 'devlog' | 'asset' = 'devlog'): boolean => {
+    const current = ApiClient.getBookmarks(type);
+    const exists = current.includes(String(id));
+    const next = exists ? current.filter((item) => item !== String(id)) : [...current, String(id)];
+    setStorageItem(`devground_bookmarks_${type}`, JSON.stringify(next));
+    return !exists;
+  },
+
+  isBookmarked: (id: string, type: 'devlog' | 'asset' = 'devlog'): boolean => {
+    return ApiClient.getBookmarks(type).includes(String(id));
   },
 
   // Profile API

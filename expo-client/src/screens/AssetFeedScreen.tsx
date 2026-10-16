@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -10,20 +10,25 @@ interface Props {
   onRequireLogin?: () => void;
 }
 
-const CATEGORIES = ['All', '2D', '3D', 'Audio', 'UI', 'Code'];
+const CATEGORIES = ['All', '⭐ 찜한 에셋', '2D', '3D', 'Audio', 'UI', 'Code'];
 
 export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => ApiClient.getBookmarks('asset'));
 
   // New Asset Modal State
   const [modalVisible, setModalVisible] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [newImageUrl, setNewImageUrl] = useState('');
+  const [newFileUrl, setNewFileUrl] = useState('');
   const [newCategory, setNewCategory] = useState<'2D' | '3D' | 'Audio' | 'UI' | 'Code'>('2D');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const currentUsername = ApiClient.getUsername();
 
   useEffect(() => {
     fetchAssets();
@@ -32,13 +37,28 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
   const fetchAssets = async () => {
     try {
       setLoading(true);
-      const categoryParam = selectedCategory === 'All' ? undefined : selectedCategory;
+      const categoryParam = (selectedCategory === 'All' || selectedCategory === '⭐ 찜한 에셋') ? undefined : selectedCategory;
       const data = await ApiClient.getAssets(categoryParam, searchQuery || undefined);
       setAssets(data);
+      setBookmarkedIds(ApiClient.getBookmarks('asset'));
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleBookmark = (id: string) => {
+    ApiClient.toggleBookmark(id, 'asset');
+    setBookmarkedIds(ApiClient.getBookmarks('asset'));
+  };
+
+  const handleDeleteAsset = async (id: string) => {
+    try {
+      await ApiClient.deleteAsset(id);
+      fetchAssets();
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -50,11 +70,15 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
         title: newTitle,
         description: newDescription,
         category: newCategory,
+        image_url: newImageUrl.trim() || undefined,
+        file_url: newFileUrl.trim() || undefined,
         tags: [newCategory, 'Asset']
       });
       setModalVisible(false);
       setNewTitle('');
       setNewDescription('');
+      setNewImageUrl('');
+      setNewFileUrl('');
       fetchAssets();
     } catch (e) {
       console.error(e);
@@ -62,6 +86,10 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
       setIsSubmitting(false);
     }
   };
+
+  const displayedAssets = selectedCategory === '⭐ 찜한 에셋'
+    ? assets.filter((a) => bookmarkedIds.includes(String(a.id)))
+    : assets;
 
   const renderCategoryPill = (category: string) => {
     const isSelected = selectedCategory === category;
@@ -78,26 +106,55 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
     );
   };
 
-  const renderAssetCard = ({ item }: { item: Asset }) => (
-    <View style={styles.cardWrapper}>
-      <NeumorphView radius={18} style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={styles.categoryBadge}>
-            <Text style={styles.categoryBadgeText}>{item.category}</Text>
+  const renderAssetCard = ({ item }: { item: Asset }) => {
+    const isBookmarked = bookmarkedIds.includes(String(item.id));
+    const isOwner = currentUsername && item.author === currentUsername;
+
+    return (
+      <View style={styles.cardWrapper}>
+        <NeumorphView radius={18} style={styles.card}>
+          {item.image_url ? (
+            <Image source={{ uri: item.image_url }} style={styles.assetBannerImage} resizeMode="cover" />
+          ) : null}
+
+          <View style={styles.cardHeader}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <View style={styles.categoryBadge}>
+                <Text style={styles.categoryBadgeText}>{item.category}</Text>
+              </View>
+              <Text style={styles.ratingText}>⭐ {item.avg_rating || '5.0'} ({item.feedback_count || 0})</Text>
+            </View>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+              <TouchableOpacity
+                style={[styles.bookmarkPill, isBookmarked && { backgroundColor: '#FEF3C7' }]}
+                onPress={() => handleToggleBookmark(item.id)}
+              >
+                <Text style={[styles.bookmarkPillText, isBookmarked && { color: '#D97706' }]}>
+                  {isBookmarked ? '⭐ 찜됨' : '☆ 찜'}
+                </Text>
+              </TouchableOpacity>
+              {isOwner && (
+                <TouchableOpacity
+                  style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}
+                  onPress={() => handleDeleteAsset(item.id)}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#DC2626' }}>🗑️ 삭제</Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
-          <Text style={styles.ratingText}>⭐ {item.avg_rating || '5.0'} ({item.feedback_count || 0})</Text>
-        </View>
 
-        <Text style={styles.assetTitle}>{item.title}</Text>
-        <Text style={styles.assetDesc}>{item.description || 'No description provided.'}</Text>
+          <Text style={styles.assetTitle}>{item.title}</Text>
+          <Text style={styles.assetDesc}>{item.description || 'No description provided.'}</Text>
 
-        <View style={styles.cardFooter}>
-          <Text style={styles.authorText}>by {item.author}</Text>
-          <Text style={styles.likesText}>❤️ {item.likes || 0}</Text>
-        </View>
-      </NeumorphView>
-    </View>
-  );
+          <View style={styles.cardFooter}>
+            <Text style={styles.authorText}>by {item.author}</Text>
+            <Text style={styles.likesText}>❤️ {item.likes || 0}</Text>
+          </View>
+        </NeumorphView>
+      </View>
+    );
+  };
 
   const renderListHeader = () => (
     <View style={styles.headerSection}>
@@ -141,7 +198,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
   return (
     <View style={styles.container}>
       <FlatList
-        data={assets}
+        data={displayedAssets}
         keyExtractor={(item) => item.id}
         ListHeaderComponent={renderListHeader}
         renderItem={renderAssetCard}
@@ -153,7 +210,9 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
             </View>
           ) : (
             <View style={styles.centerContainer}>
-              <Text style={styles.emptyText}>No assets found.</Text>
+              <Text style={styles.emptyText}>
+                {selectedCategory === '⭐ 찜한 에셋' ? '아직 ⭐ 찜한 에셋이 없습니다.' : 'No assets found.'}
+              </Text>
             </View>
           )
         }
@@ -172,6 +231,22 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
               placeholder="Asset Title"
               value={newTitle}
               onChangeText={setNewTitle}
+            />
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Thumbnail Image URL (https://... Optional)"
+              value={newImageUrl}
+              onChangeText={setNewImageUrl}
+              autoCapitalize="none"
+            />
+
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Download / Repo Link URL (https://... Optional)"
+              value={newFileUrl}
+              onChangeText={setNewFileUrl}
+              autoCapitalize="none"
             />
 
             <TextInput
@@ -230,11 +305,14 @@ const styles = StyleSheet.create({
   activePillText: { color: '#FFF', fontWeight: '700' },
   listContent: { paddingBottom: 110 },
   cardWrapper: { paddingHorizontal: 16, marginBottom: 20 },
-  card: { padding: 20, width: '100%' },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  card: { padding: 20, width: '100%', overflow: 'hidden' },
+  assetBannerImage: { width: '100%', height: 150, borderRadius: 12, marginBottom: 12, backgroundColor: '#D1D9E6' },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 },
   categoryBadge: { backgroundColor: '#D1D9E6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   categoryBadgeText: { fontSize: 12, fontWeight: '700', color: Theme.colors.accent },
   ratingText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
+  bookmarkPill: { backgroundColor: '#E2E8F0', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  bookmarkPillText: { fontSize: 12, fontWeight: '700', color: Theme.colors.textLight },
   assetTitle: { fontSize: 18, fontWeight: '700', color: Theme.colors.text, marginBottom: 8, lineHeight: 24 },
   assetDesc: { fontSize: 14, color: Theme.colors.textLight, marginBottom: 14, lineHeight: 20 },
   cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#D1D9E6', paddingTop: 10 },

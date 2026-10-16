@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -15,6 +15,7 @@ const PRESET_TAGS = ['Unity', 'Unreal', 'Godot', 'C#', 'Graphics', 'BugFix', 'Re
 export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSuccess }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [imageUrl, setImageUrl] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>(['Unity']);
   const [isPosting, setIsPosting] = useState(false);
 
@@ -33,6 +34,7 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
       await ApiClient.postDevLog({
         title,
         content,
+        image_url: imageUrl.trim() || undefined,
         tags: selectedTags.length > 0 ? selectedTags : ['DevLog']
       });
       onPostSuccess();
@@ -52,7 +54,7 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
         <View style={{ width: 60 }} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.label}>Title</Text>
         <NeumorphView radius={12} style={styles.inputContainer}>
           <TextInput
@@ -64,6 +66,25 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
             placeholderTextColor={Theme.colors.textLight}
           />
         </NeumorphView>
+
+        <Text style={styles.label}>Thumbnail Image / GIF URL (Optional)</Text>
+        <NeumorphView radius={12} style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={imageUrl}
+            onChangeText={setImageUrl}
+            editable={!isPosting}
+            placeholder="https://... (Screenshot or GIF URL)"
+            placeholderTextColor={Theme.colors.textLight}
+            autoCapitalize="none"
+          />
+        </NeumorphView>
+
+        {imageUrl.trim().startsWith('http') && (
+          <View style={styles.previewWrapper}>
+            <Image source={{ uri: imageUrl.trim() }} style={styles.previewImage} resizeMode="cover" />
+          </View>
+        )}
 
         <Text style={styles.label}>Content</Text>
         <NeumorphView radius={12} style={[styles.inputContainer, styles.textAreaContainer]}>
@@ -105,7 +126,7 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
             )}
           </NeumorphView>
         </TouchableOpacity>
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -134,19 +155,30 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    flex: 1,
+    paddingBottom: 60,
   },
   label: {
     color: Theme.colors.textLight,
     fontWeight: '600',
-    marginBottom: 12,
+    marginBottom: 10,
     marginLeft: 4,
   },
   inputContainer: {
-    marginBottom: 24,
+    marginBottom: 20,
+  },
+  previewWrapper: {
+    marginBottom: 20,
+    borderRadius: 12,
+    overflow: 'hidden',
+    height: 160,
+    backgroundColor: '#D1D9E6',
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
   },
   textAreaContainer: {
-    flex: 1,
+    minHeight: 160,
   },
   input: {
     color: Theme.colors.text,
@@ -154,11 +186,11 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   textArea: {
-    flex: 1,
+    minHeight: 160,
     textAlignVertical: 'top',
   },
   postButtonContainer: {
-    marginTop: 16,
+    marginTop: 8,
   },
   postButton: {
     padding: 16,

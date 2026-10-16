@@ -14,6 +14,7 @@ interface Props {
 export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogClick }) => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeSubTab, setActiveSubTab] = useState<'devlogs' | 'assets'>('devlogs');
 
   useEffect(() => {
     fetchProfile();
@@ -28,6 +29,24 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteDevLog = async (id: string) => {
+    try {
+      await ApiClient.deleteDevLog(id);
+      fetchProfile();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleDeleteAsset = async (id: string) => {
+    try {
+      await ApiClient.deleteAsset(id);
+      fetchProfile();
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -68,29 +87,91 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
         </NeumorphView>
       </View>
 
-      {/* Recent DevLogs Section */}
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>My DevLogs</Text>
+      {/* Sub-Tabs for My DevLogs / My Assets */}
+      <View style={styles.subTabsRow}>
+        <TouchableOpacity
+          style={[styles.subTabBtn, activeSubTab === 'devlogs' && styles.activeSubTabBtn]}
+          onPress={() => setActiveSubTab('devlogs')}
+        >
+          <Text style={[styles.subTabText, activeSubTab === 'devlogs' && styles.activeSubTabText]}>
+            📜 내가 쓴 개발일지 ({profile?.recent_devlogs?.length || 0})
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.subTabBtn, activeSubTab === 'assets' && styles.activeSubTabBtn]}
+          onPress={() => setActiveSubTab('assets')}
+        >
+          <Text style={[styles.subTabText, activeSubTab === 'assets' && styles.activeSubTabText]}>
+            🎨 내가 공유한 에셋 ({profile?.recent_assets?.length || 0})
+          </Text>
+        </TouchableOpacity>
       </View>
 
-      {profile?.recent_devlogs && profile.recent_devlogs.length > 0 ? (
-        <FlatList
-          data={profile.recent_devlogs}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <TouchableOpacity onPress={() => onDevLogClick(item.id)}>
-              <NeumorphView radius={12} style={styles.postItem}>
-                <Text style={styles.postTitle}>{item.title}</Text>
-                <Text style={styles.postMeta}>❤️ {item.likes} • {new Date(item.created_at).toLocaleDateString()}</Text>
-              </NeumorphView>
-            </TouchableOpacity>
-          )}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
-        />
+      {activeSubTab === 'devlogs' ? (
+        profile?.recent_devlogs && profile.recent_devlogs.length > 0 ? (
+          <FlatList
+            data={profile.recent_devlogs}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <TouchableOpacity onPress={() => onDevLogClick(item.id)}>
+                <NeumorphView radius={12} style={styles.postItem}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <View style={{ flex: 1, marginRight: 8 }}>
+                      <Text style={styles.postTitle}>{item.title}</Text>
+                      <Text style={styles.postMeta}>
+                        ❤️ {item.likes} • 💬 {item.comment_count ?? 0} • {new Date(item.created_at).toLocaleDateString()}
+                      </Text>
+                    </View>
+                    <TouchableOpacity
+                      style={styles.deleteMiniBtn}
+                      onPress={(e: any) => {
+                        e?.stopPropagation?.();
+                        handleDeleteDevLog(item.id);
+                      }}
+                    >
+                      <Text style={styles.deleteMiniText}>🗑️ 삭제</Text>
+                    </TouchableOpacity>
+                  </View>
+                </NeumorphView>
+              </TouchableOpacity>
+            )}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
+          />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>아직 작성한 개발일지가 없습니다.</Text>
+          </View>
+        )
       ) : (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No DevLogs posted yet.</Text>
-        </View>
+        profile?.recent_assets && profile.recent_assets.length > 0 ? (
+          <FlatList
+            data={profile.recent_assets}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <NeumorphView radius={12} style={styles.postItem}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <View style={{ flex: 1, marginRight: 8 }}>
+                    <Text style={styles.postTitle}>[{item.category}] {item.title}</Text>
+                    <Text style={styles.postMeta}>
+                      ❤️ {item.likes} • {new Date(item.created_at).toLocaleDateString()}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.deleteMiniBtn}
+                    onPress={() => handleDeleteAsset(item.id)}
+                  >
+                    <Text style={styles.deleteMiniText}>🗑️ 삭제</Text>
+                  </TouchableOpacity>
+                </View>
+              </NeumorphView>
+            )}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 20 }}
+          />
+        ) : (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>아직 공유한 에셋이 없습니다.</Text>
+          </View>
+        )
       )}
 
       {/* Logout Button */}
@@ -106,23 +187,28 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Theme.colors.background },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: Theme.colors.background },
-  header: { alignItems: 'center', paddingTop: 32, paddingBottom: 16 },
+  header: { alignItems: 'center', paddingTop: 24, paddingBottom: 12 },
   avatar: {
-    width: 72, height: 72, borderRadius: 36, backgroundColor: Theme.colors.primary,
-    justifyContent: 'center', alignItems: 'center', marginBottom: 12
+    width: 68, height: 68, borderRadius: 34, backgroundColor: Theme.colors.primary,
+    justifyContent: 'center', alignItems: 'center', marginBottom: 10
   },
-  avatarText: { color: '#FFF', fontSize: 32, fontWeight: '800' },
+  avatarText: { color: '#FFF', fontSize: 30, fontWeight: '800' },
   usernameText: { fontSize: 22, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 },
   subText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
-  statsRow: { flexDirection: 'row', paddingHorizontal: 20, marginVertical: 16, gap: 12 },
+  statsRow: { flexDirection: 'row', paddingHorizontal: 20, marginVertical: 12, gap: 12 },
   statCard: { flex: 1, padding: 14, alignItems: 'center', justifyContent: 'center' },
   statNumber: { fontSize: 18, fontWeight: '800', color: Theme.colors.primary, marginBottom: 4 },
   statLabel: { fontSize: 12, color: Theme.colors.textLight, fontWeight: '600' },
-  sectionHeader: { paddingHorizontal: 20, marginVertical: 12 },
-  sectionTitle: { fontSize: 18, fontWeight: '800', color: Theme.colors.text },
+  subTabsRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 14, gap: 10 },
+  subTabBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: '#E2E8F0', alignItems: 'center' },
+  activeSubTabBtn: { backgroundColor: Theme.colors.primary },
+  subTabText: { fontSize: 13, fontWeight: '700', color: Theme.colors.textLight },
+  activeSubTabText: { color: '#FFFFFF' },
   postItem: { padding: 14, marginBottom: 12 },
   postTitle: { fontSize: 15, fontWeight: '700', color: Theme.colors.text, marginBottom: 4 },
   postMeta: { fontSize: 12, color: Theme.colors.textLight, fontWeight: '600' },
+  deleteMiniBtn: { backgroundColor: '#FEE2E2', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 },
+  deleteMiniText: { fontSize: 12, fontWeight: '700', color: '#DC2626' },
   emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   emptyText: { fontSize: 14, color: Theme.colors.textLight, fontWeight: '600' },
   footer: { padding: 20 },

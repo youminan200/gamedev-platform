@@ -2,8 +2,10 @@ export interface DevLog {
   id: string;
   title: string;
   content?: string;
+  image_url?: string;
   author: string;
   likes: number;
+  comment_count?: number;
   tags: string[];
   is_liked?: boolean;
   created_at?: string;
@@ -12,6 +14,7 @@ export interface DevLog {
 export interface DevLogCreateRequest {
   title: string;
   content?: string;
+  image_url?: string;
   tags: string[];
 }
 
@@ -21,6 +24,7 @@ export interface Asset {
   description: string;
   category: '2D' | '3D' | 'Audio' | 'UI' | 'Code';
   file_url?: string;
+  image_url?: string;
   author: string;
   tags: string[];
   likes: number;
@@ -55,6 +59,17 @@ export interface UserProfile {
     id: string;
     title: string;
     likes: number;
+    comment_count?: number;
+    image_url?: string;
+    created_at: string;
+  }>;
+  recent_assets?: Array<{
+    id: string;
+    title: string;
+    category: string;
+    likes: number;
+    image_url?: string;
+    file_url?: string;
     created_at: string;
   }>;
 }

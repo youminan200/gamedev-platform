@@ -18,7 +18,8 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
+  const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'bookmarked'>('latest');
+  const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => ApiClient.getBookmarks('devlog'));
 
   useEffect(() => {
     fetchLogs();
@@ -29,6 +30,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       setLoading(true);
       const data = await ApiClient.getDevLogs(searchQuery || undefined);
       setLogs(data);
+      setBookmarkedIds(ApiClient.getBookmarks('devlog'));
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -36,7 +38,16 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
     }
   };
 
-  const sortedLogs = [...logs].sort((a, b) => {
+  const handleToggleBookmark = (id: string) => {
+    ApiClient.toggleBookmark(id, 'devlog');
+    setBookmarkedIds(ApiClient.getBookmarks('devlog'));
+  };
+
+  const filteredLogs = sortBy === 'bookmarked'
+    ? logs.filter((item) => bookmarkedIds.includes(String(item.id)))
+    : logs;
+
+  const sortedLogs = [...filteredLogs].sort((a, b) => {
     if (sortBy === 'popular') {
       return (b.likes || 0) - (a.likes || 0);
     }
@@ -127,6 +138,15 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
         >
           <Text style={[styles.sortButtonText, sortBy === 'popular' && styles.activeSortButtonText]}>🔥 Most Liked</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity 
+          style={[styles.sortButton, sortBy === 'bookmarked' && styles.activeSortButton]}
+          onPress={() => setSortBy('bookmarked')}
+        >
+          <Text style={[styles.sortButtonText, sortBy === 'bookmarked' && styles.activeSortButtonText]}>
+            ⭐ 찜한 글 ({bookmarkedIds.length})
+          </Text>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -146,8 +166,20 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
         keyExtractor={item => item.id}
         ListHeaderComponent={renderHeader}
         renderItem={({ item }) => (
-          <DevLogCard devLog={item} onClick={() => onDevLogClick(item.id)} />
+          <DevLogCard
+            devLog={item}
+            onClick={() => onDevLogClick(item.id)}
+            isBookmarked={bookmarkedIds.includes(String(item.id))}
+            onToggleBookmark={handleToggleBookmark}
+          />
         )}
+        ListEmptyComponent={
+          <View style={{ padding: 40, alignItems: 'center' }}>
+            <Text style={{ color: Theme.colors.textLight, fontWeight: '600', fontSize: 15 }}>
+              {sortBy === 'bookmarked' ? '아직 ⭐ 찜한 개발일지가 없습니다.' : '등록된 개발일지가 없습니다.'}
+            </Text>
+          </View>
+        }
         contentContainerStyle={styles.listContent}
         onRefresh={fetchLogs}
         refreshing={loading}
