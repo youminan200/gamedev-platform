@@ -1,10 +1,19 @@
 # 🎮 DevGround (인디 게임 개발자 개발일지 & 에셋 공유 플랫폼)
 
 [![Live Web App](https://img.shields.io/badge/🌐_Live_Web_App-gamedev--platform--expo--client.vercel.app-4F46E5?style=for-the-badge)](https://gamedev-platform-expo-client.vercel.app)
+[![Admin Dashboard](https://img.shields.io/badge/📊_이용자_현황_대시보드-/admin-0EA5E9?style=for-the-badge)](https://gamedev-platform.onrender.com/admin)
 [![Backend API](https://img.shields.io/badge/⚡_24/7_API_Server-Render_Live-10B981?style=for-the-badge)](https://gamedev-platform.onrender.com/api/devlogs)
 
-> **지금 바로 접속하기 (설치 및 로그인 없이 즉시 구경 가능!):**  
-> 👉 **[https://gamedev-platform-expo-client.vercel.app](https://gamedev-platform-expo-client.vercel.app)**
+---
+
+## 🔗 공식 서비스 바로가기 (24시간 상시 가동)
+
+| 구분 | 바로가기 링크 | 설명 |
+| :--- | :--- | :--- |
+| 🌐 **공식 웹앱 (유저용)** | **[https://gamedev-platform-expo-client.vercel.app](https://gamedev-platform-expo-client.vercel.app)** | 설치·로그인 없이 즉시 개발일지 및 에셋 허브 열람 가능 |
+| 📊 **이용자 현황 대시보드** | **[https://gamedev-platform.onrender.com/admin](https://gamedev-platform.onrender.com/admin)** | 실시간 가입자 수, 게시글/에셋 통계 및 가입 회원 목록 표 |
+| 📈 **실시간 통계 JSON API** | **[https://gamedev-platform.onrender.com/api/stats](https://gamedev-platform.onrender.com/api/stats)** | 전체 이용자 및 콘텐츠 통계 JSON 응답 |
+| ⚡ **백엔드 상태 확인** | **[https://gamedev-platform.onrender.com/](https://gamedev-platform.onrender.com/)** | 24/7 Render 클라우드 API 서버 상태 확인 |
 
 ---
 
@@ -28,6 +37,9 @@
    - **카카오 1초 로그인 (Kakao OAuth)** 및 일반 계정 회원가입 지원
    - 브라우저 재접속·새로고침 시에도 풀리지 않는 자동 세션 유지
    - 모바일/PC 브라우저에서 **홈 화면에 앱처럼 추가(PWA)** 및 원클릭 공유(`🔗 공유`) 지원
+
+4. **📊 실시간 이용자 및 콘텐츠 대시보드 (`/admin`)**
+   - 총 가입자 수, 등록된 개발일지/에셋/댓글 수 및 가입 방식(`KAKAO`, `NAVER`, `LOCAL`)별 회원 현황 실시간 조회
 
 ---
 
