@@ -43,25 +43,62 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
     return Number(b.id) - Number(a.id);
   });
 
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const shareUrl = 'https://gamedev-platform-expo-client.vercel.app';
+    const shareText = 'DevGround - 인디 게임 개발자들의 개발일지(DevLog) & 무료 에셋 공유 커뮤니티 🎮';
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({
+          title: 'DevGround',
+          text: shareText,
+          url: shareUrl,
+        });
+        return;
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      }
+    } catch {}
+  };
+
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={[styles.titleRow, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
         <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
-        {onAuthClick && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
             style={{
-              backgroundColor: username ? '#E2E8F0' : Theme.colors.primary,
-              paddingHorizontal: 14,
+              backgroundColor: copied ? '#10B981' : '#E2E8F0',
+              paddingHorizontal: 12,
               paddingVertical: 8,
               borderRadius: 20,
             }}
-            onPress={onAuthClick}
+            onPress={handleShare}
           >
-            <Text style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
-              {username ? `👤 ${username}` : '🔑 로그인 / 가입'}
+            <Text style={{ color: copied ? '#FFFFFF' : Theme.colors.text, fontWeight: '700', fontSize: 13 }}>
+              {copied ? '✅ 링크 복사됨' : '🔗 공유'}
             </Text>
           </TouchableOpacity>
-        )}
+          {onAuthClick && (
+            <TouchableOpacity
+              style={{
+                backgroundColor: username ? '#E2E8F0' : Theme.colors.primary,
+                paddingHorizontal: 14,
+                paddingVertical: 8,
+                borderRadius: 20,
+              }}
+              onPress={onAuthClick}
+            >
+              <Text style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
+                {username ? `👤 ${username}` : '🔑 로그인 / 가입'}
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Search Input */}
