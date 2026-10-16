@@ -12,13 +12,13 @@ interface Props {
 
 export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostClick }) => {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: Theme.colors.background, borderTopColor: Theme.colors.border }]}>
       <TouchableOpacity 
         style={styles.tabItem} 
         onPress={() => onTabChange('DevLogs')}
       >
         <Text style={styles.tabIcon}>{currentTab === 'DevLogs' ? '📜' : '📄'}</Text>
-        <Text style={[styles.tabLabel, currentTab === 'DevLogs' && styles.activeTabLabel]}>
+        <Text style={[styles.tabLabel, { color: Theme.colors.textLight }, currentTab === 'DevLogs' && { color: Theme.colors.primary, fontWeight: '800' }]}>
           DevLogs
         </Text>
       </TouchableOpacity>
@@ -28,13 +28,13 @@ export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostC
         onPress={() => onTabChange('AssetHub')}
       >
         <Text style={styles.tabIcon}>{currentTab === 'AssetHub' ? '🎨' : '🖌️'}</Text>
-        <Text style={[styles.tabLabel, currentTab === 'AssetHub' && styles.activeTabLabel]}>
+        <Text style={[styles.tabLabel, { color: Theme.colors.textLight }, currentTab === 'AssetHub' && { color: Theme.colors.primary, fontWeight: '800' }]}>
           Asset Hub
         </Text>
       </TouchableOpacity>
 
       <TouchableOpacity 
-        style={styles.postButton} 
+        style={[styles.postButton, { backgroundColor: Theme.colors.primary }]} 
         onPress={onPostClick}
         activeOpacity={0.85}
       >
@@ -46,7 +46,7 @@ export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostC
         onPress={() => onTabChange('Profile')}
       >
         <Text style={styles.tabIcon}>{currentTab === 'Profile' ? '👤' : '👤'}</Text>
-        <Text style={[styles.tabLabel, currentTab === 'Profile' && styles.activeTabLabel]}>
+        <Text style={[styles.tabLabel, { color: Theme.colors.textLight }, currentTab === 'Profile' && { color: Theme.colors.primary, fontWeight: '800' }]}>
           Profile
         </Text>
       </TouchableOpacity>
@@ -60,7 +60,7 @@ const styles = StyleSheet.create({
     height: 64,
     backgroundColor: Theme.colors.background,
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: Theme.colors.border,
     alignItems: 'center',
     justifyContent: 'space-around',
     paddingHorizontal: 8,

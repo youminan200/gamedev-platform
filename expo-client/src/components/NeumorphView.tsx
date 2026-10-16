@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, ViewStyle, StyleProp } from 'react-native';
+import { Theme } from '../theme';
 
 interface Props {
   children: React.ReactNode;
@@ -21,11 +22,15 @@ export const NeumorphView: React.FC<Props> = ({ children, style, radius = 16 }) 
     justifyContent,
     flexDirection,
     gap,
+    backgroundColor,
     ...outerStyle
   } = flatStyle;
 
+  const surfaceColor = backgroundColor || Theme.colors.surface;
+
   const innerContentStyle: ViewStyle = {
     borderRadius: radius,
+    backgroundColor: surfaceColor,
     ...(padding !== undefined ? { padding } : {}),
     ...(paddingHorizontal !== undefined ? { paddingHorizontal } : {}),
     ...(paddingVertical !== undefined ? { paddingVertical } : {}),
@@ -40,8 +45,27 @@ export const NeumorphView: React.FC<Props> = ({ children, style, radius = 16 }) 
   };
 
   return (
-    <View style={[styles.outerShadow, { borderRadius: radius }, outerStyle]}>
-      <View style={[styles.innerShadow, { borderRadius: radius }]}>
+    <View
+      style={[
+        styles.outerShadow,
+        {
+          borderRadius: radius,
+          shadowColor: Theme.colors.shadowDark,
+          backgroundColor: surfaceColor,
+        },
+        outerStyle,
+      ]}
+    >
+      <View
+        style={[
+          styles.innerShadow,
+          {
+            borderRadius: radius,
+            shadowColor: Theme.colors.shadowLight,
+            backgroundColor: surfaceColor,
+          },
+        ]}
+      >
         <View style={[styles.content, innerContentStyle]}>
           {children}
         </View>
@@ -52,22 +76,17 @@ export const NeumorphView: React.FC<Props> = ({ children, style, radius = 16 }) 
 
 const styles = StyleSheet.create({
   outerShadow: {
-    shadowColor: '#A3B1C6',
     shadowOffset: { width: 6, height: 6 },
     shadowOpacity: 0.6,
     shadowRadius: 10,
-    elevation: 8, // For Android approximation
-    backgroundColor: '#E0E5EC',
+    elevation: 8,
   },
   innerShadow: {
-    shadowColor: '#FFFFFF',
-    shadowOffset: { width: -6, height: -6 },
-    shadowOpacity: 0.8,
-    shadowRadius: 10,
-    backgroundColor: '#E0E5EC',
+    shadowOffset: { width: -4, height: -4 },
+    shadowOpacity: 0.7,
+    shadowRadius: 8,
   },
   content: {
-    backgroundColor: '#E0E5EC',
     overflow: 'hidden',
   },
 });

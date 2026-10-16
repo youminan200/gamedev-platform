@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
   statNumber: { fontSize: 18, fontWeight: '800', color: Theme.colors.primary, marginBottom: 4 },
   statLabel: { fontSize: 12, color: Theme.colors.textLight, fontWeight: '600' },
   subTabsRow: { flexDirection: 'row', paddingHorizontal: 20, marginBottom: 14, gap: 10 },
-  subTabBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: '#E2E8F0', alignItems: 'center' },
+  subTabBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, backgroundColor: Theme.colors.pillBg, alignItems: 'center' },
   activeSubTabBtn: { backgroundColor: Theme.colors.primary },
   subTabText: { fontSize: 13, fontWeight: '700', color: Theme.colors.textLight },
   activeSubTabText: { color: '#FFFFFF' },

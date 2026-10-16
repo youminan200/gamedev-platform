@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, Linking, ScrollView } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -62,6 +62,54 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
     }
   };
 
+  // Asset Detail Modal State
+  const [detailAsset, setDetailAsset] = useState<any>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [rating, setRating] = useState(5);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [isSendingFeedback, setIsSendingFeedback] = useState(false);
+
+  const openDetail = async (asset: Asset) => {
+    setDetailAsset({ ...asset, feedbacks: [] });
+    setRating(5);
+    setFeedbackText('');
+    try {
+      setDetailLoading(true);
+      const data = await ApiClient.getAssetDetails(asset.id);
+      setDetailAsset(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setDetailLoading(false);
+    }
+  };
+
+  const handleOpenLink = (url?: string) => {
+    if (!url) return;
+    Linking.openURL(url).catch(() => {});
+  };
+
+  const handleSendFeedback = async () => {
+    if (!ApiClient.getToken()) {
+      setDetailAsset(null);
+      onRequireLogin?.();
+      return;
+    }
+    if (!feedbackText.trim() || !detailAsset) return;
+    try {
+      setIsSendingFeedback(true);
+      await ApiClient.postAssetFeedback(detailAsset.id, { rating, content: feedbackText.trim() });
+      setFeedbackText('');
+      const data = await ApiClient.getAssetDetails(detailAsset.id);
+      setDetailAsset(data);
+      fetchAssets();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSendingFeedback(false);
+    }
+  };
+
   const handleCreateAsset = async () => {
     if (!newTitle.trim()) return;
     try {
@@ -111,7 +159,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
     const isOwner = currentUsername && item.author === currentUsername;
 
     return (
-      <View style={styles.cardWrapper}>
+      <TouchableOpacity activeOpacity={0.9} style={styles.cardWrapper} onPress={() => openDetail(item)}>
         <NeumorphView radius={18} style={styles.card}>
           {item.image_url ? (
             <Image source={{ uri: item.image_url }} style={styles.assetBannerImage} resizeMode="cover" />
@@ -152,7 +200,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
             <Text style={styles.likesText}>❤️ {item.likes || 0}</Text>
           </View>
         </NeumorphView>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -219,6 +267,69 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
         onRefresh={fetchAssets}
         refreshing={loading}
       />
+
+      {/* Asset Detail Modal */}
+      <Modal visible={!!detailAsset} animationType="slide" transparent onRequestClose={() => setDetailAsset(null)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalContent, { maxHeight: '90%' }]}>
+            <ScrollView>
+              {detailAsset && (
+                <>
+                  {detailAsset.image_url ? (
+                    <Image source={{ uri: detailAsset.image_url }} style={styles.assetBannerImage} resizeMode="cover" />
+                  ) : null}
+                  <Text style={styles.modalTitle}>{detailAsset.title}</Text>
+                  <Text style={styles.assetDesc}>{detailAsset.description || 'No description provided.'}</Text>
+                  <Text style={styles.authorText}>
+                    [{detailAsset.category}] by {detailAsset.author} • ⭐ {detailAsset.avg_rating || '-'} ({detailAsset.feedback_count || 0})
+                  </Text>
+
+                  {detailAsset.file_url ? (
+                    <TouchableOpacity style={styles.openLinkBtn} onPress={() => handleOpenLink(detailAsset.file_url)}>
+                      <Text style={styles.openLinkText}>🔗 다운로드 / 링크 열기</Text>
+                    </TouchableOpacity>
+                  ) : null}
+
+                  <Text style={[styles.modalLabel, { marginTop: 18 }]}>리뷰 남기기</Text>
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <TouchableOpacity key={n} onPress={() => setRating(n)}>
+                        <Text style={{ fontSize: 28 }}>{n <= rating ? '⭐' : '☆'}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TextInput
+                    style={[styles.modalInput, { height: 70 }]}
+                    placeholder="피드백을 남겨주세요..."
+                    multiline
+                    value={feedbackText}
+                    onChangeText={setFeedbackText}
+                  />
+                  <TouchableOpacity style={styles.submitModalButton} onPress={handleSendFeedback} disabled={isSendingFeedback}>
+                    <Text style={[styles.submitModalText, { textAlign: 'center' }]}>
+                      {isSendingFeedback ? '등록 중...' : '리뷰 등록'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <Text style={[styles.modalLabel, { marginTop: 20 }]}>💬 리뷰 ({detailAsset.feedbacks?.length || 0})</Text>
+                  {detailLoading ? <ActivityIndicator color={Theme.colors.primary} /> : null}
+                  {(detailAsset.feedbacks || []).map((f: any) => (
+                    <View key={f.id} style={{ marginBottom: 12 }}>
+                      <Text style={{ fontWeight: '700', color: Theme.colors.text }}>
+                        {f.author} {'⭐'.repeat(f.rating || 0)}
+                      </Text>
+                      <Text style={{ color: Theme.colors.text, marginTop: 2 }}>{f.content}</Text>
+                    </View>
+                  ))}
+                </>
+              )}
+            </ScrollView>
+            <TouchableOpacity style={[styles.cancelModalButton, { alignSelf: 'flex-end' }]} onPress={() => setDetailAsset(null)}>
+              <Text style={styles.cancelModalText}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Upload Asset Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
@@ -299,23 +410,23 @@ const styles = StyleSheet.create({
   searchBox: { width: '100%' },
   searchInput: { paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: Theme.colors.text },
   categoryRow: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 4, gap: 8 },
-  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, backgroundColor: '#E2E8F0' },
+  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, backgroundColor: Theme.colors.pillBg },
   activePill: { backgroundColor: Theme.colors.primary },
   pillText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
   activePillText: { color: '#FFF', fontWeight: '700' },
   listContent: { paddingBottom: 110 },
   cardWrapper: { paddingHorizontal: 16, marginBottom: 20 },
   card: { padding: 20, width: '100%', overflow: 'hidden' },
-  assetBannerImage: { width: '100%', height: 150, borderRadius: 12, marginBottom: 12, backgroundColor: '#D1D9E6' },
+  assetBannerImage: { width: '100%', height: 150, borderRadius: 12, marginBottom: 12, backgroundColor: Theme.colors.pillBg },
   cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 },
-  categoryBadge: { backgroundColor: '#D1D9E6', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  categoryBadge: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   categoryBadgeText: { fontSize: 12, fontWeight: '700', color: Theme.colors.accent },
   ratingText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
-  bookmarkPill: { backgroundColor: '#E2E8F0', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
+  bookmarkPill: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
   bookmarkPillText: { fontSize: 12, fontWeight: '700', color: Theme.colors.textLight },
   assetTitle: { fontSize: 18, fontWeight: '700', color: Theme.colors.text, marginBottom: 8, lineHeight: 24 },
   assetDesc: { fontSize: 14, color: Theme.colors.textLight, marginBottom: 14, lineHeight: 20 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#D1D9E6', paddingTop: 10 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Theme.colors.pillBg, paddingTop: 10 },
   authorText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
   likesText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 40 },
@@ -326,7 +437,7 @@ const styles = StyleSheet.create({
   modalInput: { backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 12, fontSize: 15 },
   modalLabel: { fontSize: 14, fontWeight: '700', color: Theme.colors.text, marginBottom: 8 },
   categorySelectRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  catSelectBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: '#E2E8F0' },
+  catSelectBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: Theme.colors.pillBg },
   activeCatSelectBadge: { backgroundColor: Theme.colors.primary },
   catSelectText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
   activeCatSelectText: { color: '#FFF', fontWeight: '700' },
@@ -335,4 +446,6 @@ const styles = StyleSheet.create({
   cancelModalText: { color: Theme.colors.textLight, fontWeight: '700' },
   submitModalButton: { backgroundColor: Theme.colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
   submitModalText: { color: '#FFF', fontWeight: '700' },
+  openLinkBtn: { backgroundColor: Theme.colors.primary, paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginTop: 12 },
+  openLinkText: { color: '#FFF', fontWeight: '800', fontSize: 15 },
 });

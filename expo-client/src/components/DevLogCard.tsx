@@ -11,9 +11,18 @@ interface DevLogCardProps {
   onClick: () => void;
   isBookmarked?: boolean;
   onToggleBookmark?: (id: string) => void;
+  onTagClick?: (tag: string) => void;
+  selectedTag?: string | null;
 }
 
-export const DevLogCard: React.FC<DevLogCardProps> = ({ devLog, onClick, isBookmarked, onToggleBookmark }) => {
+export const DevLogCard: React.FC<DevLogCardProps> = ({
+  devLog,
+  onClick,
+  isBookmarked,
+  onToggleBookmark,
+  onTagClick,
+  selectedTag,
+}) => {
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onClick} style={styles.cardContainer}>
       <NeumorphView radius={20} style={styles.card}>
@@ -21,28 +30,28 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({ devLog, onClick, isBookm
         {devLog.image_url ? (
           <Image
             source={{ uri: devLog.image_url }}
-            style={styles.thumbnailImage}
+            style={[styles.thumbnailImage, { backgroundColor: Theme.colors.pillBg }]}
             resizeMode="cover"
           />
         ) : (
-          <View style={styles.thumbnail}>
-            <Text style={styles.thumbnailText}>🎮 DEVLOG</Text>
+          <View style={[styles.thumbnail, { backgroundColor: Theme.colors.pillBg }]}>
+            <Text style={[styles.thumbnailText, { color: Theme.colors.textLight }]}>🎮 DEVLOG</Text>
           </View>
         )}
         
         {/* Content */}
         <View style={styles.content}>
           <View style={styles.titleHeaderRow}>
-            <Text style={[styles.title, { flex: 1 }]}>{devLog.title}</Text>
+            <Text style={[styles.title, { flex: 1, color: Theme.colors.text }]}>{devLog.title}</Text>
             {onToggleBookmark && (
               <TouchableOpacity
                 onPress={(e: any) => {
                   e?.stopPropagation?.();
                   onToggleBookmark(devLog.id);
                 }}
-                style={[styles.bookmarkBtn, isBookmarked && styles.bookmarkBtnActive]}
+                style={[styles.bookmarkBtn, { backgroundColor: Theme.colors.pillBg }, isBookmarked && styles.bookmarkBtnActive]}
               >
-                <Text style={[styles.bookmarkBtnText, isBookmarked && styles.bookmarkBtnTextActive]}>
+                <Text style={[styles.bookmarkBtnText, { color: Theme.colors.textLight }, isBookmarked && styles.bookmarkBtnTextActive]}>
                   {isBookmarked ? '⭐ 찜됨' : '☆ 찜'}
                 </Text>
               </TouchableOpacity>
@@ -50,19 +59,41 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({ devLog, onClick, isBookm
           </View>
           
           <View style={styles.metaRow}>
-            <Text style={styles.metaText}>By {devLog.author} • {formatRelativeTime(devLog.created_at)}</Text>
+            <Text style={[styles.metaText, { color: Theme.colors.textLight }]}>By {devLog.author} • {formatRelativeTime(devLog.created_at)}</Text>
             <View style={styles.statsBadgesRow}>
-              <Text style={styles.metaText}>💬 {devLog.comment_count ?? 0}</Text>
-              <Text style={styles.metaText}>❤️ {devLog.likes}</Text>
+              <Text style={[styles.metaText, { color: Theme.colors.textLight }]}>💬 {devLog.comment_count ?? 0}</Text>
+              <Text style={[styles.metaText, { color: Theme.colors.textLight }]}>❤️ {devLog.likes}</Text>
             </View>
           </View>
 
           <View style={styles.tagsContainer}>
-            {devLog.tags.map((tag, index) => (
-              <View key={index} style={styles.tag}>
-                <Text style={styles.tagText}>#{tag}</Text>
-              </View>
-            ))}
+            {devLog.tags.map((tag, index) => {
+              const isTagSelected = selectedTag === tag;
+              return (
+                <TouchableOpacity
+                  key={index}
+                  style={[
+                    styles.tag,
+                    { backgroundColor: isTagSelected ? Theme.colors.primary : Theme.colors.pillBg },
+                  ]}
+                  onPress={(e: any) => {
+                    if (onTagClick) {
+                      e?.stopPropagation?.();
+                      onTagClick(tag);
+                    }
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.tagText,
+                      { color: isTagSelected ? '#FFFFFF' : Theme.colors.accent },
+                    ]}
+                  >
+                    #{tag}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </View>
       </NeumorphView>
@@ -81,7 +112,7 @@ const styles = StyleSheet.create({
   },
   thumbnail: {
     height: 150,
-    backgroundColor: '#D1D9E6',
+    backgroundColor: Theme.colors.pillBg,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     justifyContent: 'center',
@@ -92,7 +123,7 @@ const styles = StyleSheet.create({
     height: 180,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    backgroundColor: '#D1D9E6',
+    backgroundColor: Theme.colors.pillBg,
   },
   thumbnailText: {
     color: Theme.colors.textLight,
@@ -118,7 +149,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 12,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: Theme.colors.pillBg,
   },
   bookmarkBtnActive: {
     backgroundColor: '#FEF3C7',
@@ -153,7 +184,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   tag: {
-    backgroundColor: '#D1D9E6',
+    backgroundColor: Theme.colors.pillBg,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 12,

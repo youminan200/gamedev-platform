@@ -20,15 +20,29 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'bookmarked'>('latest');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => ApiClient.getBookmarks('devlog'));
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLogs();
-  }, [searchQuery]);
+  }, [searchQuery, selectedTag]);
+
+  const handleTagClick = (tag: string) => {
+    setSelectedTag((prev) => (prev === tag ? null : tag));
+    if (sortBy === 'bookmarked') setSortBy('latest');
+  };
+
+  const handleToggleTheme = () => {
+    Theme.toggleMode();
+    // StyleSheets are evaluated at load time, so reload to apply the palette everywhere (web).
+    if (typeof window !== 'undefined' && window.location && typeof window.location.reload === 'function') {
+      window.location.reload();
+    }
+  };
 
   const fetchLogs = async () => {
     try {
       setLoading(true);
-      const data = await ApiClient.getDevLogs(searchQuery || undefined);
+      const data = await ApiClient.getDevLogs(searchQuery || undefined, selectedTag || undefined);
       setLogs(data);
       setBookmarkedIds(ApiClient.getBookmarks('devlog'));
     } catch (e: any) {
@@ -83,21 +97,34 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
             style={{
-              backgroundColor: copied ? '#10B981' : '#E2E8F0',
+              backgroundColor: Theme.colors.pillBg,
+              paddingHorizontal: 12,
+              paddingVertical: 8,
+              borderRadius: 20,
+            }}
+            onPress={handleToggleTheme}
+          >
+            <Text style={{ color: Theme.colors.text, fontWeight: '700', fontSize: 13 }}>
+              {Theme.isDark ? '☀️ Light' : '🌙 Dark'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{
+              backgroundColor: copied ? '#10B981' : Theme.colors.pillBg,
               paddingHorizontal: 12,
               paddingVertical: 8,
               borderRadius: 20,
             }}
             onPress={handleShare}
           >
-            <Text style={{ color: copied ? '#FFFFFF' : Theme.colors.text, fontWeight: '700', fontSize: 13 }}>
+            <Text style={{ color: copied ? '#FFFFFF' : '#334155', fontWeight: '700', fontSize: 13 }}>
               {copied ? '✅ 링크 복사됨' : '🔗 공유'}
             </Text>
           </TouchableOpacity>
           {onAuthClick && (
             <TouchableOpacity
               style={{
-                backgroundColor: username ? '#E2E8F0' : Theme.colors.primary,
+                backgroundColor: username ? Theme.colors.pillBg : Theme.colors.primary,
                 paddingHorizontal: 14,
                 paddingVertical: 8,
                 borderRadius: 20,
@@ -171,6 +198,8 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             onClick={() => onDevLogClick(item.id)}
             isBookmarked={bookmarkedIds.includes(String(item.id))}
             onToggleBookmark={handleToggleBookmark}
+            onTagClick={handleTagClick}
+            selectedTag={selectedTag}
           />
         )}
         ListEmptyComponent={
@@ -231,7 +260,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 6,
     borderRadius: 14,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: Theme.colors.pillBg,
   },
   activeSortButton: {
     backgroundColor: Theme.colors.primary,

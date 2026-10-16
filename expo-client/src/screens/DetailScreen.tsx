@@ -25,6 +25,23 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
   const [isSavingEdit, setIsSavingEdit] = useState(false);
 
   const currentUsername = ApiClient.getUsername();
+  const [shared, setShared] = useState(false);
+
+  const handleShare = async () => {
+    const shareUrl = 'https://gamedev-platform-expo-client.vercel.app';
+    const shareText = `[DevGround] ${devlog?.title || 'DevLog'} 🎮`;
+    try {
+      if (typeof navigator !== 'undefined' && (navigator as any).share) {
+        await (navigator as any).share({ title: 'DevGround', text: shareText, url: shareUrl });
+        return;
+      }
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`);
+        setShared(true);
+        setTimeout(() => setShared(false), 2500);
+      }
+    } catch {}
+  };
 
   useEffect(() => {
     fetchDetail();
@@ -156,6 +173,12 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
         </View>
       </View>
 
+      <View style={styles.ownerActionsRow}>
+        <TouchableOpacity style={styles.editBtn} onPress={handleShare}>
+          <Text style={styles.editBtnText}>{shared ? '✅ 링크 복사됨' : '🔗 이 글 공유하기'}</Text>
+        </TouchableOpacity>
+      </View>
+
       {isAuthor && (
         <View style={styles.ownerActionsRow}>
           <TouchableOpacity style={styles.editBtn} onPress={handleOpenEdit}>
@@ -278,25 +301,25 @@ const styles = StyleSheet.create({
   authorRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 },
   author: { fontSize: 14, color: Theme.colors.textLight },
   ownerActionsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
-  editBtn: { backgroundColor: '#E2E8F0', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
+  editBtn: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   editBtnText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
   deleteBtn: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   deleteBtnText: { fontSize: 13, fontWeight: '700', color: '#DC2626' },
-  bannerImageWrapper: { width: '100%', height: 220, borderRadius: 16, overflow: 'hidden', marginBottom: 16, backgroundColor: '#D1D9E6' },
+  bannerImageWrapper: { width: '100%', height: 220, borderRadius: 16, overflow: 'hidden', marginBottom: 16, backgroundColor: Theme.colors.pillBg },
   bannerImage: { width: '100%', height: '100%' },
-  likeButton: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: '#E2E8F0' },
+  likeButton: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: Theme.colors.pillBg },
   likedButton: { backgroundColor: '#FFE4E6' },
   likeButtonText: { fontSize: 14, fontWeight: '700', color: Theme.colors.text },
   likedButtonText: { color: '#E11D48' },
   body: { fontSize: 16, color: Theme.colors.text, lineHeight: 24, minHeight: 100 },
-  divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 24 },
+  divider: { height: 1, backgroundColor: Theme.colors.border, marginVertical: 24 },
   commentsTitle: { fontSize: 18, fontWeight: '700', color: Theme.colors.text, marginBottom: 16 },
   commentItem: { paddingHorizontal: 16, marginBottom: 16 },
   commentAuthor: { fontSize: 14, fontWeight: '700', color: Theme.colors.text, marginBottom: 4 },
   commentContent: { fontSize: 15, color: Theme.colors.text },
   commentInputContainer: {
     flexDirection: 'row', alignItems: 'center', padding: 16,
-    borderTopWidth: 1, borderTopColor: '#EEEEEE', backgroundColor: Theme.colors.background
+    borderTopWidth: 1, borderTopColor: Theme.colors.border, backgroundColor: Theme.colors.background
   },
   commentInputBox: { flex: 1, marginRight: 12 },
   input: { paddingHorizontal: 16, paddingVertical: 12, fontSize: 15, color: Theme.colors.text },

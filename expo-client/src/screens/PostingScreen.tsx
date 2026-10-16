@@ -171,7 +171,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     overflow: 'hidden',
     height: 160,
-    backgroundColor: '#D1D9E6',
+    backgroundColor: Theme.colors.pillBg,
   },
   previewImage: {
     width: '100%',
@@ -212,7 +212,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 14,
-    backgroundColor: '#E2E8F0',
+    backgroundColor: Theme.colors.pillBg,
   },
   activeTagPill: {
     backgroundColor: Theme.colors.primary,
