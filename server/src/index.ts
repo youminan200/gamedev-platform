@@ -799,6 +799,21 @@ app.get('/api/users/:username', (req, res) => {
   });
 });
 
+const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY || '3561b2d56ccfedbef1d54c2172b29aa5';
+
+app.get('/api/auth/kakao/login', (req: any, res: any) => {
+  const returnUrl = req.query.state || 'https://gamedev-platform-expo-client.vercel.app';
+  const host = req.get('host');
+  const rawProto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+  const protocol = rawProto.split(',')[0].trim();
+  const callbackUrl = host?.includes('onrender.com')
+    ? 'https://gamedev-platform.onrender.com/api/auth/kakao/callback'
+    : `${protocol}://${host}/api/auth/kakao/callback`;
+
+  const authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${encodeURIComponent(callbackUrl)}&response_type=code&state=${encodeURIComponent(returnUrl)}`;
+  return res.redirect(authUrl);
+});
+
 app.get('/api/auth/kakao/callback', async (req: any, res: any) => {
   const code = req.query.code;
   const returnUrl = req.query.state || `https://gamedev-platform-expo-client.vercel.app`;
@@ -833,29 +848,34 @@ app.get('/api/auth/kakao/callback', async (req: any, res: any) => {
       headers: { Authorization: `Bearer ${accessToken}` }
     });
     
-    const { id } = userResponse.data;
+    const { id, properties, kakao_account } = userResponse.data;
     const providerId = id.toString();
-    const username = `kakao_${providerId}`;
+    const displayName = properties?.nickname || kakao_account?.profile?.nickname || `kakao_${providerId.slice(0, 6)}`;
+    const email = kakao_account?.email || `kakao_${providerId}@devground.local`;
 
     // 3. Create or get user
     let stmt = db.prepare('SELECT user_id FROM oauth_accounts WHERE provider = ? AND provider_id = ?');
     let oauthAccount: any = stmt.get('kakao', providerId);
     let userId;
+    let username = displayName;
 
     if (!oauthAccount) {
       const existingUser: any = db.prepare('SELECT id FROM users WHERE username = ?').get(username);
       if (existingUser) {
-        userId = existingUser.id;
-      } else {
-        const insertUser = db.prepare('INSERT INTO users (username, email) VALUES (?, ?)');
-        const userInfo = insertUser.run(username, `kakao_${providerId}@devground.local`);
-        userId = userInfo.lastInsertRowid;
+        username = `${displayName}_${providerId.slice(0, 4)}`;
       }
+      const insertUser = db.prepare('INSERT INTO users (username, email) VALUES (?, ?)');
+      const userInfo = insertUser.run(username, email);
+      userId = userInfo.lastInsertRowid;
 
       const insertOauth = db.prepare('INSERT OR REPLACE INTO oauth_accounts (user_id, provider, provider_id, access_token) VALUES (?, ?, ?, ?)');
       insertOauth.run(userId, 'kakao', providerId, accessToken);
     } else {
       userId = oauthAccount.user_id;
+      const existingUser: any = db.prepare('SELECT username FROM users WHERE id = ?').get(userId);
+      if (existingUser?.username) {
+        username = existingUser.username;
+      }
       const updateOauth = db.prepare('UPDATE oauth_accounts SET access_token = ? WHERE user_id = ? AND provider = ?');
       updateOauth.run(accessToken, userId, 'kakao');
     }
