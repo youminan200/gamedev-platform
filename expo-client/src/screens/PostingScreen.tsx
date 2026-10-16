@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView, Platform } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -18,6 +18,19 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
   const [imageUrl, setImageUrl] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>(['Unity']);
   const [isPosting, setIsPosting] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handlePickImage = async () => {
+    try {
+      setIsUploading(true);
+      const url = await ApiClient.pickAndUploadImage();
+      if (url) setImageUrl(url);
+    } catch (e: any) {
+      if (typeof window !== 'undefined' && (window as any).alert) (window as any).alert(e.message || '업로드 실패');
+    } finally {
+      setIsUploading(false);
+    }
+  };
 
   const toggleTag = (tag: string) => {
     if (selectedTags.includes(tag)) {
@@ -79,6 +92,14 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
             autoCapitalize="none"
           />
         </NeumorphView>
+
+        {Platform.OS === 'web' && (
+          <TouchableOpacity style={styles.uploadFileBtn} onPress={handlePickImage} disabled={isUploading || isPosting}>
+            <Text style={styles.uploadFileBtnText}>
+              {isUploading ? '업로드 중...' : '📁 내 PC에서 이미지 업로드 (최대 5MB)'}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {imageUrl.trim().startsWith('http') && (
           <View style={styles.previewWrapper}>
@@ -173,6 +194,14 @@ const styles = StyleSheet.create({
     height: 160,
     backgroundColor: Theme.colors.pillBg,
   },
+  uploadFileBtn: {
+    backgroundColor: Theme.colors.pillBg,
+    paddingVertical: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  uploadFileBtnText: { color: Theme.colors.text, fontWeight: '700', fontSize: 13 },
   previewImage: {
     width: '100%',
     height: '100%',

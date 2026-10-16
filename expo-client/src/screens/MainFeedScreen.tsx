@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Modal, ScrollView } from 'react-native';
 import { DevLog } from '../models/DevLog';
 import { ApiClient } from '../api/ApiClient';
 import { Theme } from '../theme';
@@ -21,6 +21,37 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [sortBy, setSortBy] = useState<'latest' | 'popular' | 'bookmarked'>('latest');
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => ApiClient.getBookmarks('devlog'));
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  const loadNotifications = async () => {
+    if (!username || !ApiClient.getToken()) {
+      setNotifications([]);
+      setUnreadCount(0);
+      return;
+    }
+    try {
+      const data = await ApiClient.getNotifications();
+      setNotifications(data.items);
+      setUnreadCount(data.unread);
+    } catch {}
+  };
+
+  useEffect(() => {
+    loadNotifications();
+  }, [username]);
+
+  const handleOpenNotifications = async () => {
+    setNotifOpen(true);
+    await loadNotifications();
+    if (unreadCount > 0) {
+      try {
+        await ApiClient.markNotificationsRead();
+        setUnreadCount(0);
+      } catch {}
+    }
+  };
 
   useEffect(() => {
     fetchLogs();
@@ -95,6 +126,16 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       <View style={[styles.titleRow, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
         <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          {username ? (
+            <TouchableOpacity
+              style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 }}
+              onPress={handleOpenNotifications}
+            >
+              <Text style={{ color: Theme.colors.text, fontWeight: '700', fontSize: 13 }}>
+                🔔{unreadCount > 0 ? ` ${unreadCount}` : ''}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
           <TouchableOpacity
             style={{
               backgroundColor: Theme.colors.pillBg,
@@ -213,6 +254,38 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
         onRefresh={fetchLogs}
         refreshing={loading}
       />
+
+      <Modal visible={notifOpen} animationType="fade" transparent onRequestClose={() => setNotifOpen(false)}>
+        <View style={styles.notifOverlay}>
+          <View style={[styles.notifPanel, { backgroundColor: Theme.colors.background }]}>
+            <Text style={[styles.notifTitle, { color: Theme.colors.text }]}>🔔 알림</Text>
+            <ScrollView style={{ maxHeight: 360 }}>
+              {notifications.length === 0 ? (
+                <Text style={{ color: Theme.colors.textLight, paddingVertical: 20, textAlign: 'center' }}>새 알림이 없습니다.</Text>
+              ) : (
+                notifications.map((n) => (
+                  <TouchableOpacity
+                    key={n.id}
+                    style={[styles.notifItem, { borderBottomColor: Theme.colors.border }]}
+                    onPress={() => {
+                      setNotifOpen(false);
+                      if (n.ref_type === 'devlog' && n.ref_id) onDevLogClick(n.ref_id);
+                    }}
+                  >
+                    <Text style={{ color: Theme.colors.text, fontWeight: n.is_read ? '500' : '800' }}>{n.message}</Text>
+                    <Text style={{ color: Theme.colors.textLight, fontSize: 11, marginTop: 2 }}>
+                      {n.created_at ? new Date(n.created_at.replace(' ', 'T') + 'Z').toLocaleString() : ''}
+                    </Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
+            <TouchableOpacity style={{ alignSelf: 'flex-end', paddingVertical: 10 }} onPress={() => setNotifOpen(false)}>
+              <Text style={{ color: Theme.colors.primary, fontWeight: '800' }}>닫기</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -276,5 +349,9 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingBottom: 100,
-  }
+  },
+  notifOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
+  notifPanel: { borderRadius: 20, padding: 20 },
+  notifTitle: { fontSize: 20, fontWeight: '800', marginBottom: 12 },
+  notifItem: { paddingVertical: 12, borderBottomWidth: 1 },
 });

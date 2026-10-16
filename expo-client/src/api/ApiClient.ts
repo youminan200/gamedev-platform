@@ -245,6 +245,80 @@ export const ApiClient = {
     return response.json();
   },
 
+  updateAsset: async (id: string, data: any): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/assets/${id}`, {
+      method: 'PUT',
+      headers: ApiClient.getHeaders(),
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update asset');
+    return response.json();
+  },
+
+  toggleLikeAsset: async (id: string): Promise<{ liked: boolean; likes: number }> => {
+    const response = await fetch(`${BASE_URL}/assets/${id}/like`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to toggle asset like');
+    return response.json();
+  },
+
+  getNotifications: async (): Promise<{ unread: number; items: any[] }> => {
+    const response = await fetch(`${BASE_URL}/notifications`, { headers: ApiClient.getHeaders() });
+    if (!response.ok) throw new Error('Failed to fetch notifications');
+    return response.json();
+  },
+
+  markNotificationsRead: async (): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/notifications/read`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to mark notifications read');
+    return response.json();
+  },
+
+  uploadImageData: async (dataUrl: string): Promise<string> => {
+    const response = await fetch(`${BASE_URL}/upload`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+      body: JSON.stringify({ data: dataUrl }),
+    });
+    const body = await response.json();
+    if (!response.ok) throw new Error(body.error || 'Failed to upload image');
+    return body.url;
+  },
+
+  // Web-only: open the browser file picker and upload the chosen image. Resolves null if cancelled/unsupported.
+  pickAndUploadImage: (): Promise<string | null> => {
+    return new Promise((resolve, reject) => {
+      if (Platform.OS !== 'web' || typeof document === 'undefined') {
+        resolve(null);
+        return;
+      }
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/png,image/jpeg,image/gif,image/webp';
+      input.onchange = () => {
+        const file = input.files && input.files[0];
+        if (!file) return resolve(null);
+        if (file.size > 5 * 1024 * 1024) return reject(new Error('이미지는 5MB 이하만 가능합니다.'));
+        const reader = new FileReader();
+        reader.onload = async () => {
+          try {
+            resolve(await ApiClient.uploadImageData(String(reader.result)));
+          } catch (e) {
+            reject(e);
+          }
+        };
+        reader.onerror = () => reject(new Error('파일을 읽을 수 없습니다.'));
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    });
+  },
+
   // Bookmarks (localStorage + in-memory fallback)
   getBookmarks: (type: 'devlog' | 'asset' = 'devlog'): string[] => {
     const raw = getStorageItem(`devground_bookmarks_${type}`);

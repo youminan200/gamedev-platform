@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, Linking, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, TextInput, ActivityIndicator, Modal, Image, Linking, ScrollView, Platform } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -71,6 +71,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
 
   const openDetail = async (asset: Asset) => {
     setDetailAsset({ ...asset, feedbacks: [] });
+    setEditing(false);
     setRating(5);
     setFeedbackText('');
     try {
@@ -107,6 +108,72 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
       console.error(e);
     } finally {
       setIsSendingFeedback(false);
+    }
+  };
+
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editFileUrl, setEditFileUrl] = useState('');
+  const [editImageUrl, setEditImageUrl] = useState('');
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleLikeAsset = async () => {
+    if (!detailAsset) return;
+    if (!ApiClient.getToken()) {
+      setDetailAsset(null);
+      onRequireLogin?.();
+      return;
+    }
+    try {
+      const res = await ApiClient.toggleLikeAsset(detailAsset.id);
+      setDetailAsset((prev: any) => (prev ? { ...prev, likes: res.likes, is_liked: res.liked } : prev));
+      fetchAssets();
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleStartEdit = () => {
+    if (!detailAsset) return;
+    setEditTitle(detailAsset.title || '');
+    setEditDesc(detailAsset.description || '');
+    setEditFileUrl(detailAsset.file_url || '');
+    setEditImageUrl(detailAsset.image_url || '');
+    setEditing(true);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!detailAsset || !editTitle.trim()) return;
+    try {
+      setIsSavingEdit(true);
+      await ApiClient.updateAsset(detailAsset.id, {
+        title: editTitle.trim(),
+        description: editDesc,
+        file_url: editFileUrl.trim(),
+        image_url: editImageUrl.trim() || null,
+      });
+      const data = await ApiClient.getAssetDetails(detailAsset.id);
+      setDetailAsset(data);
+      setEditing(false);
+      fetchAssets();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSavingEdit(false);
+    }
+  };
+
+  const pickImageInto = async (setter: (url: string) => void) => {
+    try {
+      setIsUploading(true);
+      const url = await ApiClient.pickAndUploadImage();
+      if (url) setter(url);
+    } catch (e: any) {
+      if (typeof window !== 'undefined' && (window as any).alert) (window as any).alert(e.message || '업로드 실패');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -290,6 +357,62 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
                     </TouchableOpacity>
                   ) : null}
 
+                  <View style={styles.detailActionRow}>
+                    <TouchableOpacity
+                      style={[styles.detailActionBtn, detailAsset.is_liked && { backgroundColor: '#FFE4E6' }]}
+                      onPress={handleLikeAsset}
+                    >
+                      <Text style={[styles.detailActionText, detailAsset.is_liked && { color: '#E11D48' }]}>
+                        {detailAsset.is_liked ? '❤️' : '🤍'} {detailAsset.likes || 0}
+                      </Text>
+                    </TouchableOpacity>
+                    {currentUsername && detailAsset.author === currentUsername && !editing && (
+                      <TouchableOpacity style={styles.detailActionBtn} onPress={handleStartEdit}>
+                        <Text style={styles.detailActionText}>✏️ 수정</Text>
+                      </TouchableOpacity>
+                    )}
+                  </View>
+
+                  {editing && (
+                    <View style={{ marginTop: 14 }}>
+                      <TextInput style={styles.modalInput} placeholder="Title" value={editTitle} onChangeText={setEditTitle} />
+                      <TextInput
+                        style={[styles.modalInput, { height: 70 }]}
+                        placeholder="Description"
+                        multiline
+                        value={editDesc}
+                        onChangeText={setEditDesc}
+                      />
+                      <TextInput
+                        style={styles.modalInput}
+                        placeholder="Download / Repo Link URL"
+                        value={editFileUrl}
+                        onChangeText={setEditFileUrl}
+                        autoCapitalize="none"
+                      />
+                      <TextInput
+                        style={styles.modalInput}
+                        placeholder="Thumbnail Image URL"
+                        value={editImageUrl}
+                        onChangeText={setEditImageUrl}
+                        autoCapitalize="none"
+                      />
+                      {Platform.OS === 'web' && (
+                        <TouchableOpacity style={styles.uploadFileBtn} onPress={() => pickImageInto(setEditImageUrl)} disabled={isUploading}>
+                          <Text style={styles.uploadFileBtnText}>{isUploading ? '업로드 중...' : '📁 이미지 파일 업로드'}</Text>
+                        </TouchableOpacity>
+                      )}
+                      <View style={styles.modalButtonRow}>
+                        <TouchableOpacity style={styles.cancelModalButton} onPress={() => setEditing(false)}>
+                          <Text style={styles.cancelModalText}>취소</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.submitModalButton} onPress={handleSaveEdit} disabled={isSavingEdit}>
+                          <Text style={styles.submitModalText}>{isSavingEdit ? '저장 중...' : '저장'}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+
                   <Text style={[styles.modalLabel, { marginTop: 18 }]}>리뷰 남기기</Text>
                   <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
                     {[1, 2, 3, 4, 5].map((n) => (
@@ -351,6 +474,11 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
               onChangeText={setNewImageUrl}
               autoCapitalize="none"
             />
+            {Platform.OS === 'web' && (
+              <TouchableOpacity style={styles.uploadFileBtn} onPress={() => pickImageInto(setNewImageUrl)} disabled={isUploading}>
+                <Text style={styles.uploadFileBtnText}>{isUploading ? '업로드 중...' : '📁 이미지 파일 업로드'}</Text>
+              </TouchableOpacity>
+            )}
 
             <TextInput
               style={styles.modalInput}
@@ -448,4 +576,9 @@ const styles = StyleSheet.create({
   submitModalText: { color: '#FFF', fontWeight: '700' },
   openLinkBtn: { backgroundColor: Theme.colors.primary, paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginTop: 12 },
   openLinkText: { color: '#FFF', fontWeight: '800', fontSize: 15 },
+  uploadFileBtn: { backgroundColor: Theme.colors.pillBg, paddingVertical: 10, borderRadius: 12, alignItems: 'center', marginBottom: 12 },
+  uploadFileBtnText: { color: Theme.colors.text, fontWeight: '700', fontSize: 13 },
+  detailActionRow: { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' },
+  detailActionBtn: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
+  detailActionText: { fontWeight: '700', fontSize: 13, color: Theme.colors.text },
 });

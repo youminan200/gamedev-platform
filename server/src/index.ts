@@ -4,6 +4,8 @@ import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import axios from 'axios';
 import cors from 'cors';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
@@ -11,8 +13,12 @@ const app = express();
 const port = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'devground_super_secret';
 
+const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
+try { fs.mkdirSync(UPLOAD_DIR, { recursive: true }); } catch {}
+
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '8mb' }));
+app.use('/uploads', express.static(UPLOAD_DIR));
 
 // Initialize SQLite Database
 const db = new Database('database.sqlite', { verbose: console.log });
@@ -103,6 +109,37 @@ try {
 try {
   db.exec(`ALTER TABLE assets ADD COLUMN image_url TEXT;`);
 } catch {}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS asset_likes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    asset_id INTEGER NOT NULL,
+    user_id INTEGER NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(asset_id, user_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS notifications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    type TEXT NOT NULL,
+    message TEXT NOT NULL,
+    ref_type TEXT,
+    ref_id INTEGER,
+    is_read INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+const createNotification = (userId: any, actorId: any, type: string, message: string, refType: string, refId: any) => {
+  if (!userId || Number(userId) === Number(actorId)) return;
+  try {
+    db.prepare('INSERT INTO notifications (user_id, type, message, ref_type, ref_id) VALUES (?, ?, ?, ?, ?)')
+      .run(userId, type, message, refType, Number(refId));
+  } catch (e) {
+    console.error('notification error', e);
+  }
+};
 
 // Seed Initial Community Data for Official Launch
 const initializeSeedData = () => {
@@ -707,6 +744,11 @@ app.post('/api/devlogs/:id/comments', authenticateToken, (req: any, res: any) =>
   const stmt = db.prepare('INSERT INTO comments (devlog_id, user_id, content) VALUES (?, ?, ?)');
   const info = stmt.run(devlogId, userId, content);
 
+  const targetLog: any = db.prepare('SELECT user_id, title FROM devlogs WHERE id = ?').get(devlogId);
+  if (targetLog) {
+    createNotification(targetLog.user_id, userId, 'comment', `${req.user.username}님이 "${targetLog.title}"에 댓글을 남겼습니다.`, 'devlog', devlogId);
+  }
+
   res.status(201).json({
     id: info.lastInsertRowid.toString(),
     devlog_id: devlogId,
@@ -763,7 +805,7 @@ app.get('/api/assets', (req, res) => {
   res.json(assets);
 });
 
-app.get('/api/assets/:id', (req, res) => {
+app.get('/api/assets/:id', optionalAuthenticateToken, (req: any, res: any) => {
   const assetId = req.params.id;
   const stmt = db.prepare(`
     SELECT a.*, u.username as author,
@@ -779,6 +821,9 @@ app.get('/api/assets/:id', (req, res) => {
   asset.id = asset.id.toString();
   asset.tags = asset.tags ? JSON.parse(asset.tags) : [];
   asset.avg_rating = asset.avg_rating ? Math.round(asset.avg_rating * 10) / 10 : 0;
+  asset.is_liked = req.user
+    ? !!db.prepare('SELECT 1 FROM asset_likes WHERE asset_id = ? AND user_id = ?').get(assetId, req.user.id)
+    : false;
 
   const feedbackStmt = db.prepare(`
     SELECT f.*, u.username as author
@@ -843,6 +888,11 @@ app.post('/api/assets/:id/feedbacks', authenticateToken, (req: any, res: any) =>
   const stmt = db.prepare('INSERT INTO asset_feedbacks (asset_id, user_id, rating, feedback_type, content) VALUES (?, ?, ?, ?, ?)');
   const info = stmt.run(assetId, userId, rating || 5, feedback_type || 'General', content);
 
+  const targetAsset: any = db.prepare('SELECT user_id, title FROM assets WHERE id = ?').get(assetId);
+  if (targetAsset) {
+    createNotification(targetAsset.user_id, userId, 'feedback', `${req.user.username}님이 에셋 "${targetAsset.title}"에 리뷰를 남겼습니다.`, 'asset', assetId);
+  }
+
   res.status(201).json({
     id: info.lastInsertRowid.toString(),
     asset_id: assetId,
@@ -852,6 +902,85 @@ app.post('/api/assets/:id/feedbacks', authenticateToken, (req: any, res: any) =>
     author: req.user.username,
     created_at: new Date().toISOString()
   });
+});
+
+app.put('/api/assets/:id', authenticateToken, (req: any, res: any) => {
+  const assetId = req.params.id;
+  const { title, description, category, file_url, image_url, tags } = req.body;
+  const existing: any = db.prepare('SELECT * FROM assets WHERE id = ?').get(assetId);
+  if (!existing) return res.status(404).json({ error: 'Asset not found' });
+  if (Number(existing.user_id) !== Number(req.user.id)) {
+    return res.status(403).json({ error: 'Not authorized to edit this asset' });
+  }
+
+  const next = {
+    title: title !== undefined ? title : existing.title,
+    description: description !== undefined ? description : existing.description,
+    category: category !== undefined ? category : existing.category,
+    file_url: file_url !== undefined ? file_url : existing.file_url,
+    image_url: image_url !== undefined ? image_url : existing.image_url,
+    tags: tags !== undefined ? JSON.stringify(tags) : existing.tags,
+  };
+  db.prepare('UPDATE assets SET title = ?, description = ?, category = ?, file_url = ?, image_url = ?, tags = ? WHERE id = ?')
+    .run(next.title, next.description, next.category, next.file_url, next.image_url, next.tags, assetId);
+
+  res.json({ ...next, id: String(assetId), tags: next.tags ? JSON.parse(next.tags) : [] });
+});
+
+app.post('/api/assets/:id/like', authenticateToken, (req: any, res: any) => {
+  const assetId = req.params.id;
+  const userId = req.user.id;
+  const asset: any = db.prepare('SELECT id, user_id, title, likes FROM assets WHERE id = ?').get(assetId);
+  if (!asset) return res.status(404).json({ error: 'Asset not found' });
+
+  const existing = db.prepare('SELECT id FROM asset_likes WHERE asset_id = ? AND user_id = ?').get(assetId, userId);
+  let liked = false;
+  let newLikes = asset.likes || 0;
+  if (existing) {
+    db.prepare('DELETE FROM asset_likes WHERE asset_id = ? AND user_id = ?').run(assetId, userId);
+    newLikes = Math.max(0, newLikes - 1);
+  } else {
+    db.prepare('INSERT INTO asset_likes (asset_id, user_id) VALUES (?, ?)').run(assetId, userId);
+    newLikes += 1;
+    liked = true;
+    createNotification(asset.user_id, userId, 'like', `${req.user.username}님이 에셋 "${asset.title}"을(를) 좋아합니다.`, 'asset', assetId);
+  }
+  db.prepare('UPDATE assets SET likes = ? WHERE id = ?').run(newLikes, assetId);
+  res.json({ liked, likes: newLikes });
+});
+
+// Notifications
+app.get('/api/notifications', authenticateToken, (req: any, res: any) => {
+  const items = db.prepare('SELECT * FROM notifications WHERE user_id = ? ORDER BY id DESC LIMIT 50').all(req.user.id)
+    .map((n: any) => ({ ...n, id: String(n.id), ref_id: n.ref_id != null ? String(n.ref_id) : null, is_read: !!n.is_read }));
+  const unread = items.filter((n: any) => !n.is_read).length;
+  res.json({ unread, items });
+});
+
+app.post('/api/notifications/read', authenticateToken, (req: any, res: any) => {
+  db.prepare('UPDATE notifications SET is_read = 1 WHERE user_id = ?').run(req.user.id);
+  res.json({ success: true });
+});
+
+// Image upload (base64 JSON, max ~5MB)
+app.post('/api/upload', authenticateToken, (req: any, res: any) => {
+  const { filename, data } = req.body || {};
+  if (!data || typeof data !== 'string') return res.status(400).json({ error: 'data is required' });
+
+  const match = data.match(/^data:(image\/(png|jpeg|jpg|gif|webp));base64,(.+)$/);
+  if (!match) return res.status(400).json({ error: 'Only png/jpeg/gif/webp images are allowed' });
+
+  const buffer = Buffer.from(match[3], 'base64');
+  if (buffer.length > 5 * 1024 * 1024) return res.status(413).json({ error: 'File too large (max 5MB)' });
+
+  const ext = match[2] === 'jpeg' ? 'jpg' : match[2];
+  const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
+  fs.writeFileSync(path.join(UPLOAD_DIR, safeName), buffer);
+
+  const host = req.get('host');
+  const rawProto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
+  const protocol = rawProto.split(',')[0].trim();
+  res.status(201).json({ url: `${protocol}://${host}/uploads/${safeName}` });
 });
 
 // User Profile Route
