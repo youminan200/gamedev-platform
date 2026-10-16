@@ -232,8 +232,111 @@ app.get('/', (_req, res) => {
     status: 'online',
     service: 'DevGround Official API',
     web_url: 'https://gamedev-platform-expo-client.vercel.app',
-    endpoints: ['/api/devlogs', '/api/assets']
+    admin_dashboard: 'https://gamedev-platform.onrender.com/admin',
+    endpoints: ['/api/stats', '/api/devlogs', '/api/assets']
   });
+});
+
+app.get('/api/stats', (_req, res) => {
+  const totalUsers = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
+  const totalDevlogs = (db.prepare('SELECT COUNT(*) as count FROM devlogs').get() as any).count;
+  const totalAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
+  const totalComments = (db.prepare('SELECT COUNT(*) as count FROM comments').get() as any).count;
+
+  const users = db.prepare(`
+    SELECT u.id, u.username, u.email, u.created_at,
+      o.provider as login_type,
+      (SELECT COUNT(*) FROM devlogs d WHERE d.user_id = u.id) as devlog_count,
+      (SELECT COUNT(*) FROM assets a WHERE a.user_id = u.id) as asset_count
+    FROM users u
+    LEFT JOIN oauth_accounts o ON o.user_id = u.id
+    ORDER BY u.id DESC
+  `).all();
+
+  res.json({
+    summary: {
+      total_users: totalUsers,
+      total_devlogs: totalDevlogs,
+      total_assets: totalAssets,
+      total_comments: totalComments,
+    },
+    users,
+  });
+});
+
+app.get('/admin', (_req, res) => {
+  const totalUsers = (db.prepare('SELECT COUNT(*) as count FROM users').get() as any).count;
+  const totalDevlogs = (db.prepare('SELECT COUNT(*) as count FROM devlogs').get() as any).count;
+  const totalAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
+  const totalComments = (db.prepare('SELECT COUNT(*) as count FROM comments').get() as any).count;
+
+  const users = db.prepare(`
+    SELECT u.id, u.username, u.email, u.created_at,
+      COALESCE(o.provider, 'local') as login_type,
+      (SELECT COUNT(*) FROM devlogs d WHERE d.user_id = u.id) as devlog_count,
+      (SELECT COUNT(*) FROM assets a WHERE a.user_id = u.id) as asset_count
+    FROM users u
+    LEFT JOIN oauth_accounts o ON o.user_id = u.id
+    ORDER BY u.id DESC
+  `).all() as any[];
+
+  const rowsHtml = users.map(u => `
+    <tr>
+      <td>#${u.id}</td>
+      <td><strong>${u.username}</strong></td>
+      <td><span class="badge ${u.login_type}">${u.login_type.toUpperCase()}</span></td>
+      <td>${u.devlog_count}개</td>
+      <td>${u.asset_count}개</td>
+      <td>${u.created_at || '-'}</td>
+    </tr>
+  `).join('');
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(`<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>DevGround 관리자 대시보드 (이용자 현황)</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 32px; }
+    .container { max-width: 960px; margin: 0 auto; }
+    h1 { font-size: 26px; margin-bottom: 8px; }
+    .sub { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px; }
+    .card-label { color: #94a3b8; font-size: 13px; font-weight: 600; }
+    .card-val { font-size: 32px; font-weight: 800; color: #38bdf8; margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 14px; overflow: hidden; border: 1px solid #334155; }
+    th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
+    th { background: #0f172a; color: #94a3b8; font-weight: 700; }
+    .badge { padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; }
+    .badge.kakao { background: #FEE500; color: #000; }
+    .badge.naver { background: #03C75A; color: #fff; }
+    .badge.local { background: #475569; color: #fff; }
+    a { color: #38bdf8; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>📊 DevGround 실시간 이용자 현황</h1>
+    <div class="sub">새로고침(F5)하면 실시간 가입자 및 게시글 통계를 확인할 수 있습니다. | <a href="https://gamedev-platform-expo-client.vercel.app" target="_blank">서비스 바로가기 ↗</a></div>
+    <div class="cards">
+      <div class="card"><div class="card-label">👥 총 가입 이용자</div><div class="card-val">${totalUsers}명</div></div>
+      <div class="card"><div class="card-label">📜 등록된 개발일지</div><div class="card-val">${totalDevlogs}개</div></div>
+      <div class="card"><div class="card-label">🎨 공유된 에셋</div><div class="card-val">${totalAssets}개</div></div>
+      <div class="card"><div class="card-label">💬 전체 피드백 댓글</div><div class="card-val">${totalComments}개</div></div>
+    </div>
+    <h2>가입 이용자 목록 (${totalUsers}명)</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>닉네임(아이디)</th><th>가입 방식</th><th>작성 개발일지</th><th>등록 에셋</th><th>가입 일시(UTC)</th></tr>
+      </thead>
+      <tbody>${rowsHtml}</tbody>
+    </table>
+  </div>
+</body>
+</html>`);
 });
 
 // Middleware
