@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image } from 'react-native';
 import { Theme } from '../theme';
 import { NeumorphView } from '../components/NeumorphView';
 import { ApiClient } from '../api/ApiClient';
@@ -167,7 +167,14 @@ export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup, onS
             disabled={isLoading}
             activeOpacity={0.8}
           >
-            <Text style={[styles.socialButtonText, { color: '#000000' }]}>카카오 로그인</Text>
+            {isLoading ? (
+              <ActivityIndicator color="#000000" />
+            ) : (
+              <View style={styles.socialContent}>
+                <Image source={require('../../assets/kakao.png')} style={styles.socialIcon} />
+                <Text style={[styles.socialButtonText, { color: '#000000' }]}>카카오 로그인</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity 
@@ -176,7 +183,14 @@ export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup, onS
             disabled={isLoading}
             activeOpacity={0.8}
           >
-            <Text style={[styles.socialButtonText, { color: '#FFFFFF' }]}>네이버 로그인</Text>
+            {isLoading ? (
+              <ActivityIndicator color="#FFFFFF" />
+            ) : (
+              <View style={styles.socialContent}>
+                <Image source={require('../../assets/naver.png')} style={styles.socialIcon} />
+                <Text style={[styles.socialButtonText, { color: '#FFFFFF' }]}>네이버 로그인</Text>
+              </View>
+            )}
           </TouchableOpacity>
         </View>
 
@@ -283,6 +297,17 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  socialContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  socialIcon: {
+    width: 22,
+    height: 22,
+    borderRadius: 4,
   },
   socialButtonText: {
     fontWeight: '700',

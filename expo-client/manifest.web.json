@@ -1,0 +1,21 @@
+{
+  "name": "DevGround - 게임 개발자 커뮤니티",
+  "short_name": "DevGround",
+  "description": "인디 게임 개발자들의 개발일지(DevLog) 및 에셋 공유 플랫폼",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#E0E5EC",
+  "theme_color": "#E0E5EC",
+  "icons": [
+    {
+      "src": "./assets/icon.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./assets/icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
