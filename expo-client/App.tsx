@@ -3,6 +3,7 @@ import { View, Text, Platform, StatusBar, Image, ActivityIndicator } from 'react
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Network from 'expo-network';
 import { Theme } from './src/theme';
+import { ApiClient } from './src/api/ApiClient';
 import { LoginScreen } from './src/screens/LoginScreen';
 import { MainFeedScreen } from './src/screens/MainFeedScreen';
 import { PostingScreen } from './src/screens/PostingScreen';
@@ -25,34 +26,62 @@ type ScreenState =
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<ScreenState>({
-    type: Platform.OS === 'web' ? 'Login' : 'Splash'
+    type: Platform.OS === 'web' ? 'MainFeed' : 'Splash'
   });
-  const [username, setUsername] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(() => ApiClient.getUsername());
   const [activeTab, setActiveTab] = useState<TabType>('DevLogs');
 
   useEffect(() => {
-    if (Platform.OS === 'web') return;
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      document.title = 'DevGround - 게임 개발자 커뮤니티';
+
+      const params = new URLSearchParams(window.location.search);
+      const urlToken = params.get('token');
+      if (urlToken) {
+        ApiClient.setToken(urlToken);
+        const decodedUsername = ApiClient.decodeTokenUsername(urlToken) || 'Creator';
+        ApiClient.setUsername(decodedUsername);
+        setUsername(decodedUsername);
+        window.history.replaceState({}, document.title, window.location.pathname);
+        setActiveTab('DevLogs');
+        setCurrentScreen({ type: 'MainFeed' });
+      }
+      return;
+    }
+
     const checkNetworkAndInitialize = async () => {
       try {
         await new Promise(resolve => setTimeout(resolve, 1000));
         const state = await Network.getNetworkStateAsync();
         if (state.isConnected !== false) {
-          setCurrentScreen({ type: 'Login' });
+          setCurrentScreen({ type: 'MainFeed' });
         } else {
           setCurrentScreen({ type: 'Offline' });
         }
       } catch (e) {
-        setCurrentScreen({ type: 'Login' });
+        setCurrentScreen({ type: 'MainFeed' });
       }
     };
     checkNetworkAndInitialize();
   }, []);
 
   const handleTabChange = (tab: TabType) => {
+    if (tab === 'Profile' && (!username || !ApiClient.getToken())) {
+      setCurrentScreen({ type: 'Login' });
+      return;
+    }
     setActiveTab(tab);
     if (tab === 'DevLogs') setCurrentScreen({ type: 'MainFeed' });
     else if (tab === 'AssetHub') setCurrentScreen({ type: 'AssetHub' });
     else if (tab === 'Profile') setCurrentScreen({ type: 'Profile' });
+  };
+
+  const handlePostClick = () => {
+    if (!username || !ApiClient.getToken()) {
+      setCurrentScreen({ type: 'Login' });
+      return;
+    }
+    setCurrentScreen({ type: 'Posting' });
   };
 
   let content;
@@ -81,6 +110,10 @@ export default function App() {
             setCurrentScreen({ type: 'MainFeed' });
           }} 
           onGoToSignup={() => setCurrentScreen({ type: 'Signup' })}
+          onSkipLogin={() => {
+            setActiveTab('DevLogs');
+            setCurrentScreen({ type: 'MainFeed' });
+          }}
         />
       );
       break;
@@ -100,13 +133,24 @@ export default function App() {
       content = (
         <MainFeedScreen 
           onDevLogClick={(id) => setCurrentScreen({ type: 'Detail', id })}
-          onPostClick={() => setCurrentScreen({ type: 'Posting' })}
+          onPostClick={handlePostClick}
+          username={username}
+          onAuthClick={() => {
+            if (username && ApiClient.getToken()) {
+              setActiveTab('Profile');
+              setCurrentScreen({ type: 'Profile' });
+            } else {
+              setCurrentScreen({ type: 'Login' });
+            }
+          }}
         />
       );
       break;
     case 'AssetHub':
       content = (
-        <AssetFeedScreen />
+        <AssetFeedScreen
+          onRequireLogin={() => setCurrentScreen({ type: 'Login' })}
+        />
       );
       break;
     case 'Profile':
@@ -114,8 +158,10 @@ export default function App() {
         <ProfileScreen 
           username={username || 'Creator'}
           onLogout={() => {
+            ApiClient.logout();
             setUsername(null);
-            setCurrentScreen({ type: 'Login' });
+            setActiveTab('DevLogs');
+            setCurrentScreen({ type: 'MainFeed' });
           }}
           onDevLogClick={(id) => setCurrentScreen({ type: 'Detail', id })}
         />
@@ -126,6 +172,7 @@ export default function App() {
         <DetailScreen 
           id={currentScreen.id}
           onBack={() => setCurrentScreen({ type: 'MainFeed' })}
+          onRequireLogin={() => setCurrentScreen({ type: 'Login' })}
         />
       );
       break;
@@ -157,7 +204,7 @@ export default function App() {
           <BottomTabBar 
             currentTab={activeTab} 
             onTabChange={handleTabChange}
-            onPostClick={() => setCurrentScreen({ type: 'Posting' })}
+            onPostClick={handlePostClick}
           />
         )}
       </SafeAreaView>

@@ -9,9 +9,11 @@ import { NeumorphView } from '../components/NeumorphView';
 interface Props {
   onDevLogClick: (id: string) => void;
   onPostClick: () => void;
+  username?: string | null;
+  onAuthClick?: () => void;
 }
 
-export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick }) => {
+export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, username, onAuthClick }) => {
   const [logs, setLogs] = useState<DevLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,8 +45,23 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick }) 
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      <View style={styles.titleRow}>
+      <View style={[styles.titleRow, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
         <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
+        {onAuthClick && (
+          <TouchableOpacity
+            style={{
+              backgroundColor: username ? '#E2E8F0' : Theme.colors.primary,
+              paddingHorizontal: 14,
+              paddingVertical: 8,
+              borderRadius: 20,
+            }}
+            onPress={onAuthClick}
+          >
+            <Text style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
+              {username ? `👤 ${username}` : '🔑 로그인 / 가입'}
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Search Input */}

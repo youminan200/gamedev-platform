@@ -10,6 +10,7 @@ import * as Linking from 'expo-linking';
 interface Props {
   onLoginSuccess: (username: string) => void;
   onGoToSignup: () => void;
+  onSkipLogin?: () => void;
 }
 
 import { Platform } from 'react-native';
@@ -17,7 +18,7 @@ import { Platform } from 'react-native';
 const KAKAO_REST_API_KEY = '3561b2d56ccfedbef1d54c2172b29aa5';
 const BACKEND_CALLBACK_URL = 'https://gamedev-platform.onrender.com/api/auth/kakao/callback';
 
-export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup }) => {
+export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup, onSkipLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -27,16 +28,26 @@ export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup }) =
     try {
       setIsLoading(true);
       setError('');
+
+      if (Platform.OS === 'web' && typeof window !== 'undefined') {
+        const returnUrl = window.location.origin;
+        const authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${BACKEND_CALLBACK_URL}&response_type=code&state=${encodeURIComponent(returnUrl)}`;
+        window.location.href = authUrl;
+        return;
+      }
+
       const returnUrl = Linking.createURL('login');
       const authUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${KAKAO_REST_API_KEY}&redirect_uri=${BACKEND_CALLBACK_URL}&response_type=code&state=${encodeURIComponent(returnUrl)}`;
       
       const result = await WebBrowser.openAuthSessionAsync(authUrl, returnUrl);
       
       if (result.type === 'success' && result.url) {
-        const token = result.url.split('token=')[1];
+        const token = result.url.split('token=')[1]?.split('&')[0];
         if (token) {
           ApiClient.setToken(token);
-          onLoginSuccess('Kakao User');
+          const decodedUser = ApiClient.decodeTokenUsername(token) || 'Kakao User';
+          ApiClient.setUsername(decodedUser);
+          onLoginSuccess(decodedUser);
         } else {
           setError('Failed to get token from login. URL: ' + result.url);
         }
@@ -137,6 +148,14 @@ export const LoginScreen: React.FC<Props> = ({ onLoginSuccess, onGoToSignup }) =
         <TouchableOpacity style={styles.switchContainer} onPress={onGoToSignup}>
           <Text style={styles.switchText}>Don't have an account? <Text style={styles.switchTextBold}>Sign up</Text></Text>
         </TouchableOpacity>
+
+        {onSkipLogin && (
+          <TouchableOpacity style={{ marginTop: 16, alignItems: 'center' }} onPress={onSkipLogin}>
+            <Text style={{ color: Theme.colors.primary, fontSize: 14, fontWeight: '700' }}>
+              로그인 없이 먼저 둘러보기 →
+            </Text>
+          </TouchableOpacity>
+        )}
       </View>
     </View>
   );

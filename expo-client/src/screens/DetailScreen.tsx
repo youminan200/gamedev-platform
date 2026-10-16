@@ -7,9 +7,10 @@ import { NeumorphView } from '../components/NeumorphView';
 interface Props {
   id: string;
   onBack: () => void;
+  onRequireLogin?: () => void;
 }
 
-export const DetailScreen: React.FC<Props> = ({ id, onBack }) => {
+export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) => {
   const [devlog, setDevlog] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
@@ -32,6 +33,10 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack }) => {
   };
 
   const handlePostComment = async () => {
+    if (!ApiClient.getToken()) {
+      onRequireLogin?.();
+      return;
+    }
     if (!comment.trim()) return;
     try {
       setIsPosting(true);
@@ -54,6 +59,10 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack }) => {
   }
 
   const handleToggleLike = async () => {
+    if (!ApiClient.getToken()) {
+      onRequireLogin?.();
+      return;
+    }
     try {
       const res = await ApiClient.toggleLikeDevLog(id);
       setDevlog((prev: any) => prev ? { ...prev, likes: res.likes, is_liked: res.liked } : prev);
@@ -131,7 +140,12 @@ const styles = StyleSheet.create({
   headerTitle: { color: Theme.colors.text, fontSize: 18, fontWeight: '700' },
   postContent: { padding: 16 },
   title: { fontSize: 24, color: Theme.colors.text, fontWeight: '800', marginBottom: 8 },
-  author: { fontSize: 14, color: Theme.colors.textLight, marginBottom: 24 },
+  authorRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 },
+  author: { fontSize: 14, color: Theme.colors.textLight },
+  likeButton: { paddingHorizontal: 14, paddingVertical: 6, borderRadius: 16, backgroundColor: '#E2E8F0' },
+  likedButton: { backgroundColor: '#FFE4E6' },
+  likeButtonText: { fontSize: 14, fontWeight: '700', color: Theme.colors.text },
+  likedButtonText: { color: '#E11D48' },
   body: { fontSize: 16, color: Theme.colors.text, lineHeight: 24, minHeight: 100 },
   divider: { height: 1, backgroundColor: '#E0E0E0', marginVertical: 24 },
   commentsTitle: { fontSize: 18, fontWeight: '700', color: Theme.colors.text, marginBottom: 16 },

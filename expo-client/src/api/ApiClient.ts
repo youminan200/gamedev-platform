@@ -3,14 +3,72 @@ import { Platform } from 'react-native';
 
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://gamedev-platform.onrender.com/api';
 
-let authToken: string | null = null;
+const TOKEN_KEY = 'devground_auth_token';
+const USERNAME_KEY = 'devground_username';
+
+const getStorageItem = (key: string): string | null => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage.getItem(key);
+    }
+  } catch {}
+  return null;
+};
+
+const setStorageItem = (key: string, value: string | null) => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      if (value === null) {
+        window.localStorage.removeItem(key);
+      } else {
+        window.localStorage.setItem(key, value);
+      }
+    }
+  } catch {}
+};
+
+let authToken: string | null = getStorageItem(TOKEN_KEY);
+let savedUsername: string | null = getStorageItem(USERNAME_KEY);
 
 export const ApiClient = {
-  setToken: (token: string) => {
+  setToken: (token: string | null) => {
     authToken = token;
+    setStorageItem(TOKEN_KEY, token);
   },
-  
+
   getToken: () => authToken,
+
+  setUsername: (username: string | null) => {
+    savedUsername = username;
+    setStorageItem(USERNAME_KEY, username);
+  },
+
+  getUsername: () => savedUsername,
+
+  logout: () => {
+    authToken = null;
+    savedUsername = null;
+    setStorageItem(TOKEN_KEY, null);
+    setStorageItem(USERNAME_KEY, null);
+  },
+
+  decodeTokenUsername: (token: string): string | null => {
+    try {
+      const base64Url = token.split('.')[1];
+      if (!base64Url) return null;
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const parsed = JSON.parse(jsonPayload);
+      return parsed.username || null;
+    } catch {
+      return null;
+    }
+  },
 
   getHeaders: () => {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' };
@@ -28,7 +86,10 @@ export const ApiClient = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed to login');
-    if (data.token) ApiClient.setToken(data.token);
+    if (data.token) {
+      ApiClient.setToken(data.token);
+      ApiClient.setUsername(data.user?.username || username);
+    }
     return data;
   },
 
@@ -40,7 +101,10 @@ export const ApiClient = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed to sign up');
-    if (data.token) ApiClient.setToken(data.token);
+    if (data.token) {
+      ApiClient.setToken(data.token);
+      ApiClient.setUsername(data.user?.username || username);
+    }
     return data;
   },
 
@@ -52,8 +116,11 @@ export const ApiClient = {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed to login with Kakao');
-    if (data.token) ApiClient.setToken(data.token);
-    // Assuming backend returns a user object or we can decode the token
+    if (data.token) {
+      ApiClient.setToken(data.token);
+      const decodedUser = ApiClient.decodeTokenUsername(data.token);
+      if (decodedUser) ApiClient.setUsername(decodedUser);
+    }
     return data;
   },
 

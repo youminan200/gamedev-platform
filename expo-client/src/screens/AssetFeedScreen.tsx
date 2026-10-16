@@ -7,11 +7,12 @@ import { Asset } from '../models/DevLog';
 
 interface Props {
   onAssetClick?: (id: string) => void;
+  onRequireLogin?: () => void;
 }
 
 const CATEGORIES = ['All', '2D', '3D', 'Audio', 'UI', 'Code'];
 
-export const AssetFeedScreen: React.FC<Props> = () => {
+export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -101,7 +102,16 @@ export const AssetFeedScreen: React.FC<Props> = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>🎨 Asset Hub</Text>
-        <TouchableOpacity style={styles.uploadButton} onPress={() => setModalVisible(true)}>
+        <TouchableOpacity
+          style={styles.uploadButton}
+          onPress={() => {
+            if (!ApiClient.getToken()) {
+              onRequireLogin?.();
+              return;
+            }
+            setModalVisible(true);
+          }}
+        >
           <Text style={styles.uploadButtonText}>+ Share Asset</Text>
         </TouchableOpacity>
       </View>
