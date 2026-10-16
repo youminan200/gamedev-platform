@@ -5,7 +5,8 @@
   "main": "src/index.ts",
   "scripts": {
     "dev": "ts-node src/index.ts",
-    "build": "tsc",
+    "sync-db": "node sync-db.js",
+    "build": "node sync-db.js && tsc",
     "start": "node dist/index.js"
   },
   "dependencies": {
