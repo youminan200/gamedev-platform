@@ -31,6 +31,7 @@
       "themeColor": "#E0E5EC",
       "backgroundColor": "#E0E5EC",
       "display": "standalone",
+      "icon": "./assets/icon.png",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
