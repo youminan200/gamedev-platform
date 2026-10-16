@@ -96,6 +96,146 @@ db.exec(`
   );
 `);
 
+// Seed Initial Community Data for Official Launch
+const initializeSeedData = () => {
+  try {
+    db.prepare(`DELETE FROM devlogs WHERE title = '하' AND content = '하'`).run();
+
+    const ensureUser = (username: string, email: string): number => {
+      const existing = db.prepare('SELECT id FROM users WHERE username = ?').get(username) as any;
+      if (existing) return existing.id;
+      const res = db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)').run(username, email, 'devground_seed');
+      return Number(res.lastInsertRowid);
+    };
+
+    const devlogCount = (db.prepare('SELECT COUNT(*) as count FROM devlogs').get() as any).count;
+    if (devlogCount === 0) {
+      const u1 = ensureUser('PixelKnight', 'pixel@devground.io');
+      const u2 = ensureUser('ShaderWizard', 'shader@devground.io');
+      const u3 = ensureUser('IndieSoundLab', 'sound@devground.io');
+      const u4 = ensureUser('GodotCrafter', 'godot@devground.io');
+
+      const insertDevlog = db.prepare(
+        'INSERT INTO devlogs (user_id, title, content, likes, tags) VALUES (?, ?, ?, ?, ?)'
+      );
+
+      const d1 = insertDevlog.run(
+        u1,
+        '[DevLog #12] 2D 로그라이크 던전 보스 패턴 & 타격감 개선기',
+        '이번 주에는 보스 페이즈 전환 시 카메라 쉐이크(Camera Shake)와 히트스톱(Hit-stop) 프레임을 0.06초로 조정해 타격감을 대폭 끌어올렸습니다.\n\n특히 패링 성공 시 파티클 이펙트와 사운드 싱크를 맞추니 손맛이 훨씬 좋아졌네요! 모바일 조작감 피드백 환영합니다.',
+        24,
+        JSON.stringify(['Unity', 'C#', 'Action', 'Roguelike'])
+      );
+
+      const d2 = insertDevlog.run(
+        u2,
+        '언리얼 엔진 5 카툰 렌더링(Cel Shader) 외곽선 최적화 공유',
+        '모바일/저사양 환경에서도 프레임 드랍 없이 깔끔한 애니메이션풍 외곽선을 표현하기 위해 Post-Process 머티리얼 대신 Inverted Hull 방식과 노멀 맵 보정을 결합했습니다.\n\n드로우콜은 늘어나지만 셰이더 복잡도가 낮아져 평균 60FPS 방어에 성공했습니다!',
+        19,
+        JSON.stringify(['Unreal', 'Graphics', 'Shader'])
+      );
+
+      const d3 = insertDevlog.run(
+        u4,
+        'Godot 4.3으로 1인 개발 중인 픽셀 농장 시뮬레이션 첫 공개!',
+        '퇴근 후 2시간씩 반년 동안 만든 힐링 농장 시뮬레이션입니다. 타일맵 오토타일링 시스템과 계절별 날씨 변화(비, 눈, 반딧불이)까지 구현 완료했습니다.\n\n다음 주 데모 빌드 배포 전 UI 배치에 대한 의견을 듣고 싶습니다!',
+        31,
+        JSON.stringify(['Godot', 'PixelArt', 'Release'])
+      );
+
+      const d4 = insertDevlog.run(
+        u3,
+        '인디 게임에서 무료로 쓸 수 있는 효과음(SFX) 레이어링 팁 3가지',
+        '1. 검 베기 소리는 금속성 마찰음 + 짧은 바람 소리(White Noise Fade)를 겹치면 묵직해집니다.\n2. UI 버튼 클릭음은 피치(Pitch)를 ±5% 랜덤화하면 반복 피로도가 확 줄어듭니다.\n3. Asset Hub에 제가 직접 만든 8비트 효과음 팩도 공유해 두었으니 자유롭게 쓰세요!',
+        15,
+        JSON.stringify(['Audio', 'Tip', 'IndieDev'])
+      );
+
+      const insertComment = db.prepare(
+        'INSERT INTO comments (devlog_id, user_id, content) VALUES (?, ?, ?)'
+      );
+      insertComment.run(d1.lastInsertRowid, u2, '히트스톱 0.06초 디테일 너무 좋네요! 기대됩니다 🔥');
+      insertComment.run(d1.lastInsertRowid, u4, '패링 타이밍 판정 프레임은 몇 프레임 정도로 잡으셨나요?');
+      insertComment.run(d3.lastInsertRowid, u1, '색감이 진짜 따뜻하네요. 데모 나오면 꼭 플레이해보겠습니다!');
+    }
+
+    const assetCount = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
+    if (assetCount === 0) {
+      const u1 = ensureUser('PixelKnight', 'pixel@devground.io');
+      const u2 = ensureUser('ShaderWizard', 'shader@devground.io');
+      const u3 = ensureUser('IndieSoundLab', 'sound@devground.io');
+      const u4 = ensureUser('GodotCrafter', 'godot@devground.io');
+
+      const insertAsset = db.prepare(
+        'INSERT INTO assets (user_id, title, description, category, file_url, tags, likes) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      );
+
+      insertAsset.run(
+        u1,
+        '16x16 다크 판타지 던전 타일셋 & 캐릭터 스프라이트 팩',
+        '벽면, 바닥, 함정, 보물상자 및 기본 기사 캐릭터 4방향 애니메이션이 포함된 픽셀아트 에셋 팩입니다. 상업/비상업 프로젝트 모두 무료 사용 가능합니다.',
+        '2D',
+        'https://gamedev-platform-expo-client.vercel.app',
+        JSON.stringify(['2D', 'PixelArt', 'Tileset']),
+        28
+      );
+
+      insertAsset.run(
+        u2,
+        '로우폴리(Low-Poly) 판타지 무기 & 포션 3D 모델 20종 (FBX)',
+        '모바일 RPG에 최적화된 평균 300 폴리곤 이하의 검, 방패, 지팡이, 포션 3D 에셋 모음입니다. 단일 컬러 팔레트 텍스처를 사용해 배칭 효율이 뛰어납니다.',
+        '3D',
+        'https://gamedev-platform-expo-client.vercel.app',
+        JSON.stringify(['3D', 'LowPoly', 'RPG']),
+        22
+      );
+
+      insertAsset.run(
+        u3,
+        '레트로 8비트 & 신스웨이브 BGM / 효과음 스타터 팩 (WAV/OGG)',
+        '타이틀 화면, 보스전 루프 BGM 4곡과 점프/공격/코인/클릭 효과음 30종이 포함된 오디오 팩입니다. 끊김 없는 루프(Seamless Loop) 처리가 완료되어 있습니다.',
+        'Audio',
+        'https://gamedev-platform-expo-client.vercel.app',
+        JSON.stringify(['Audio', 'BGM', 'SFX']),
+        35
+      );
+
+      insertAsset.run(
+        u4,
+        '모바일 게임용 뉴모피즘 & 픽셀 UI 프레임 키트 (PNG/SVG)',
+        '체력바, 인벤토리 슬롯, 대화창, 스킬 쿨타임 아이콘 등 모바일 화면 비율에 맞춘 고해상도 UI 컴포넌트 세트입니다.',
+        'UI',
+        'https://gamedev-platform-expo-client.vercel.app',
+        JSON.stringify(['UI', 'HUD', 'Mobile']),
+        17
+      );
+
+      insertAsset.run(
+        u1,
+        'Unity 2D 플랫포머 코요테 타임 & 점프 버퍼 컨트롤러 스크립트',
+        '셀레스트(Celeste) 스타일의 쫀득한 점프 조작감을 구현하는 C# 캐릭터 컨트롤러입니다. 코요테 타임, 점프 버퍼링, 대시 잔상 로직이 포함되어 있습니다.',
+        'Code',
+        'https://gamedev-platform-expo-client.vercel.app',
+        JSON.stringify(['Code', 'Unity', 'C#']),
+        41
+      );
+    }
+  } catch (err) {
+    console.error('Seed data initialization error:', err);
+  }
+};
+
+initializeSeedData();
+
+app.get('/', (_req, res) => {
+  res.json({
+    status: 'online',
+    service: 'DevGround Official API',
+    web_url: 'https://gamedev-platform-expo-client.vercel.app',
+    endpoints: ['/api/devlogs', '/api/assets']
+  });
+});
+
 // Middleware
 export const authenticateToken = (req: any, res: any, next: any) => {
   const authHeader = req.headers['authorization'];
