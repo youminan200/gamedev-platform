@@ -169,6 +169,12 @@ p.Jump();', helpful_count: 48 },
   const [submittingErr, setSubmittingErr] = useState(false);
 
   const [ideaMachineOpen, setIdeaMachineOpen] = useState(false);
+  const [pixelStudioOpen, setPixelStudioOpen] = useState(false);
+  const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
+  const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
+  const [scriptSpeed, setScriptSpeed] = useState<string>('8');
+  const [scriptJump, setScriptJump] = useState<string>('14');
+  const [scriptCopied, setScriptCopied] = useState<boolean>(false);
   const [currentIdea, setCurrentIdea] = useState({
     genre: '2D 덱빌딩 로그라이크',
     mechanic: '공격할 때마다 시간을 2초 되감기',
@@ -720,45 +726,59 @@ p.Jump();', helpful_count: 48 },
         <View style={{ marginBottom: 14, gap: 10 }}>
           {[
             {
-              code: 'MOD_01 // ERR_DOCTOR',
+              code: 'MOD_01 // PIXEL_SPRITE_WORKSHOP',
+              title: '16×16 · 32×32 웹 도트 찍기 스튜디오 (투명 PNG 저장)',
+              desc: '브라우저에서 좌우대칭·채우기·Pico-8 팔레트로 도트 캐릭터/아이콘을 찍고 투명 배경 .PNG로 즉시 추출합니다.',
+              accent: '#FFD166',
+              onPress: () => setPixelStudioOpen(true)
+            },
+            {
+              code: 'MOD_02 // CSHARP_SCRIPT_VENDING',
+              title: 'Unity / C# 필수 스크립트 자판기 (이동·점프·세이브·풀링)',
+              desc: '이동속도·점프력 수치만 입력하면 2D 플랫포머, 3D 카메라, 오브젝트 풀링, JSON 세이브 C# 코드를 자동 생성합니다.',
+              accent: '#10B981',
+              onPress: () => setCsharpVendingOpen(true)
+            },
+            {
+              code: 'MOD_03 // ERR_DOCTOR',
               title: 'Unity · Unreal · Godot 만능 에러 해결 센터',
               desc: '콘솔 에러 로그를 붙여넣으면 발생 줄 번호·한글 번역·수정 코드를 1초 만에 진단합니다. (23종 필수 에러 수록)',
               accent: '#FF4D6D',
               onPress: handleOpenErrorWiki
             },
             {
-              code: 'MOD_02 // 8BIT_SFX_SYNTH',
+              code: 'MOD_04 // 8BIT_SFX_SYNTH',
               title: '8-Bit 레트로 효과음(SFX) 합성 스튜디오',
               desc: '점프·레이저·폭발·코인 효과음을 파형으로 조절하고 상업용 무료 .WAV 오디오 파일로 즉시 추출합니다.',
               accent: '#00E5FF',
               onPress: () => setSfxStudioOpen(true)
             },
             {
-              code: 'MOD_03 // ARCADE_CABINET',
+              code: 'MOD_05 // ARCADE_CABINET',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
-              accent: '#10B981',
+              accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_04 // PARTY_RECRUIT',
+              code: 'MOD_06 // PARTY_RECRUIT',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
-              accent: '#FFD166',
+              accent: '#F97316',
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_05 // IDEA_SLOT_MACHINE',
+              code: 'MOD_07 // IDEA_SLOT_MACHINE',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
               accent: '#A855F7',
               onPress: () => setIdeaMachineOpen(true)
             },
             {
-              code: 'MOD_06 // HALL_OF_FAME & APP',
+              code: 'MOD_08 // HALL_OF_FAME & APP',
               title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
-              accent: '#38BDF8',
+              accent: '#EC4899',
               onPress: handleInstallAppClick
             }
           ].map((mod) => (
@@ -1664,6 +1684,189 @@ p.Jump();', helpful_count: 48 },
                 <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 13 }}>{ideaCopied ? '✅ 기획안 복사됨!' : '📋 기획안 복사하기'}</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* PIXEL ART SPRITE STUDIO MODAL */}
+      <Modal visible={pixelStudioOpen} animationType="fade" transparent onRequestClose={() => setPixelStudioOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 12 }}>
+          <View style={{ width: '100%', maxWidth: 740, height: '88%', backgroundColor: '#11131C', borderWidth: 2, borderColor: '#FFD166', borderRadius: 6, overflow: 'hidden' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
+              <Text style={{ color: '#FFD166', fontWeight: '900', fontSize: 13.5, fontFamily: 'monospace' }}>
+                🎨 MOD_01 // 16×16 · 32×32 PIXEL_SPRITE_WORKSHOP
+              </Text>
+              <TouchableOpacity onPress={() => setPixelStudioOpen(false)} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X CLOSE]</Text>
+              </TouchableOpacity>
+            </View>
+            {Platform.OS === 'web' ? (
+              React.createElement('iframe', {
+                src: '/pixel-studio.html',
+                style: { width: '100%', height: '100%', border: 'none', backgroundColor: '#11131C' },
+              })
+            ) : (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                <Text style={{ color: '#FFF' }}>웹 브라우저에서 도트 스튜디오가 실행됩니다.</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* UNITY / C# ESSENTIAL SCRIPT VENDING MACHINE MODAL */}
+      <Modal visible={csharpVendingOpen} animationType="fade" transparent onRequestClose={() => setCsharpVendingOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, maxHeight: '90%', backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: '#10B981', borderRadius: 6, padding: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#10B981', fontFamily: 'monospace' }}>
+                  💻 MOD_02 // UNITY C# SCRIPT VENDING MACHINE
+                </Text>
+                <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
+                  매번 구글링하는 필수 C# 스크립트를 수치 조절 후 1초 만에 복사하거나 .cs 파일로 받으세요.
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setCsharpVendingOpen(false)} style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X]</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                {[
+                  { key: 'platformer2d', label: '🏃 2D 플랫포머 이동·점프' },
+                  { key: 'fps3d', label: '🎥 3D 1인칭 카메라·이동' },
+                  { key: 'pool', label: '♻️ 오브젝트 풀링 매니저' },
+                  { key: 'jsonSave', label: '💾 JSON 세이브·로드' },
+                  { key: 'singleton', label: '👑 제네릭 싱글톤 매니저' },
+                  { key: 'camShake', label: '💥 카메라 흔들림 타격감' },
+                ].map((item) => (
+                  <TouchableOpacity
+                    key={item.key}
+                    onPress={() => { setSelectedScriptKey(item.key); setScriptCopied(false); }}
+                    style={{
+                      backgroundColor: selectedScriptKey === item.key ? '#10B981' : Theme.colors.pillBg,
+                      borderWidth: 1.5,
+                      borderColor: selectedScriptKey === item.key ? '#10B981' : Theme.colors.border,
+                      paddingHorizontal: 10,
+                      paddingVertical: 6,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11.5, fontWeight: '900', color: selectedScriptKey === item.key ? '#11131C' : Theme.colors.text, fontFamily: 'monospace' }}>
+                      {item.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 10, marginBottom: 12 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#FFD166', fontFamily: 'monospace', marginBottom: 4 }}>
+                    {'> PARAM_01 (속도 / 풀 크기 / 강도)'}
+                  </Text>
+                  <TextInput
+                    style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: Theme.colors.text, fontFamily: 'monospace', fontSize: 13 }}
+                    value={scriptSpeed}
+                    onChangeText={setScriptSpeed}
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace', marginBottom: 4 }}>
+                    {'> PARAM_02 (점프력 / 감도 / 지속시간)'}
+                  </Text>
+                  <TextInput
+                    style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: Theme.colors.text, fontFamily: 'monospace', fontSize: 13 }}
+                    value={scriptJump}
+                    onChangeText={setScriptJump}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+
+              {(() => {
+                const spd = scriptSpeed || '8';
+                const jmp = scriptJump || '14';
+                const templates: Record<string, { file: string; code: string }> = {
+                  platformer2d: {
+                    file: 'PlayerController2D.cs',
+                    code: `using UnityEngine;\n\n[RequireComponent(typeof(Rigidbody2D))]\npublic class PlayerController2D : MonoBehaviour\n{\n    [Header("Movement Settings")]\n    public float moveSpeed = ${spd}f;\n    public float jumpForce = ${jmp}f;\n    public Transform groundCheck;\n    public LayerMask groundLayer;\n\n    private Rigidbody2D rb;\n    private float moveInput;\n    private bool isGrounded;\n    private float coyoteCounter;\n\n    void Awake() => rb = GetComponent<Rigidbody2D>();\n\n    void Update()\n    {\n        moveInput = Input.GetAxisRaw("Horizontal");\n        isGrounded = Physics2D.OverlapCircle(groundCheck.position, 0.2f, groundLayer);\n        coyoteCounter = isGrounded ? 0.12f : coyoteCounter - Time.deltaTime;\n\n        if (Input.GetButtonDown("Jump") && coyoteCounter > 0f)\n        {\n            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);\n            coyoteCounter = 0f;\n        }\n        if (moveInput != 0) transform.localScale = new Vector3(Mathf.Sign(moveInput), 1f, 1f);\n    }\n\n    void FixedUpdate()\n    {\n        rb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);\n    }\n}`
+                  },
+                  fps3d: {
+                    file: 'FirstPersonController.cs',
+                    code: `using UnityEngine;\n\n[RequireComponent(typeof(CharacterController))]\npublic class FirstPersonController : MonoBehaviour\n{\n    public float walkSpeed = ${spd}f;\n    public float mouseSensitivity = ${jmp}0f;\n    public Transform playerCamera;\n\n    private CharacterController cc;\n    private float xRotation = 0f;\n\n    void Start()\n    {\n        cc = GetComponent<CharacterController>();\n        Cursor.lockState = CursorLockMode.Locked;\n    }\n\n    void Update()\n    {\n        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;\n        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;\n        xRotation = Mathf.Clamp(xRotation - mouseY, -85f, 85f);\n        playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);\n        transform.Rotate(Vector3.up * mouseX);\n\n        Vector3 move = transform.right * Input.GetAxis("Horizontal") + transform.forward * Input.GetAxis("Vertical");\n        cc.SimpleMove(move * walkSpeed);\n    }\n}`
+                  },
+                  pool: {
+                    file: 'ObjectPoolManager.cs',
+                    code: `using System.Collections.Generic;\nusing UnityEngine;\n\npublic class ObjectPoolManager : MonoBehaviour\n{\n    public static ObjectPoolManager Instance { get; private set; }\n    public GameObject prefab;\n    public int initialPoolSize = ${spd};\n    private readonly Queue<GameObject> pool = new Queue<GameObject>();\n\n    void Awake()\n    {\n        Instance = this;\n        for (int i = 0; i < initialPoolSize; i++) CreateNewObject();\n    }\n\n    private GameObject CreateNewObject()\n    {\n        GameObject obj = Instantiate(prefab, transform);\n        obj.SetActive(false);\n        pool.Enqueue(obj);\n        return obj;\n    }\n\n    public GameObject Spawn(Vector3 position, Quaternion rotation)\n    {\n        if (pool.Count == 0) CreateNewObject();\n        GameObject obj = pool.Dequeue();\n        obj.transform.SetPositionAndRotation(position, rotation);\n        obj.SetActive(true);\n        return obj;\n    }\n\n    public void Despawn(GameObject obj)\n    {\n        obj.SetActive(false);\n        pool.Enqueue(obj);\n    }\n}`
+                  },
+                  jsonSave: {
+                    file: 'SaveManager.cs',
+                    code: `using System.IO;\nusing UnityEngine;\n\n[System.Serializable]\npublic class GameSaveData\n{\n    public int stageLevel = 1;\n    public int gold = ${spd}00;\n    public float maxHp = ${jmp}0f;\n}\n\npublic static class SaveManager\n{\n    private static string SavePath => Path.Combine(Application.persistentDataPath, "savegame.json");\n\n    public static void Save(GameSaveData data)\n    {\n        string json = JsonUtility.ToJson(data, true);\n        File.WriteAllText(SavePath, json);\n        Debug.Log("[SaveManager] Saved to: " + SavePath);\n    }\n\n    public static GameSaveData Load()\n    {\n        if (!File.Exists(SavePath)) return new GameSaveData();\n        string json = File.ReadAllText(SavePath);\n        return JsonUtility.FromJson<GameSaveData>(json);\n    }\n}`
+                  },
+                  singleton: {
+                    file: 'Singleton.cs',
+                    code: `using UnityEngine;\n\npublic abstract class Singleton<T> : MonoBehaviour where T : MonoBehaviour\n{\n    public static T Instance { get; private set; }\n\n    protected virtual void Awake()\n    {\n        if (Instance != null && Instance != this)\n        {\n            Destroy(gameObject);\n            return;\n        }\n        Instance = this as T;\n        DontDestroyOnLoad(gameObject);\n    }\n}`
+                  },
+                  camShake: {
+                    file: 'CameraShake.cs',
+                    code: `using System.Collections;\nusing UnityEngine;\n\npublic class CameraShake : MonoBehaviour\n{\n    public static CameraShake Instance;\n    private Vector3 originalPos;\n\n    void Awake() { Instance = this; originalPos = transform.localPosition; }\n\n    public void TriggerShake(float duration = 0.${jmp}f, float magnitude = 0.${spd}f)\n    {\n        StopAllCoroutines();\n        StartCoroutine(ShakeRoutine(duration, magnitude));\n    }\n\n    private IEnumerator ShakeRoutine(float duration, float magnitude)\n    {\n        float elapsed = 0f;\n        while (elapsed < duration)\n        {\n            transform.localPosition = originalPos + (Vector3)Random.insideUnitCircle * magnitude;\n            elapsed += Time.unscaledDeltaTime;\n            yield return null;\n        }\n        transform.localPosition = originalPos;\n    }\n}`
+                  }
+                };
+                const current = templates[selectedScriptKey] || templates.platformer2d;
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <Text style={{ color: '#FFD166', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>
+                          // FILE: {current.file}
+                        </Text>
+                        <Text style={{ color: '#10B981', fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>
+                          UNITY 2022 / UNITY 6 READY
+                        </Text>
+                      </View>
+                      <Text style={{ color: '#E2E8F0', fontSize: 11.5, fontFamily: 'monospace', lineHeight: 17 }}>
+                        {current.code}
+                      </Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', gap: 8 }}>
+                      <TouchableOpacity
+                        onPress={() => {
+                          try { navigator?.clipboard?.writeText(current.code); } catch {}
+                          setScriptCopied(true);
+                        }}
+                        style={{ flex: 1, backgroundColor: scriptCopied ? '#10B981' : Theme.colors.primary, paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                      >
+                        <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                          {scriptCopied ? '[✅ COPIED TO CLIPBOARD!]' : '[📋 C# 스크립트 전체 복사]'}
+                        </Text>
+                      </TouchableOpacity>
+                      {Platform.OS === 'web' && (
+                        <TouchableOpacity
+                          onPress={() => {
+                            try {
+                              const blob = new Blob([current.code], { type: 'text/plain;charset=utf-8' });
+                              const url = URL.createObjectURL(blob);
+                              const a = document.createElement('a');
+                              a.href = url;
+                              a.download = current.file;
+                              a.click();
+                            } catch {}
+                          }}
+                          style={{ backgroundColor: '#00E5FF', paddingHorizontal: 14, justifyContent: 'center', borderRadius: 4 }}
+                        >
+                          <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12, fontFamily: 'monospace' }}>
+                            [💾 {current.file} 다운로드]
+                          </Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
+                  </View>
+                );
+              })()}
+            </ScrollView>
           </View>
         </View>
       </Modal>

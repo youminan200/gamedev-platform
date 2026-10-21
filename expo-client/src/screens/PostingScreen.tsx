@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView, Platform } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Image, ScrollView, Platform, Modal } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -23,6 +23,20 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
   const [selectedTags, setSelectedTags] = useState<string[]>(['Unity']);
   const [isPosting, setIsPosting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [pixelModalOpen, setPixelModalOpen] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handler = (e: MessageEvent) => {
+        if (e.data && e.data.type === 'PIXEL_ART_EXPORT' && e.data.dataUrl) {
+          setImageUrl(e.data.dataUrl);
+          setPixelModalOpen(false);
+        }
+      };
+      window.addEventListener('message', handler);
+      return () => window.removeEventListener('message', handler);
+    }
+  }, []);
 
   const handlePickImage = async () => {
     try {
@@ -69,54 +83,64 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
     <View style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity onPress={onCancel} disabled={isPosting}>
-          <Text style={styles.headerButton}>Cancel</Text>
+          <Text style={styles.headerButton}>[← CANCEL]</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>New DevLog</Text>
+        <Text style={styles.headerTitle}>// NEW_DEVLOG_POST</Text>
         <View style={{ width: 60 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.label}>Title</Text>
-        <NeumorphView radius={12} style={styles.inputContainer}>
+        <Text style={styles.label}>Title (제목)</Text>
+        <NeumorphView radius={6} style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             value={title}
             onChangeText={setTitle}
             editable={!isPosting}
-            placeholder="Enter title..."
+            placeholder="오늘의 개발일지 제목을 입력하세요..."
             placeholderTextColor={Theme.colors.textLight}
           />
         </NeumorphView>
 
-        <Text style={styles.label}>Thumbnail Image / GIF URL (Optional)</Text>
-        <NeumorphView radius={12} style={styles.inputContainer}>
+        <Text style={styles.label}>Thumbnail Image / GIF / 도트 스프라이트 (선택)</Text>
+        <NeumorphView radius={6} style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             value={imageUrl}
             onChangeText={setImageUrl}
             editable={!isPosting}
-            placeholder="https://... (Screenshot or GIF URL)"
+            placeholder="https://... 또는 도트 공방에서 바로 전송"
             placeholderTextColor={Theme.colors.textLight}
             autoCapitalize="none"
           />
         </NeumorphView>
 
         {Platform.OS === 'web' && (
-          <TouchableOpacity style={styles.uploadFileBtn} onPress={handlePickImage} disabled={isUploading || isPosting}>
-            <Text style={styles.uploadFileBtnText}>
-              {isUploading ? '업로드 중...' : '📁 내 PC에서 이미지 업로드 (최대 5MB)'}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 8, marginBottom: 16 }}>
+            <TouchableOpacity style={[styles.uploadFileBtn, { flex: 1, marginBottom: 0 }]} onPress={handlePickImage} disabled={isUploading || isPosting}>
+              <Text style={styles.uploadFileBtnText}>
+                {isUploading ? '업로드 중...' : '📁 내 PC에서 이미지 업로드'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.uploadFileBtn, { flex: 1, marginBottom: 0, backgroundColor: '#FFD166', borderWidth: 1.5, borderColor: '#11131C' }]}
+              onPress={() => setPixelModalOpen(true)}
+            >
+              <Text style={[styles.uploadFileBtnText, { color: '#11131C', fontWeight: '900' }]}>
+                🎨 웹 도트 직접 찍기 (16×16)
+              </Text>
+            </TouchableOpacity>
+          </View>
         )}
 
-        {imageUrl.trim().startsWith('http') && (
+        {(imageUrl.trim().startsWith('http') || imageUrl.trim().startsWith('data:image/')) && (
           <View style={styles.previewWrapper}>
-            <Image source={{ uri: imageUrl.trim() }} style={styles.previewImage} resizeMode="cover" />
+            <Image source={{ uri: imageUrl.trim() }} style={styles.previewImage} resizeMode="contain" />
           </View>
         )}
 
         <Text style={styles.label}>🎮 데모 플레이 / Steam / Itch.io 링크 (선택)</Text>
-        <NeumorphView radius={12} style={styles.inputContainer}>
+        <NeumorphView radius={6} style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             value={demoUrl}
@@ -128,21 +152,49 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
           />
         </NeumorphView>
 
-        <Text style={styles.label}>Content</Text>
-        <NeumorphView radius={12} style={[styles.inputContainer, styles.textAreaContainer]}>
+        <Text style={styles.label}>Content (본문 · 코드블록 ``` 지원)</Text>
+        <NeumorphView radius={6} style={[styles.inputContainer, styles.textAreaContainer]}>
           <TextInput
             style={[styles.input, styles.textArea]}
             value={content}
             onChangeText={setContent}
             editable={!isPosting}
             multiline
-            placeholder="Enter content..."
+            placeholder="개발 진척도, 시행착오, 스크린샷 설명, 유튜브 링크 등을 자유롭게 적어보세요..."
             placeholderTextColor={Theme.colors.textLight}
           />
         </NeumorphView>
 
-        <Text style={styles.label}>📊 A안 vs B안 피드백 투표 추가 (선택)</Text>
-        <NeumorphView radius={12} style={styles.inputContainer}>
+        <Text style={styles.label}>📊 A안 vs B안 밸런스·디자인 투표함 추가 (선택 · 1클릭 프리셋)</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+          {[
+            { label: '+ 도트/아트 디자인 A vs B', q: '이번 캐릭터/오브젝트 아트 스타일 중 어떤 쪽이 더 마음에 드시나요?', a: 'A안 (선명한 레트로 도트 감성)', b: 'B안 (부드러운 라이팅 & 효과)' },
+            { label: '+ 게임 난이도·밸런스 투표', q: '데모 플레이 기준 현재 스테이지/보스 난이도는 어떤가요?', a: 'A안 (적당하고 쫄깃함!)', b: 'B안 (조금 더 쉽게 너프 필요)' },
+            { label: '+ 다음 업데이트 우선순위', q: '다음 패치에서 가장 먼저 추가되었으면 하는 콘텐츠는?', a: 'A안 (신규 보스 & 스테이지)', b: 'B안 (신규 무기 & 스킬 트리)' },
+          ].map((preset) => (
+            <TouchableOpacity
+              key={preset.label}
+              onPress={() => {
+                setPollQuestion(preset.q);
+                setPollOptionA(preset.a);
+                setPollOptionB(preset.b);
+              }}
+              style={{
+                backgroundColor: Theme.colors.pillBg,
+                borderWidth: 1.5,
+                borderColor: Theme.colors.border,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                borderRadius: 4,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#FFD166', fontFamily: 'monospace' }}>
+                {preset.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <NeumorphView radius={6} style={styles.inputContainer}>
           <TextInput
             style={styles.input}
             value={pollQuestion}
@@ -154,7 +206,7 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
         </NeumorphView>
         {pollQuestion.trim().length > 0 && (
           <View style={{ flexDirection: 'row', gap: 10 }}>
-            <NeumorphView radius={12} style={[styles.inputContainer, { flex: 1 }]}>
+            <NeumorphView radius={6} style={[styles.inputContainer, { flex: 1 }]}>
               <TextInput
                 style={styles.input}
                 value={pollOptionA}
@@ -163,7 +215,7 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
                 placeholderTextColor={Theme.colors.textLight}
               />
             </NeumorphView>
-            <NeumorphView radius={12} style={[styles.inputContainer, { flex: 1 }]}>
+            <NeumorphView radius={6} style={[styles.inputContainer, { flex: 1 }]}>
               <TextInput
                 style={styles.input}
                 value={pollOptionB}
@@ -194,15 +246,36 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
         </View>
 
         <TouchableOpacity style={styles.postButtonContainer} onPress={handlePost} disabled={isPosting} activeOpacity={0.8}>
-          <NeumorphView radius={12} style={styles.postButton}>
+          <NeumorphView radius={6} style={styles.postButton}>
             {isPosting ? (
               <ActivityIndicator color={Theme.colors.primary} />
             ) : (
-              <Text style={styles.postButtonText}>Post DevLog</Text>
+              <Text style={styles.postButtonText}>[PUBLISH_DEVLOG // 등록하기]</Text>
             )}
           </NeumorphView>
         </TouchableOpacity>
       </ScrollView>
+
+      <Modal visible={pixelModalOpen} transparent animationType="fade" onRequestClose={() => setPixelModalOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 12 }}>
+          <View style={{ width: '100%', maxWidth: 740, height: '88%', backgroundColor: '#11131C', borderWidth: 2, borderColor: '#FFD166', borderRadius: 6, overflow: 'hidden' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
+              <Text style={{ color: '#FFD166', fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>
+                🎨 PIXEL_SPRITE_WORKSHOP // 도트 찍고 게시글에 바로 첨부
+              </Text>
+              <TouchableOpacity onPress={() => setPixelModalOpen(false)} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X CLOSE]</Text>
+              </TouchableOpacity>
+            </View>
+            {Platform.OS === 'web' ? (
+              React.createElement('iframe', {
+                src: '/pixel-studio.html',
+                style: { width: '100%', height: '100%', border: 'none', backgroundColor: '#11131C' },
+              })
+            ) : null}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -217,46 +290,56 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     padding: 16,
-    paddingTop: 24,
+    paddingTop: 20,
+    borderBottomWidth: 2,
+    borderBottomColor: Theme.colors.border,
+    backgroundColor: Theme.colors.surface,
   },
   headerButton: {
     color: Theme.colors.primary,
-    fontWeight: '600',
-    fontSize: 16,
+    fontWeight: '900',
+    fontSize: 13,
+    fontFamily: 'monospace',
   },
   headerTitle: {
-    color: Theme.colors.text,
-    fontSize: 18,
-    fontWeight: '700',
+    color: '#FFD166',
+    fontSize: 15,
+    fontWeight: '900',
+    fontFamily: 'monospace',
   },
   content: {
-    padding: 24,
+    padding: 20,
     paddingBottom: 60,
   },
   label: {
     color: Theme.colors.textLight,
-    fontWeight: '600',
-    marginBottom: 10,
-    marginLeft: 4,
+    fontWeight: '800',
+    fontSize: 12.5,
+    marginBottom: 8,
+    marginLeft: 2,
   },
   inputContainer: {
-    marginBottom: 20,
+    marginBottom: 18,
   },
   previewWrapper: {
-    marginBottom: 20,
-    borderRadius: 12,
+    marginBottom: 18,
+    borderRadius: 6,
+    borderWidth: 2,
+    borderColor: Theme.colors.border,
     overflow: 'hidden',
     height: 160,
     backgroundColor: Theme.colors.pillBg,
   },
   uploadFileBtn: {
     backgroundColor: Theme.colors.pillBg,
-    paddingVertical: 12,
-    borderRadius: 12,
+    paddingVertical: 11,
+    borderRadius: 6,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.border,
     alignItems: 'center',
     marginBottom: 16,
   },
-  uploadFileBtnText: { color: Theme.colors.text, fontWeight: '700', fontSize: 13 },
+  uploadFileBtnText: { color: Theme.colors.text, fontWeight: '800', fontSize: 12 },
   previewImage: {
     width: '100%',
     height: '100%',
@@ -266,8 +349,8 @@ const styles = StyleSheet.create({
   },
   input: {
     color: Theme.colors.text,
-    padding: 16,
-    fontSize: 16,
+    padding: 14,
+    fontSize: 14.5,
   },
   textArea: {
     minHeight: 160,
@@ -277,14 +360,16 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   postButton: {
-    padding: 16,
+    padding: 15,
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: Theme.colors.primary,
   },
   postButtonText: {
-    color: Theme.colors.primary,
-    fontWeight: '700',
-    fontSize: 16,
+    color: '#FFFFFF',
+    fontWeight: '900',
+    fontSize: 14,
+    fontFamily: 'monospace',
   },
   tagsRow: {
     flexDirection: 'row',
@@ -293,21 +378,25 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   tagPill: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 14,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: Theme.colors.border,
     backgroundColor: Theme.colors.pillBg,
   },
   activeTagPill: {
     backgroundColor: Theme.colors.primary,
+    borderColor: Theme.colors.primary,
   },
   tagPillText: {
-    fontSize: 13,
+    fontSize: 12,
     color: Theme.colors.textLight,
-    fontWeight: '600',
+    fontWeight: '800',
+    fontFamily: 'monospace',
   },
   activeTagPillText: {
     color: '#FFFFFF',
-    fontWeight: '700',
+    fontWeight: '900',
   },
 });

@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEVGROUND // PIXEL_SPRITE_WORKSHOP (도트 찍기 공방)</title>
+  <style>
+    @font-face {
+      font-family: 'DungGeunMo';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    }
+    * { box-sizing: border-box; user-select: none; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: #11131C;
+      color: #F3F4F6;
+      font-family: 'DungGeunMo', 'Courier New', monospace;
+    }
+    .workshop-wrap {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #1A1D2B;
+      border: 2px solid #3A415E;
+      border-radius: 6px;
+      padding: 14px;
+      box-shadow: 4px 4px 0px #07080D;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #3A415E;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #FFD166;
+    }
+    .badge {
+      font-size: 11px;
+      background: #FF4D6D;
+      color: #FFF;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    button, .btn {
+      font-family: 'DungGeunMo', monospace;
+      font-size: 12px;
+      background: #252A3E;
+      color: #F3F4F6;
+      border: 1.5px solid #3A415E;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    button:hover { border-color: #FFD166; }
+    button.active {
+      background: #FF4D6D;
+      color: #FFF;
+      border-color: #FF4D6D;
+    }
+    button.cyan {
+      background: #00E5FF;
+      color: #11131C;
+      border-color: #00E5FF;
+      font-weight: 900;
+    }
+    button.gold {
+      background: #FFD166;
+      color: #11131C;
+      border-color: #FFD166;
+      font-weight: 900;
+    }
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 210px;
+      gap: 14px;
+      align-items: start;
+    }
+    @media (max-width: 600px) {
+      .main-grid { grid-template-columns: 1fr; }
+    }
+    .canvas-box {
+      position: relative;
+      width: 100%;
+      max-width: 384px;
+      aspect-ratio: 1 / 1;
+      margin: 0 auto;
+      border: 2px solid #FFD166;
+      background-image:
+        linear-gradient(45deg, #181B28 25%, transparent 25%),
+        linear-gradient(-45deg, #181B28 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #181B28 75%),
+        linear-gradient(-45deg, transparent 75%, #181B28 75%);
+      background-size: 16px 16px;
+      background-position: 0 0, 0 8px, 8px -8px, -8px 0;
+      background-color: #232738;
+      touch-action: none;
+    }
+    canvas#editor {
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      cursor: crosshair;
+      display: block;
+    }
+    .side-panel {
+      background: #11131C;
+      border: 1.5px solid #3A415E;
+      border-radius: 6px;
+      padding: 10px;
+    }
+    .section-label {
+      font-size: 11px;
+      color: #9CA3AF;
+      margin-bottom: 6px;
+      display: block;
+    }
+    .palette-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+    .swatch {
+      height: 26px;
+      border-radius: 4px;
+      border: 2px solid #3A415E;
+      cursor: pointer;
+    }
+    .swatch.selected {
+      border-color: #FFFFFF;
+      transform: scale(1.08);
+    }
+    .preview-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #1A1D2B;
+      border: 1.5px solid #3A415E;
+      padding: 8px;
+      border-radius: 4px;
+      margin-bottom: 12px;
+    }
+    #previewCanvas {
+      width: 48px;
+      height: 48px;
+      image-rendering: pixelated;
+      border: 1px solid #3A415E;
+      background: #11131C;
+    }
+    .status-msg {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #10B981;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="workshop-wrap">
+    <div class="top-bar">
+      <div>
+        <span class="title">🎨 PIXEL_SPRITE_WORKSHOP // 도트 공방</span>
+      </div>
+      <span class="badge">FREE .PNG EXPORT</span>
+    </div>
+
+    <!-- Tools Row -->
+    <div class="toolbar">
+      <button id="toolPen" class="active" onclick="setTool('pen')">✏️ 펜(Pen)</button>
+      <button id="toolBucket" onclick="setTool('bucket')">🪣 채우기(Fill)</button>
+      <button id="toolEraser" onclick="setTool('eraser')">🧽 지우개</button>
+      <button id="btnMirror" onclick="toggleMirror()">🦋 좌우대칭: OFF</button>
+      <button id="btnGrid" class="active" onclick="toggleGrid()"># 격자: ON</button>
+      <button onclick="setGridSize(16)" id="size16" class="active">16×16</button>
+      <button onclick="setGridSize(32)" id="size32">32×32</button>
+      <button onclick="clearCanvas()">🗑️ 초기화</button>
+    </div>
+
+    <!-- Presets Row -->
+    <div class="toolbar">
+      <span style="font-size:11px; color:#FFD166; align-self:center; margin-right:4px;">[프리셋 도트]:</span>
+      <button onclick="loadTemplate('slime')">💧 슬라임</button>
+      <button onclick="loadTemplate('sword')">⚔️ 도트검</button>
+      <button onclick="loadTemplate('heart')">❤️ 생명포션</button>
+      <button onclick="loadTemplate('robot')">🤖 메카봇</button>
+    </div>
+
+    <div class="main-grid">
+      <div class="canvas-box">
+        <canvas id="editor" width="384" height="384"></canvas>
+      </div>
+
+      <div class="side-panel">
+        <span class="section-label">> PICO-8 & INDIE PALETTE</span>
+        <div class="palette-grid" id="paletteGrid"></div>
+
+        <span class="section-label">> CUSTOM COLOR</span>
+        <input type="color" id="customColor" value="#FF4D6D" style="width:100%; height:32px; border:none; background:none; cursor:pointer; margin-bottom:12px;" onchange="selectColor(this.value)" />
+
+        <span class="section-label">> 1:1 SPRITE PREVIEW</span>
+        <div class="preview-box">
+          <canvas id="previewCanvas" width="32" height="32"></canvas>
+          <div style="font-size:11px; color:#9CA3AF; line-height:1.4;">
+            투명 배경<br/>Nearest-Neighbor<br/>Unity/Godot 호환
+          </div>
+        </div>
+
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <button class="gold" onclick="downloadPNG()">💾 투명 .PNG 다운로드</button>
+          <button class="cyan" onclick="copyDataUrl()">📋 이미지 주소(DataURL) 복사</button>
+          <button onclick="sendToParent()">🚀 개발일지/에셋 창고로 전송</button>
+        </div>
+        <div class="status-msg" id="statusMsg"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PALETTE = [
+      '#FF4D6D', '#FFD166', '#06D6A0', '#00E5FF',
+      '#118AB2', '#A855F7', '#F97316', '#EF4444',
+      '#FFFFFF', '#CBD5E1', '#64748B', '#1E293B',
+      '#000000', '#7F5539', '#B08968', '#FDE047'
+    ];
+
+    let gridSize = 16;
+    let pixels = [];
+    let currentColor = '#FF4D6D';
+    let currentTool = 'pen';
+    let mirrorX = false;
+    let showGrid = true;
+    let isDrawing = false;
+
+    const canvas = document.getElementById('editor');
+    const ctx = canvas.getContext('2d');
+    const previewCanvas = document.getElementById('previewCanvas');
+    const pCtx = previewCanvas.getContext('2d');
+
+    function initPixels(size) {
+      pixels = Array.from({ length: size }, () => Array(size).fill(null));
+    }
+
+    function buildPalette() {
+      const wrap = document.getElementById('paletteGrid');
+      wrap.innerHTML = '';
+      PALETTE.forEach(c => {
+        const d = document.createElement('div');
+        d.className = 'swatch' + (c === currentColor ? ' selected' : '');
+        d.style.backgroundColor = c;
+        d.onclick = () => selectColor(c);
+        wrap.appendChild(d);
+      });
+    }
+
+    function selectColor(c) {
+      currentColor = c;
+      document.getElementById('customColor').value = c;
+      if (currentTool === 'eraser') setTool('pen');
+      buildPalette();
+    }
+
+    function setTool(t) {
+      currentTool = t;
+      document.getElementById('toolPen').classList.toggle('active', t === 'pen');
+      document.getElementById('toolBucket').classList.toggle('active', t === 'bucket');
+      document.getElementById('toolEraser').classList.toggle('active', t === 'eraser');
+    }
+
+    function toggleMirror() {
+      mirrorX = !mirrorX;
+      const btn = document.getElementById('btnMirror');
+      btn.textContent = '🦋 좌우대칭: ' + (mirrorX ? 'ON' : 'OFF');
+      btn.classList.toggle('active', mirrorX);
+    }
+
+    function toggleGrid() {
+      showGrid = !showGrid;
+      const btn = document.getElementById('btnGrid');
+      btn.textContent = '# 격자: ' + (showGrid ? 'ON' : 'OFF');
+      btn.classList.toggle('active', showGrid);
+      render();
+    }
+
+    function setGridSize(size) {
+      gridSize = size;
+      document.getElementById('size16').classList.toggle('active', size === 16);
+      document.getElementById('size32').classList.toggle('active', size === 32);
+      initPixels(size);
+      render();
+    }
+
+    function clearCanvas() {
+      initPixels(gridSize);
+      render();
+      setStatus('캔버스를 초기화했습니다.');
+    }
+
+    function floodFill(x, y, targetColor, replacementColor) {
+      if (targetColor === replacementColor) return;
+      const stack = [[x, y]];
+      while (stack.length > 0) {
+        const [cx, cy] = stack.pop();
+        if (cx < 0 || cy < 0 || cx >= gridSize || cy >= gridSize) continue;
+        if (pixels[cy][cx] !== targetColor) continue;
+        pixels[cy][cx] = replacementColor;
+        stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
+      }
+    }
+
+    function applyAt(x, y) {
+      if (x < 0 || y < 0 || x >= gridSize || y >= gridSize) return;
+      if (currentTool === 'bucket') {
+        floodFill(x, y, pixels[y][x], currentColor);
+      } else {
+        const val = currentTool === 'eraser' ? null : currentColor;
+        pixels[y][x] = val;
+        if (mirrorX) {
+          pixels[y][gridSize - 1 - x] = val;
+        }
+      }
+      render();
+    }
+
+    function getCoords(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const x = Math.floor(((clientX - rect.left) / rect.width) * gridSize);
+      const y = Math.floor(((clientY - rect.top) / rect.height) * gridSize);
+      return [x, y];
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      isDrawing = true;
+      const [x, y] = getCoords(e);
+      applyAt(x, y);
+    });
+    canvas.addEventListener('pointermove', (e) => {
+      if (!isDrawing || currentTool === 'bucket') return;
+      const [x, y] = getCoords(e);
+      applyAt(x, y);
+    });
+    window.addEventListener('pointerup', () => { isDrawing = false; });
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const cell = canvas.width / gridSize;
+
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          if (pixels[y][x]) {
+            ctx.fillStyle = pixels[y][x];
+            ctx.fillRect(x * cell, y * cell, Math.ceil(cell), Math.ceil(cell));
+          }
+        }
+      }
+
+      if (showGrid) {
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 1;
+        for (let i = 0; i <= gridSize; i++) {
+          ctx.beginPath();
+          ctx.moveTo(i * cell, 0);
+          ctx.lineTo(i * cell, canvas.height);
+          ctx.stroke();
+          ctx.beginPath();
+          ctx.moveTo(0, i * cell);
+          ctx.lineTo(canvas.width, i * cell);
+          ctx.stroke();
+        }
+      }
+
+      // Render 1:1 preview
+      previewCanvas.width = gridSize;
+      previewCanvas.height = gridSize;
+      pCtx.clearRect(0, 0, gridSize, gridSize);
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          if (pixels[y][x]) {
+            pCtx.fillStyle = pixels[y][x];
+            pCtx.fillRect(x, y, 1, 1);
+          }
+        }
+      }
+    }
+
+    function getExportDataUrl(scale = 16) {
+      const out = document.createElement('canvas');
+      out.width = gridSize * scale;
+      out.height = gridSize * scale;
+      const octx = out.getContext('2d');
+      octx.imageSmoothingEnabled = false;
+      for (let y = 0; y < gridSize; y++) {
+        for (let x = 0; x < gridSize; x++) {
+          if (pixels[y][x]) {
+            octx.fillStyle = pixels[y][x];
+            octx.fillRect(x * scale, y * scale, scale, scale);
+          }
+        }
+      }
+      return out.toDataURL('image/png');
+    }
+
+    function downloadPNG() {
+      const url = getExportDataUrl(16);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'devground-sprite-' + gridSize + 'x' + gridSize + '.png';
+      a.click();
+      setStatus('✅ 투명 배경 .PNG 스프라이트가 다운로드되었습니다!');
+    }
+
+    function copyDataUrl() {
+      const url = getExportDataUrl(8);
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url);
+        setStatus('✅ 이미지 DataURL이 복사되었습니다! (게시글/에셋 이미지 칸에 붙여넣기 가능)');
+      }
+    }
+
+    function sendToParent() {
+      const url = getExportDataUrl(8);
+      if (window.parent) {
+        window.parent.postMessage({ type: 'PIXEL_ART_EXPORT', dataUrl: url }, '*');
+      }
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(url);
+      }
+      setStatus('🚀 도트 스프라이트가 복사 및 전송되었습니다!');
+    }
+
+    function setStatus(msg) {
+      document.getElementById('statusMsg').textContent = msg;
+    }
+
+    function loadTemplate(name) {
+      setGridSize(16);
+      const put = (coords, color) => coords.forEach(([x, y]) => {
+        if (x >= 0 && x < 16 && y >= 0 && y < 16) pixels[y][x] = color;
+      });
+      if (name === 'slime') {
+        for (let y = 6; y <= 13; y++) {
+          for (let x = 3; x <= 12; x++) {
+            if ((y === 6 || y === 13) && (x < 5 || x > 10)) continue;
+            pixels[y][x] = '#00E5FF';
+          }
+        }
+        put([[5,6],[6,5],[7,4],[8,4],[9,5],[10,6]], '#00E5FF');
+        put([[5,8],[6,8],[5,7]], '#FFFFFF');
+        put([[6,10],[6,11],[9,10],[9,11]], '#11131C');
+      } else if (name === 'sword') {
+        for (let i = 0; i < 9; i++) {
+          put([[12 - i, 3 + i]], '#FFFFFF');
+          put([[11 - i, 3 + i], [12 - i, 4 + i]], '#CBD5E1');
+        }
+        put([[4,10],[5,10],[6,11],[6,12],[3,9]], '#FFD166');
+        put([[3,12],[2,13]], '#7F5539');
+        put([[1,14]], '#FF4D6D');
+      } else if (name === 'heart') {
+        const rows = [
+          "  XXXX    XXXX  ",
+          " XXXXXX  XXXXXX ",
+          "XXXXXXXXXXXXXXXX",
+          "XXXXXXXXXXXXXXXX",
+          "XXXXXXXXXXXXXXXX",
+          " XXXXXXXXXXXXXX ",
+          "  XXXXXXXXXXXX  ",
+          "   XXXXXXXXXX   ",
+          "    XXXXXXXX    ",
+          "     XXXXXX     ",
+          "      XXXX      ",
+          "       XX       "
+        ];
+        rows.forEach((r, idx) => {
+          for (let x = 0; x < 16; x++) {
+            if (r[x] === 'X') pixels[idx + 2][x] = '#FF4D6D';
+          }
+        });
+        put([[3,4],[4,4],[3,5]], '#FFFFFF');
+      } else if (name === 'robot') {
+        for (let y = 3; y <= 12; y++) {
+          for (let x = 4; x <= 11; x++) pixels[y][x] = '#64748B';
+        }
+        put([[7,1],[8,1],[7,2],[8,2]], '#FFD166');
+        put([[5,5],[6,5],[9,5],[10,5]], '#00E5FF');
+        put([[6,9],[7,9],[8,9],[9,9]], '#10B981');
+        put([[5,13],[6,13],[9,13],[10,13]], '#1E293B');
+      }
+      render();
+      setStatus('✨ 프리셋 도트 템플릿을 불러왔습니다!');
+    }
+
+    initPixels(16);
+    buildPalette();
+    loadTemplate('slime');
+  </script>
+</body>
+</html>

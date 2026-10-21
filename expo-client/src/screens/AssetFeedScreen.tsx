@@ -20,12 +20,11 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
-  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => ApiClient.getBookmarks('asset'));
 
   // New Asset Modal State
   const [modalVisible, setModalVisible] = useState(false);
+  const [pixelModalVisible, setPixelModalVisible] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
@@ -36,6 +35,22 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentUsername = ApiClient.getUsername();
+
+  useEffect(() => {
+    if (Platform.OS === 'web' && typeof window !== 'undefined') {
+      const handler = (e: MessageEvent) => {
+        if (e.data && e.data.type === 'PIXEL_ART_EXPORT' && e.data.dataUrl) {
+          setNewImageUrl(e.data.dataUrl);
+          setNewFileUrl(e.data.dataUrl);
+          setNewCategory('2D');
+          setPixelModalVisible(false);
+          setModalVisible(true);
+        }
+      };
+      window.addEventListener('message', handler);
+      return () => window.removeEventListener('message', handler);
+    }
+  }, []);
 
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const playAudioPreview = (item: Asset) => {
@@ -69,7 +84,6 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
     } catch {}
     setTimeout(() => setPlayingAudioId(null), 600);
   };
-
 
   useEffect(() => {
     fetchAssets();
@@ -266,7 +280,6 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
     }
   };
 
-  // Open an asset's detail when navigated from a notification
   useEffect(() => {
     if (!openAssetId) return;
     (async () => {
@@ -303,33 +316,37 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
 
     return (
       <TouchableOpacity activeOpacity={0.9} style={styles.cardWrapper} onPress={() => openDetail(item)}>
-        <NeumorphView radius={18} style={styles.card}>
+        <NeumorphView radius={6} style={styles.card}>
           {item.image_url ? (
-            <Image source={{ uri: item.image_url }} style={styles.assetBannerImage} resizeMode="cover" />
+            <Image
+              source={{ uri: item.image_url }}
+              style={styles.assetBannerImage}
+              resizeMode={item.image_url.startsWith('data:image/') ? 'contain' : 'cover'}
+            />
           ) : null}
 
           <View style={styles.cardHeader}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <View style={styles.categoryBadge}>
-                <Text style={styles.categoryBadgeText}>{item.category}</Text>
+                <Text style={styles.categoryBadgeText}>[{item.category}]</Text>
               </View>
-              <Text style={styles.ratingText}>⭐ {item.avg_rating || '5.0'} ({item.feedback_count || 0})</Text>
+              <Text style={styles.ratingText}>★ {item.avg_rating || '5.0'} ({item.feedback_count || 0})</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
               <TouchableOpacity
-                style={[styles.bookmarkPill, isBookmarked && { backgroundColor: '#FEF3C7' }]}
+                style={[styles.bookmarkPill, isBookmarked && { backgroundColor: '#FFD166' }]}
                 onPress={() => handleToggleBookmark(item.id)}
               >
-                <Text style={[styles.bookmarkPillText, isBookmarked && { color: '#D97706' }]}>
-                  {isBookmarked ? '⭐ 찜됨' : '☆ 찜'}
+                <Text style={[styles.bookmarkPillText, isBookmarked && { color: '#11131C' }]}>
+                  {isBookmarked ? '[★ SAVED]' : '[☆ SAVE]'}
                 </Text>
               </TouchableOpacity>
               {isOwner && (
                 <TouchableOpacity
-                  style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}
+                  style={{ backgroundColor: '#3F1D24', borderWidth: 1, borderColor: '#FF4D6D', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4 }}
                   onPress={() => handleDeleteAsset(item.id)}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#DC2626' }}>🗑️ 삭제</Text>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: '#FF4D6D', fontFamily: 'monospace' }}>[DEL]</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -338,28 +355,27 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
           <Text style={styles.assetTitle}>{item.title}</Text>
           <Text style={styles.assetDesc}>{item.description || 'No description provided.'}</Text>
 
-
-          {(item.category === 'Code' || Boolean(item.code_snippet)) && (
-            <View style={{ backgroundColor: '#0F172A', borderRadius: 12, padding: 12, marginBottom: 12 }}>
+          {(item.category === 'Code' || Boolean((item as any).code_snippet)) && (
+            <View style={{ backgroundColor: '#090B10', borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, marginBottom: 12 }}>
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <Text style={{ color: '#38BDF8', fontSize: 11, fontWeight: '800' }}>💻 C# / Shader 스크립트 미리보기</Text>
+                <Text style={{ color: '#00E5FF', fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>// C# & SHADER SNIPPET</Text>
                 <TouchableOpacity
                   onPress={(e: any) => {
                     e?.stopPropagation?.();
-                    const codeText = item.code_snippet || '// Script snippet';
+                    const codeText = (item as any).code_snippet || '// Script snippet';
                     try { navigator?.clipboard?.writeText(codeText); } catch {}
                     setCopiedSnippetId(item.id);
                     setTimeout(() => setCopiedSnippetId(null), 2000);
                   }}
-                  style={{ backgroundColor: copiedSnippetId === item.id ? '#10B981' : '#1E293B', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
+                  style={{ backgroundColor: copiedSnippetId === item.id ? '#10B981' : Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}
                 >
-                  <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
-                    {copiedSnippetId === item.id ? '✅ 코드 복사됨!' : '📋 코드 복사'}
+                  <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800', fontFamily: 'monospace' }}>
+                    {copiedSnippetId === item.id ? '[COPIED!]' : '[COPY_CODE]'}
                   </Text>
                 </TouchableOpacity>
               </View>
               <Text numberOfLines={6} style={{ color: '#E2E8F0', fontSize: 11, fontFamily: 'monospace', lineHeight: 16 }}>
-                {item.code_snippet || 'using UnityEngine;\n// 클릭하여 전체 스크립트 및 다운로드 링크를 확인하세요.'}
+                {(item as any).code_snippet || 'using UnityEngine;\n// 클릭하여 전체 스크립트 및 다운로드 링크를 확인하세요.'}
               </Text>
             </View>
           )}
@@ -369,18 +385,18 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                 e?.stopPropagation?.();
                 playAudioPreview(item);
               }}
-              style={{ backgroundColor: '#EEF2FF', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, marginBottom: 12, alignItems: 'center' }}
+              style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: '#00E5FF', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 4, marginBottom: 12, alignItems: 'center' }}
             >
-              <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
-                {playingAudioId === item.id ? '🔊 효과음 재생 중...' : '🎵 효과음/오디오 즉시 미리듣기 (▶️ Play)'}
+              <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#00E5FF', fontFamily: 'monospace' }}>
+                {playingAudioId === item.id ? '🔊 PLAYING_SFX...' : '▶ PREVIEW_8BIT_SFX (미리듣기)'}
               </Text>
             </TouchableOpacity>
           )}
           <View style={styles.cardFooter}>
-            <Text style={styles.authorText}>by {item.author} • 📥 {item.downloads ?? 0}회 다운로드</Text>
+            <Text style={styles.authorText}>@{item.author} • DL {item.downloads ?? 0}</Text>
             <TouchableOpacity onPress={() => handleQuickLike(item.id)}>
-              <Text style={[styles.likesText, item.is_liked && { color: '#E11D48' }]}>
-                {item.is_liked ? '❤️' : '🤍'} {item.likes || 0}
+              <Text style={[styles.likesText, item.is_liked && { color: Theme.colors.primary }]}>
+                ♥ {item.likes || 0}
               </Text>
             </TouchableOpacity>
           </View>
@@ -393,27 +409,42 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
     <View style={styles.headerSection}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>🎨 Asset Hub</Text>
-        <TouchableOpacity
-          style={styles.uploadButton}
-          onPress={() => {
-            if (!ApiClient.getToken()) {
-              onRequireLogin?.();
-              return;
-            }
-            setModalVisible(true);
-          }}
-        >
-          <Text style={styles.uploadButtonText}>+ Share Asset</Text>
-        </TouchableOpacity>
+        <View>
+          <Text style={styles.headerTitle}>ASSET_VAULT // 무료 에셋 창고</Text>
+          <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
+            2D 도트 스프라이트 · 3D 모델 · 8비트 효과음 · C# 스크립트 무료 공유소
+          </Text>
+        </View>
+        <View style={{ flexDirection: 'row', gap: 6 }}>
+          {Platform.OS === 'web' && (
+            <TouchableOpacity
+              style={[styles.uploadButton, { backgroundColor: '#FFD166', borderColor: '#11131C' }]}
+              onPress={() => setPixelModalVisible(true)}
+            >
+              <Text style={[styles.uploadButtonText, { color: '#11131C' }]}>🎨 도트 찍기</Text>
+            </TouchableOpacity>
+          )}
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={() => {
+              if (!ApiClient.getToken()) {
+                onRequireLogin?.();
+                return;
+              }
+              setModalVisible(true);
+            }}
+          >
+            <Text style={styles.uploadButtonText}>[+ 에셋 등록]</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Search Input */}
       <View style={styles.searchContainer}>
-        <NeumorphView radius={12} style={styles.searchBox}>
+        <NeumorphView radius={6} style={styles.searchBox}>
           <TextInput
             style={styles.searchInput}
-            placeholder="Search 2D, 3D, Audio assets..."
+            placeholder="> SEARCH_ASSETS (2D, 3D, Audio, C# 스크립트 검색...)"
             placeholderTextColor={Theme.colors.textLight}
             value={searchQuery}
             onChangeText={setSearchQuery}
@@ -445,10 +476,10 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
             <View style={styles.centerContainer}>
               <Text style={styles.emptyText}>
                 {selectedCategory === '⭐ 찜한 에셋'
-                  ? '아직 ⭐ 찜한 에셋이 없습니다.'
+                  ? '아직 찜한 에셋이 없습니다.'
                   : selectedCategory === LIKED_CATEGORY
-                    ? '아직 ❤️ 좋아요한 에셋이 없습니다.'
-                    : 'No assets found.'}
+                    ? '아직 좋아요한 에셋이 없습니다.'
+                    : '// NO_ASSETS_FOUND //'}
               </Text>
             </View>
           )
@@ -456,6 +487,28 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
         onRefresh={fetchAssets}
         refreshing={loading}
       />
+
+      {/* Pixel Studio Modal */}
+      <Modal visible={pixelModalVisible} animationType="fade" transparent onRequestClose={() => setPixelModalVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 12 }}>
+          <View style={{ width: '100%', maxWidth: 740, height: '88%', backgroundColor: '#11131C', borderWidth: 2, borderColor: '#FFD166', borderRadius: 6, overflow: 'hidden' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
+              <Text style={{ color: '#FFD166', fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>
+                🎨 PIXEL_SPRITE_WORKSHOP // 도트 찍고 에셋 창고에 바로 공유
+              </Text>
+              <TouchableOpacity onPress={() => setPixelModalVisible(false)} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X CLOSE]</Text>
+              </TouchableOpacity>
+            </View>
+            {Platform.OS === 'web' ? (
+              React.createElement('iframe', {
+                src: '/pixel-studio.html',
+                style: { width: '100%', height: '100%', border: 'none', backgroundColor: '#11131C' },
+              })
+            ) : null}
+          </View>
+        </View>
+      </Modal>
 
       {/* Asset Detail Modal */}
       <Modal visible={!!detailAsset} animationType="slide" transparent onRequestClose={() => setDetailAsset(null)}>
@@ -465,42 +518,47 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
               {detailAsset && (
                 <>
                   {detailAsset.image_url ? (
-                    <Image source={{ uri: detailAsset.image_url }} style={styles.assetBannerImage} resizeMode="cover" />
+                    <Image
+                      source={{ uri: detailAsset.image_url }}
+                      style={styles.assetBannerImage}
+                      resizeMode={detailAsset.image_url.startsWith('data:image/') ? 'contain' : 'cover'}
+                    />
                   ) : null}
                   <Text style={styles.modalTitle}>{detailAsset.title}</Text>
                   <Text style={styles.assetDesc}>{detailAsset.description || 'No description provided.'}</Text>
                   <Text style={styles.authorText}>
-                    [{detailAsset.category}] by {detailAsset.author} • ⭐ {detailAsset.avg_rating || '-'} ({detailAsset.feedback_count || 0})
+                    [{detailAsset.category}] by @{detailAsset.author} • ★ {detailAsset.avg_rating || '-'} ({detailAsset.feedback_count || 0})
                   </Text>
 
                   {detailAsset.file_url ? (
                     <TouchableOpacity style={styles.openLinkBtn} onPress={() => handleOpenLink(detailAsset.file_url, detailAsset.id)}>
-                      <Text style={styles.openLinkText}>📥 다운로드 / 링크 열기 ({detailAsset.downloads ?? 0}회)</Text>
+                      <Text style={styles.openLinkText}>[📥 DOWNLOAD_ASSET ({detailAsset.downloads ?? 0})]</Text>
                     </TouchableOpacity>
                   ) : null}
 
                   <View style={styles.detailActionRow}>
                     <TouchableOpacity
-                      style={[styles.detailActionBtn, detailAsset.is_liked && { backgroundColor: '#FFE4E6' }]}
+                      style={[styles.detailActionBtn, detailAsset.is_liked && { backgroundColor: Theme.colors.primary }]}
                       onPress={handleLikeAsset}
                     >
-                      <Text style={[styles.detailActionText, detailAsset.is_liked && { color: '#E11D48' }]}>
-                        {detailAsset.is_liked ? '❤️' : '🤍'} {detailAsset.likes || 0}
+                      <Text style={[styles.detailActionText, detailAsset.is_liked && { color: '#FFF' }]}>
+                        ♥ {detailAsset.likes || 0}
                       </Text>
                     </TouchableOpacity>
                     {currentUsername && detailAsset.author === currentUsername && !editing && (
                       <TouchableOpacity style={styles.detailActionBtn} onPress={handleStartEdit}>
-                        <Text style={styles.detailActionText}>✏️ 수정</Text>
+                        <Text style={styles.detailActionText}>[✏️ EDIT]</Text>
                       </TouchableOpacity>
                     )}
                   </View>
 
                   {editing && (
                     <View style={{ marginTop: 14 }}>
-                      <TextInput style={styles.modalInput} placeholder="Title" value={editTitle} onChangeText={setEditTitle} />
+                      <TextInput style={styles.modalInput} placeholder="Title" placeholderTextColor="#6B7280" value={editTitle} onChangeText={setEditTitle} />
                       <TextInput
                         style={[styles.modalInput, { height: 70 }]}
                         placeholder="Description"
+                        placeholderTextColor="#6B7280"
                         multiline
                         value={editDesc}
                         onChangeText={setEditDesc}
@@ -508,6 +566,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                       <TextInput
                         style={styles.modalInput}
                         placeholder="Download / Repo Link URL"
+                        placeholderTextColor="#6B7280"
                         value={editFileUrl}
                         onChangeText={setEditFileUrl}
                         autoCapitalize="none"
@@ -515,6 +574,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                       <TextInput
                         style={styles.modalInput}
                         placeholder="Thumbnail Image URL"
+                        placeholderTextColor="#6B7280"
                         value={editImageUrl}
                         onChangeText={setEditImageUrl}
                         autoCapitalize="none"
@@ -524,17 +584,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                           <Text style={styles.uploadFileBtnText}>{isUploading ? '업로드 중...' : '📁 이미지 파일 업로드'}</Text>
                         </TouchableOpacity>
                       )}
-          
-            {newCategory === 'Code' && (
-              <TextInput
-                style={[styles.modalInput, { height: 90, fontFamily: 'monospace', fontSize: 12 }]}
-                placeholder="핵심 C# / GDScript / Shader 코드 스니펫 붙여넣기 (선택사항)"
-                multiline
-                value={newCodeSnippet}
-                onChangeText={setNewCodeSnippet}
-              />
-            )}
-            <View style={styles.modalButtonRow}>
+                      <View style={styles.modalButtonRow}>
                         <TouchableOpacity style={styles.cancelModalButton} onPress={() => setEditing(false)}>
                           <Text style={styles.cancelModalText}>취소</Text>
                         </TouchableOpacity>
@@ -549,20 +599,21 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                   <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
                     {[1, 2, 3, 4, 5].map((n) => (
                       <TouchableOpacity key={n} onPress={() => setRating(n)}>
-                        <Text style={{ fontSize: 28 }}>{n <= rating ? '⭐' : '☆'}</Text>
+                        <Text style={{ fontSize: 24 }}>{n <= rating ? '⭐' : '☆'}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
                   <TextInput
                     style={[styles.modalInput, { height: 70 }]}
                     placeholder="피드백을 남겨주세요..."
+                    placeholderTextColor="#6B7280"
                     multiline
                     value={feedbackText}
                     onChangeText={setFeedbackText}
                   />
                   <TouchableOpacity style={styles.submitModalButton} onPress={handleSendFeedback} disabled={isSendingFeedback}>
                     <Text style={[styles.submitModalText, { textAlign: 'center' }]}>
-                      {isSendingFeedback ? '등록 중...' : '리뷰 등록'}
+                      {isSendingFeedback ? '등록 중...' : '[리뷰 등록]'}
                     </Text>
                   </TouchableOpacity>
 
@@ -571,7 +622,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                   {(detailAsset.feedbacks || []).map((f: any) => (
                     <View key={f.id} style={{ marginBottom: 12 }}>
                       <Text style={{ fontWeight: '700', color: Theme.colors.text }}>
-                        {f.author} {'⭐'.repeat(f.rating || 0)}
+                        @{f.author} {'⭐'.repeat(f.rating || 0)}
                       </Text>
                       <Text style={{ color: Theme.colors.text, marginTop: 2 }}>{f.content}</Text>
                     </View>
@@ -580,7 +631,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
               )}
             </ScrollView>
             <TouchableOpacity style={[styles.cancelModalButton, { alignSelf: 'flex-end' }]} onPress={() => setDetailAsset(null)}>
-              <Text style={styles.cancelModalText}>닫기</Text>
+              <Text style={styles.cancelModalText}>[닫기]</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -590,43 +641,69 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Share Game Asset</Text>
-            
+            <Text style={styles.modalTitle}>// SHARE_GAME_ASSET</Text>
+
             <TextInput
               style={styles.modalInput}
-              placeholder="Asset Title"
+              placeholder="에셋 제목 (예: 16x16 슬라임 도트 스프라이트)"
+              placeholderTextColor="#6B7280"
               value={newTitle}
               onChangeText={setNewTitle}
             />
 
             <TextInput
               style={styles.modalInput}
-              placeholder="Thumbnail Image URL (https://... Optional)"
+              placeholder="썸네일/스프라이트 URL 또는 도트 공방에서 전송"
+              placeholderTextColor="#6B7280"
               value={newImageUrl}
               onChangeText={setNewImageUrl}
               autoCapitalize="none"
             />
             {Platform.OS === 'web' && (
-              <TouchableOpacity style={styles.uploadFileBtn} onPress={() => pickImageInto(setNewImageUrl)} disabled={isUploading}>
-                <Text style={styles.uploadFileBtnText}>{isUploading ? '업로드 중...' : '📁 이미지 파일 업로드'}</Text>
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                <TouchableOpacity style={[styles.uploadFileBtn, { flex: 1, marginBottom: 0 }]} onPress={() => pickImageInto(setNewImageUrl)} disabled={isUploading}>
+                  <Text style={styles.uploadFileBtnText}>{isUploading ? '업로드 중...' : '📁 PC 파일 업로드'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.uploadFileBtn, { flex: 1, marginBottom: 0, backgroundColor: '#FFD166' }]}
+                  onPress={() => {
+                    setModalVisible(false);
+                    setPixelModalVisible(true);
+                  }}
+                >
+                  <Text style={[styles.uploadFileBtnText, { color: '#11131C', fontWeight: '900' }]}>🎨 웹 도트 직접 찍기</Text>
+                </TouchableOpacity>
+              </View>
             )}
 
             <TextInput
               style={styles.modalInput}
-              placeholder="Download / Repo Link URL (https://... Optional)"
+              placeholder="다운로드 링크 / GitHub 주소 (선택)"
+              placeholderTextColor="#6B7280"
               value={newFileUrl}
               onChangeText={setNewFileUrl}
               autoCapitalize="none"
             />
 
             <TextInput
-              style={[styles.modalInput, { height: 80 }]}
-              placeholder="Description..."
+              style={[styles.modalInput, { height: 70 }]}
+              placeholder="에셋 설명 및 라이선스 안내 (예: 상업적 무료 사용 가능)..."
+              placeholderTextColor="#6B7280"
               multiline
               value={newDescription}
               onChangeText={setNewDescription}
             />
+
+            {newCategory === 'Code' && (
+              <TextInput
+                style={[styles.modalInput, { height: 85, fontFamily: 'monospace', fontSize: 12 }]}
+                placeholder="핵심 C# / GDScript / Shader 코드 스니펫 붙여넣기 (선택)"
+                placeholderTextColor="#6B7280"
+                multiline
+                value={newCodeSnippet}
+                onChangeText={setNewCodeSnippet}
+              />
+            )}
 
             <Text style={styles.modalLabel}>Category:</Text>
             <View style={styles.categorySelectRow}>
@@ -646,7 +723,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                 <Text style={styles.cancelModalText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.submitModalButton} onPress={handleCreateAsset} disabled={isSubmitting}>
-                <Text style={styles.submitModalText}>{isSubmitting ? 'Posting...' : 'Share'}</Text>
+                <Text style={styles.submitModalText}>{isSubmitting ? 'Posting...' : '[SHARE_ASSET]'}</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -658,59 +735,62 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
 
 const styles = StyleSheet.create({
   container: { flex: 1, minHeight: 0, backgroundColor: Theme.colors.background },
-  headerSection: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8 },
+  headerSection: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 8 },
   header: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 12, flexWrap: 'wrap', gap: 8,
+    backgroundColor: Theme.colors.surface,
+    borderWidth: 2, borderColor: Theme.colors.border,
+    borderRadius: 6, padding: 12,
   },
-  headerTitle: { fontSize: 24, fontWeight: '800', color: Theme.colors.primary },
-  uploadButton: { backgroundColor: Theme.colors.primary, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20 },
-  uploadButtonText: { color: '#FFF', fontWeight: '700', fontSize: 13 },
-  searchContainer: { marginBottom: 12 },
+  headerTitle: { fontSize: 16, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' },
+  uploadButton: { backgroundColor: Theme.colors.primary, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 11, paddingVertical: 7, borderRadius: 4 },
+  uploadButtonText: { color: '#FFF', fontWeight: '900', fontSize: 11.5, fontFamily: 'monospace' },
+  searchContainer: { marginBottom: 10 },
   searchBox: { width: '100%' },
-  searchInput: { paddingHorizontal: 16, paddingVertical: 10, fontSize: 14, color: Theme.colors.text },
-  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 4, gap: 8 },
-  pill: { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 16, backgroundColor: Theme.colors.pillBg },
-  activePill: { backgroundColor: Theme.colors.primary },
-  pillText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
-  activePillText: { color: '#FFF', fontWeight: '700' },
+  searchInput: { paddingHorizontal: 14, paddingVertical: 10, fontSize: 13, color: Theme.colors.text, fontFamily: 'monospace' },
+  categoryRow: { flexDirection: 'row', flexWrap: 'wrap', marginVertical: 4, gap: 6 },
+  pill: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4, borderWidth: 1.5, borderColor: Theme.colors.border, backgroundColor: Theme.colors.pillBg },
+  activePill: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
+  pillText: { fontSize: 11.5, color: Theme.colors.textLight, fontWeight: '800', fontFamily: 'monospace' },
+  activePillText: { color: '#FFF', fontWeight: '900' },
   listContent: { paddingBottom: 110 },
-  cardWrapper: { paddingHorizontal: 16, marginBottom: 20 },
-  card: { padding: 20, width: '100%', overflow: 'hidden' },
-  assetBannerImage: { width: '100%', height: 150, borderRadius: 12, marginBottom: 12, backgroundColor: Theme.colors.pillBg },
-  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 },
-  categoryBadge: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
-  categoryBadgeText: { fontSize: 12, fontWeight: '700', color: Theme.colors.accent },
-  ratingText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
-  bookmarkPill: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 },
-  bookmarkPillText: { fontSize: 12, fontWeight: '700', color: Theme.colors.textLight },
-  assetTitle: { fontSize: 18, fontWeight: '700', color: Theme.colors.text, marginBottom: 8, lineHeight: 24 },
-  assetDesc: { fontSize: 14, color: Theme.colors.textLight, marginBottom: 14, lineHeight: 20 },
-  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1, borderTopColor: Theme.colors.pillBg, paddingTop: 10 },
-  authorText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
-  likesText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
+  cardWrapper: { paddingHorizontal: 16, marginBottom: 16 },
+  card: { padding: 14, width: '100%', overflow: 'hidden' },
+  assetBannerImage: { width: '100%', height: 150, borderRadius: 4, marginBottom: 10, backgroundColor: Theme.colors.pillBg },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8, flexWrap: 'wrap', gap: 8 },
+  categoryBadge: { backgroundColor: Theme.colors.pillBg, borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  categoryBadgeText: { fontSize: 11, fontWeight: '900', color: '#00E5FF', fontFamily: 'monospace' },
+  ratingText: { fontSize: 12, fontWeight: '800', color: '#FFD166', fontFamily: 'monospace' },
+  bookmarkPill: { backgroundColor: Theme.colors.pillBg, borderWidth: 1, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 },
+  bookmarkPillText: { fontSize: 10.5, fontWeight: '900', color: Theme.colors.textLight, fontFamily: 'monospace' },
+  assetTitle: { fontSize: 16, fontWeight: '800', color: Theme.colors.text, marginBottom: 6, lineHeight: 22 },
+  assetDesc: { fontSize: 13, color: Theme.colors.textLight, marginBottom: 12, lineHeight: 19 },
+  cardFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', borderTopWidth: 1.5, borderTopColor: Theme.colors.border, paddingTop: 8 },
+  authorText: { fontSize: 11.5, color: Theme.colors.textLight, fontWeight: '800', fontFamily: 'monospace' },
+  likesText: { fontSize: 12, fontWeight: '900', color: Theme.colors.text, fontFamily: 'monospace' },
   centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 40 },
-  emptyText: { fontSize: 16, color: Theme.colors.textLight, fontWeight: '600' },
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 },
-  modalContent: { backgroundColor: Theme.colors.background, borderRadius: 20, padding: 24 },
-  modalTitle: { fontSize: 20, fontWeight: '800', color: Theme.colors.text, marginBottom: 16 },
-  modalInput: { backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginBottom: 12, fontSize: 15 },
-  modalLabel: { fontSize: 14, fontWeight: '700', color: Theme.colors.text, marginBottom: 8 },
-  categorySelectRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 20 },
-  catSelectBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12, backgroundColor: Theme.colors.pillBg },
-  activeCatSelectBadge: { backgroundColor: Theme.colors.primary },
-  catSelectText: { fontSize: 13, color: Theme.colors.textLight, fontWeight: '600' },
-  activeCatSelectText: { color: '#FFF', fontWeight: '700' },
-  modalButtonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 12 },
-  cancelModalButton: { paddingHorizontal: 16, paddingVertical: 10 },
-  cancelModalText: { color: Theme.colors.textLight, fontWeight: '700' },
-  submitModalButton: { backgroundColor: Theme.colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12 },
-  submitModalText: { color: '#FFF', fontWeight: '700' },
-  openLinkBtn: { backgroundColor: Theme.colors.primary, paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginTop: 12 },
-  openLinkText: { color: '#FFF', fontWeight: '800', fontSize: 15 },
-  uploadFileBtn: { backgroundColor: Theme.colors.pillBg, paddingVertical: 10, borderRadius: 12, alignItems: 'center', marginBottom: 12 },
-  uploadFileBtnText: { color: Theme.colors.text, fontWeight: '700', fontSize: 13 },
-  detailActionRow: { flexDirection: 'row', gap: 8, marginTop: 12, flexWrap: 'wrap' },
-  detailActionBtn: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 14, paddingVertical: 8, borderRadius: 12 },
-  detailActionText: { fontWeight: '700', fontSize: 13, color: Theme.colors.text },
+  emptyText: { fontSize: 14, color: Theme.colors.textLight, fontWeight: '800', fontFamily: 'monospace' },
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.75)', justifyContent: 'center', padding: 18 },
+  modalContent: { backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: Theme.colors.border, borderRadius: 6, padding: 18 },
+  modalTitle: { fontSize: 16, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace', marginBottom: 14 },
+  modalInput: { backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 10, marginBottom: 10, fontSize: 13.5, color: Theme.colors.text },
+  modalLabel: { fontSize: 12.5, fontWeight: '800', color: Theme.colors.textLight, marginBottom: 8, fontFamily: 'monospace' },
+  categorySelectRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 16 },
+  catSelectBadge: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4, borderWidth: 1.5, borderColor: Theme.colors.border, backgroundColor: Theme.colors.pillBg },
+  activeCatSelectBadge: { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.primary },
+  catSelectText: { fontSize: 12, color: Theme.colors.textLight, fontWeight: '800', fontFamily: 'monospace' },
+  activeCatSelectText: { color: '#FFF', fontWeight: '900' },
+  modalButtonRow: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10 },
+  cancelModalButton: { paddingHorizontal: 14, paddingVertical: 9 },
+  cancelModalText: { color: Theme.colors.textLight, fontWeight: '800', fontFamily: 'monospace' },
+  submitModalButton: { backgroundColor: Theme.colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 4 },
+  submitModalText: { color: '#FFF', fontWeight: '900', fontFamily: 'monospace' },
+  openLinkBtn: { backgroundColor: '#00E5FF', paddingVertical: 11, borderRadius: 4, alignItems: 'center', marginTop: 10 },
+  openLinkText: { color: '#11131C', fontWeight: '900', fontSize: 13, fontFamily: 'monospace' },
+  uploadFileBtn: { backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingVertical: 9, borderRadius: 4, alignItems: 'center', marginBottom: 10 },
+  uploadFileBtnText: { color: Theme.colors.text, fontWeight: '800', fontSize: 12 },
+  detailActionRow: { flexDirection: 'row', gap: 8, marginTop: 10, flexWrap: 'wrap' },
+  detailActionBtn: { backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 4 },
+  detailActionText: { fontWeight: '900', fontSize: 12, color: Theme.colors.text, fontFamily: 'monospace' },
 });

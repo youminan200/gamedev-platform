@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Image, Linking } from 'react-native';
 import { DevLog } from '../models/DevLog';
 import { Theme } from '../theme';
 import { NeumorphView } from './NeumorphView';
+import { ApiClient } from '../api/ApiClient';
 import { formatRelativeTime } from '../utils/time';
 
 interface DevLogCardProps {
@@ -31,6 +32,25 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
   selectedTag,
   onAuthorClick,
 }) => {
+  const [votesA, setVotesA] = useState<number>(Number(devLog.poll_votes_a || 0));
+  const [votesB, setVotesB] = useState<number>(Number(devLog.poll_votes_b || 0));
+  const [votedChoice, setVotedChoice] = useState<'A' | 'B' | null>(null);
+
+  const handleQuickVote = async (e: any, option: 'A' | 'B') => {
+    e?.stopPropagation?.();
+    if (votedChoice) return;
+    setVotedChoice(option);
+    if (option === 'A') setVotesA(v => v + 1);
+    else setVotesB(v => v + 1);
+    try {
+      const res = await ApiClient.voteDevLogPoll(devLog.id, option);
+      if (res) {
+        setVotesA(Number(res.poll_votes_a || 0));
+        setVotesB(Number(res.poll_votes_b || 0));
+      }
+    } catch {}
+  };
+
   return (
     <TouchableOpacity activeOpacity={0.88} onPress={onClick} style={styles.cardContainer}>
       <NeumorphView radius={6} style={styles.card}>
@@ -139,6 +159,73 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
               </Text>
             </TouchableOpacity>
           ) : null}
+
+          {devLog.poll_question ? (() => {
+            const total = votesA + votesB;
+            const pctA = total > 0 ? Math.round((votesA / total) * 100) : 50;
+            const pctB = total > 0 ? 100 - pctA : 50;
+            return (
+              <View
+                style={{
+                  backgroundColor: Theme.colors.background,
+                  borderWidth: 1.5,
+                  borderColor: Theme.colors.border,
+                  borderRadius: 4,
+                  padding: 10,
+                  marginBottom: 10,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>
+                    [A vs B // 플레이테스트 투표함]
+                  </Text>
+                  <Text style={{ fontSize: 10, color: Theme.colors.textLight, fontFamily: 'monospace' }}>
+                    TOTAL: {total} VOTES
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 12.5, fontWeight: '800', color: Theme.colors.text, marginBottom: 8 }}>
+                  Q. {devLog.poll_question}
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 6, marginBottom: 6 }}>
+                  <TouchableOpacity
+                    onPress={(e) => handleQuickVote(e, 'A')}
+                    style={{
+                      flex: 1,
+                      backgroundColor: votedChoice === 'A' ? Theme.colors.primary : Theme.colors.pillBg,
+                      borderWidth: 1.5,
+                      borderColor: votedChoice === 'A' ? Theme.colors.primary : Theme.colors.border,
+                      paddingVertical: 6,
+                      paddingHorizontal: 8,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '900', color: votedChoice === 'A' ? '#FFF' : Theme.colors.text, fontFamily: 'monospace' }}>
+                      [A] {devLog.poll_option_a || 'A안'} ({pctA}%)
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={(e) => handleQuickVote(e, 'B')}
+                    style={{
+                      flex: 1,
+                      backgroundColor: votedChoice === 'B' ? '#00E5FF' : Theme.colors.pillBg,
+                      borderWidth: 1.5,
+                      borderColor: votedChoice === 'B' ? '#00E5FF' : Theme.colors.border,
+                      paddingVertical: 6,
+                      paddingHorizontal: 8,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '900', color: votedChoice === 'B' ? '#11131C' : Theme.colors.text, fontFamily: 'monospace' }}>
+                      [B] {devLog.poll_option_b || 'B안'} ({pctB}%)
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={{ height: 6, backgroundColor: '#00E5FF', borderRadius: 2, overflow: 'hidden', flexDirection: 'row' }}>
+                  <View style={{ width: `${pctA}%`, backgroundColor: Theme.colors.primary }} />
+                </View>
+              </View>
+            );
+          })() : null}
 
           <View style={styles.tagsContainer}>
             {devLog.tags.map((tag, index) => {
