@@ -405,8 +405,8 @@ app.get('/api/leaderboard', (_req, res) => {
 app.get('/api/system-status', (req, res) => {
   const todayKey = 'visits_' + new Date().toISOString().slice(0, 10);
   const countVisit = req.query.track !== '0';
-  const prevTotal = Number(getSetting('total_visits', '184')) || 184;
-  const prevToday = Number(getSetting(todayKey, '26')) || 26;
+  const prevTotal = Number(getSetting('total_visits', '0')) || 0;
+  const prevToday = Number(getSetting(todayKey, '0')) || 0;
   const total_visits = countVisit ? prevTotal + 1 : prevTotal;
   const today_visits = countVisit ? prevToday + 1 : prevToday;
   if (countVisit) {
@@ -465,6 +465,13 @@ app.post('/admin/delete-asset/:id', (req, res) => {
   res.redirect('/admin');
 });
 
+app.post('/admin/reset-visits', (_req, res) => {
+  const todayKey = 'visits_' + new Date().toISOString().slice(0, 10);
+  setSetting('total_visits', '0');
+  setSetting(todayKey, '0');
+  res.redirect('/admin');
+});
+
 app.get('/admin/backup.sqlite', (_req, res) => {
   res.download('database.sqlite', 'database.sqlite');
 });
@@ -474,8 +481,8 @@ app.get('/admin', (_req, res) => {
   const totalAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
   const totalComments = (db.prepare('SELECT COUNT(*) as count FROM comments').get() as any).count;
   const todayKey = 'visits_' + new Date().toISOString().slice(0, 10);
-  const todayVisits = Number(getSetting(todayKey, '26')) || 26;
-  const totalVisits = Number(getSetting('total_visits', '184')) || 184;
+  const todayVisits = Number(getSetting(todayKey, '0')) || 0;
+  const totalVisits = Number(getSetting('total_visits', '0')) || 0;
   const isMaintenance = getSetting('maintenance_mode', '0') === '1';
   const isPopupActive = getSetting('popup_active', '1') === '1';
   const popupTitle = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.3.0 대규모 업데이트)");

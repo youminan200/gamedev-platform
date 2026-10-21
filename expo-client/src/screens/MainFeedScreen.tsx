@@ -30,13 +30,13 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [authorModalLoading, setAuthorModalLoading] = useState(false);
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 26, total: 184 });
+  const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
 
   useEffect(() => {
     fetch('https://gamedev-platform.onrender.com/api/system-status?track=0')
       .then((r) => r.json())
       .then((d) => {
-        if (d.today_visits) setVisitStats({ today: d.today_visits, total: d.total_visits });
+        if (d.today_visits !== undefined) setVisitStats({ today: d.today_visits, total: d.total_visits });
       })
       .catch(() => {});
   }, []);
