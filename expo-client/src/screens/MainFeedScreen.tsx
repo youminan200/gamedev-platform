@@ -43,6 +43,48 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [badgeCopied, setBadgeCopied] = useState(false);
   const [arcadeOpen, setArcadeOpen] = useState(false);
   const [installModalOpen, setInstallModalOpen] = useState(false);
+  const [sfxStudioOpen, setSfxStudioOpen] = useState(false);
+  const [errorWikiOpen, setErrorWikiOpen] = useState(false);
+  const [errorList, setErrorList] = useState<any[]>([]);
+  const [errorSearch, setErrorSearch] = useState('');
+  const [errEngine, setErrEngine] = useState('Unity');
+  const [errTitle, setErrTitle] = useState('');
+  const [errCause, setErrCause] = useState('');
+  const [errSolution, setErrSolution] = useState('');
+  const [errCode, setErrCode] = useState('');
+  const [submittingErr, setSubmittingErr] = useState(false);
+
+  const [ideaMachineOpen, setIdeaMachineOpen] = useState(false);
+  const [currentIdea, setCurrentIdea] = useState({
+    genre: '2D 덱빌딩 로그라이크',
+    mechanic: '공격할 때마다 시간을 2초 되감기',
+    theme: '마왕성 야간 청소부',
+    constraint: '체력이 곧 화폐(돈)로 사용되는 규칙'
+  });
+  const [ideaCopied, setIdeaCopied] = useState(false);
+
+  const rollGameIdea = () => {
+    const genres = ['2D 덱빌딩 로그라이크', '뱀서라이크 탄막 생존', '도트 메트로배니아 액션', '물리엔진 병맛 협동게임', '힐링 자동화 농장 타이쿤', '사이버펑크 추리 어드벤처', '리듬 기반 보스 러시', '타워 디펜스 + 오토배틀러', '1인칭 리미널 스페이스 공포'];
+    const mechanics = ['시간을 3초 되감는 능력', '무기를 던져서 순간이동', '빛과 그림자 반전 퍼즐', '적의 스킬을 훔쳐서 조합', '중력 방향을 4방향으로 전환', '마우스 커서 하나로만 조작', '박자에 맞춰 패링할수록 공격력 2배', '죽을 때마다 이전 캐릭터가 보스로 등장'];
+    const themes = ['마왕성 야간 청소부', '망해가는 마법 대장간 운영', '우주 택배 상하차 알바', '버그 걸린 고전 게임 속 세계', '심해 잠수함 요리사', '고양이 해적단의 보물섬', 'AI가 지배한 네온 서울', '장난감 병정들의 책상 위 전쟁'];
+    const constraints = ['체력이 곧 상점 화폐로 사용됨', '화면에 동시에 무기 1개만 존재', '1스테이지당 제한시간 60초', '공격 버튼 없이 반사/패링으로만 처치', '낮에는 상점 운영, 밤에는 던전 탐험'];
+    const pick = (arr: string[]) => arr[Math.floor(Math.random() * arr.length)];
+    setCurrentIdea({
+      genre: pick(genres),
+      mechanic: pick(mechanics),
+      theme: pick(themes),
+      constraint: pick(constraints)
+    });
+    setIdeaCopied(false);
+  };
+
+  const handleOpenErrorWiki = async () => {
+    setErrorWikiOpen(true);
+    try {
+      const list = await ApiClient.getErrors();
+      setErrorList(list);
+    } catch {}
+  };
 
   const handleInstallAppClick = async () => {
     try {
@@ -247,7 +289,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       <View style={[styles.titleRow, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
         <View>
           <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
             <Text style={{ fontSize: 11, fontWeight: '700', color: Theme.colors.textLight }}>
               {lang === 'en' ? `👁️ Today ${visitStats.today} • Total ${visitStats.total} visits` : `👁️ 오늘 ${visitStats.today}명 • 누적 ${visitStats.total}명 방문`}
             </Text>
@@ -280,6 +322,24 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
             >
               <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{lang === 'en' ? '📲 Install App' : '📲 무료 앱 설치'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setSfxStudioOpen(true)}
+              style={{ backgroundColor: '#F3E8FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#7E22CE' }}>{lang === 'en' ? '🔊 8-Bit SFX Studio' : '🔊 효과음 제작기'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleOpenErrorWiki}
+              style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#C2410C' }}>{lang === 'en' ? '🛠️ Error Wiki' : '🛠️ 에러 해결 사전'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setIdeaMachineOpen(true)}
+              style={{ backgroundColor: '#FEF9C3', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#A16207' }}>{lang === 'en' ? '🎲 Idea Generator' : '🎲 신작 아이디어 뽑기'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -1175,6 +1235,192 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                 style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 10 }}
               >
                 <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 13 }}>확인</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+            </Modal>
+
+      <Modal visible={sfxStudioOpen} animationType="fade" transparent onRequestClose={() => setSfxStudioOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.8)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 820, backgroundColor: '#0F172A', borderRadius: 20, padding: 16, borderWidth: 1, borderColor: '#334155' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ color: '#38BDF8', fontSize: 17, fontWeight: '800' }}>🔊 DevGround 내장 8비트 효과음(SFX) 제작 스튜디오 (.WAV 추출)</Text>
+              <TouchableOpacity onPress={() => setSfxStudioOpen(false)} style={{ backgroundColor: '#EF4444', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8 }}>
+                <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>✕ 닫기</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={{ height: 470, backgroundColor: '#0F172A', borderRadius: 12, overflow: 'hidden' }}>
+              {Platform.OS === 'web'
+                ? React.createElement('iframe', {
+                    src: '/sfx-studio.html',
+                    style: { width: '100%', height: '100%', border: 'none' },
+                  })
+                : null}
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={errorWikiOpen} animationType="fade" transparent onRequestClose={() => setErrorWikiOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <View>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text }}>🛠️ Unity · Unreal · Godot 단골 에러 1분 해결 사전</Text>
+                <Text style={{ fontSize: 12, color: Theme.colors.textLight }}>자주 막히는 빌드/셰이더/참조 에러 해결법과 방어 코드를 검색하세요!</Text>
+              </View>
+              <TouchableOpacity onPress={() => setErrorWikiOpen(false)}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 12, fontSize: 13 }}
+              placeholder="에러 메시지 검색 (예: NullReferenceException, Magenta, IL2CPP, ExitCode=25, 한글 깨짐...)"
+              value={errorSearch}
+              onChangeText={setErrorSearch}
+            />
+            <ScrollView style={{ maxHeight: 480 }}>
+              {errorList
+                .filter((e) => !errorSearch.trim() || (e.error_title + e.cause + e.solution + e.engine).toLowerCase().includes(errorSearch.toLowerCase()))
+                .map((e) => (
+                  <View key={e.id} style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 14, marginBottom: 10 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                      <View style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#C2410C' }}>{e.engine}</Text>
+                      </View>
+                      <TouchableOpacity
+                        onPress={async () => {
+                          const r = await ApiClient.markErrorHelpful(e.id);
+                          setErrorList((prev) => prev.map((x) => (x.id === e.id ? { ...x, helpful_count: r.helpful_count } : x)));
+                        }}
+                        style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>👍 해결됐어요 ({e.helpful_count || 0})</Text>
+                      </TouchableOpacity>
+                    </View>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: '#DC2626', marginBottom: 4 }}>🚨 {e.error_title}</Text>
+                    <Text style={{ fontSize: 12, color: Theme.colors.textLight, marginBottom: 6 }}>• 원인: {e.cause}</Text>
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text, marginBottom: 8, lineHeight: 19 }}>💡 해결법: {e.solution}</Text>
+                    {e.code_fix ? (
+                      <View style={{ backgroundColor: '#0F172A', padding: 10, borderRadius: 10 }}>
+                        <Text style={{ color: '#38BDF8', fontSize: 11, fontFamily: 'monospace' }}>{e.code_fix}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                ))}
+
+              <View style={{ marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: Theme.colors.pillBg }}>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.text, marginBottom: 8 }}>➕ 나만의 에러 해결 노하우 등록하기</Text>
+                <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                  {['Unity', 'Unreal 5', 'Godot 4'].map((eng) => (
+                    <TouchableOpacity
+                      key={eng}
+                      onPress={() => setErrEngine(eng)}
+                      style={{ backgroundColor: errEngine === eng ? Theme.colors.primary : Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: errEngine === eng ? '#FFF' : Theme.colors.text }}>{eng}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TextInput
+                  style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 9, marginBottom: 8, fontSize: 13 }}
+                  placeholder="에러 메시지 제목 (예: CS0103: The name does not exist...)"
+                  value={errTitle}
+                  onChangeText={setErrTitle}
+                />
+                <TextInput
+                  style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 9, marginBottom: 8, fontSize: 13 }}
+                  placeholder="발생 원인 한줄 요약"
+                  value={errCause}
+                  onChangeText={setErrCause}
+                />
+                <TextInput
+                  style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 9, marginBottom: 8, fontSize: 13, height: 56 }}
+                  placeholder="해결 방법 설명..."
+                  multiline
+                  value={errSolution}
+                  onChangeText={setErrSolution}
+                />
+                <TouchableOpacity
+                  disabled={submittingErr}
+                  onPress={async () => {
+                    if (!errTitle.trim() || !errSolution.trim()) return;
+                    try {
+                      setSubmittingErr(true);
+                      const next = await ApiClient.postError({
+                        engine: errEngine,
+                        error_title: errTitle.trim(),
+                        cause: errCause.trim() || '설정/스크립트 참조 오류',
+                        solution: errSolution.trim(),
+                        code_fix: errCode.trim() || undefined,
+                        author: username || 'IndieDev',
+                      });
+                      if (next.length > 0) setErrorList(next);
+                      setErrTitle('');
+                      setErrCause('');
+                      setErrSolution('');
+                      setErrCode('');
+                    } catch {} finally {
+                      setSubmittingErr(false);
+                    }
+                  }}
+                  style={{ backgroundColor: Theme.colors.primary, paddingVertical: 10, borderRadius: 10, alignItems: 'center' }}
+                >
+                  <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 13 }}>{submittingErr ? '등록 중...' : '🛠️ 에러 해결 사전에 등재하기'}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={ideaMachineOpen} animationType="fade" transparent onRequestClose={() => setIdeaMachineOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 18 }}>
+          <View style={{ width: '100%', maxWidth: 460, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text }}>🎲 인디게임 신작 & 게임잼 아이디어 뽑기</Text>
+              <TouchableOpacity onPress={() => setIdeaMachineOpen(false)}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontSize: 12, color: Theme.colors.textLight, marginBottom: 14 }}>
+              버튼을 누를 때마다 독창적인 인디게임 장르·핵심 기믹·세계관 조합이 무작위로 생성됩니다!
+            </Text>
+            <View style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 16, padding: 16, marginBottom: 14, gap: 10 }}>
+              <View>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: Theme.colors.primary }}>🎮 추천 장르 (Genre)</Text>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: Theme.colors.text, marginTop: 2 }}>{currentIdea.genre}</Text>
+              </View>
+              <View>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#10B981' }}>⚡ 핵심 기믹 (Core Mechanic)</Text>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginTop: 2 }}>{currentIdea.mechanic}</Text>
+              </View>
+              <View>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>🌍 세계관 / 주인공 (Theme)</Text>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginTop: 2 }}>{currentIdea.theme}</Text>
+              </View>
+              <View>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#BE185D' }}>🎯 특별 제약 조건 (Jam Rule)</Text>
+                <Text style={{ fontSize: 14, fontWeight: '700', color: Theme.colors.text, marginTop: 2 }}>{currentIdea.constraint}</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <TouchableOpacity
+                onPress={rollGameIdea}
+                style={{ flex: 1, backgroundColor: Theme.colors.primary, paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 14 }}>🎰 다시 뽑기 (Spin!)</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => {
+                  const text = `[신작 기획안]\n• 장르: ${currentIdea.genre}\n• 핵심 기믹: ${currentIdea.mechanic}\n• 세계관: ${currentIdea.theme}\n• 특별 규칙: ${currentIdea.constraint}`;
+                  try { navigator?.clipboard?.writeText(text); } catch {}
+                  setIdeaCopied(true);
+                }}
+                style={{ flex: 1, backgroundColor: ideaCopied ? '#10B981' : '#1E293B', paddingVertical: 12, borderRadius: 12, alignItems: 'center' }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 13 }}>{ideaCopied ? '✅ 기획안 복사됨!' : '📋 기획안 복사하기'}</Text>
               </TouchableOpacity>
             </View>
           </View>

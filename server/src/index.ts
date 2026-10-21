@@ -466,6 +466,19 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+
+  CREATE TABLE IF NOT EXISTS error_wiki (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    engine TEXT DEFAULT 'Unity',
+    error_title TEXT NOT NULL,
+    cause TEXT NOT NULL,
+    solution TEXT NOT NULL,
+    code_fix TEXT,
+    author TEXT DEFAULT 'DevGround Wiki',
+    helpful_count INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS site_settings (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -669,6 +682,97 @@ app.post('/api/reports', (req, res) => {
 app.post('/admin/delete-report/:id', (req, res) => {
   db.prepare('DELETE FROM reports WHERE id = ?').run(req.params.id);
   res.redirect('/admin');
+});
+
+
+try { db.exec('ALTER TABLE users ADD COLUMN support_url TEXT;'); } catch {}
+try { db.exec('ALTER TABLE devlogs ADD COLUMN support_url TEXT;'); } catch {}
+try {
+  db.prepare("UPDATE devlogs SET support_url = 'https://store.steampowered.com/genre/Indie/' WHERE support_url IS NULL OR support_url = ''").run();
+  db.prepare("UPDATE users SET support_url = 'https://store.steampowered.com/genre/Indie/' WHERE support_url IS NULL OR support_url = ''").run();
+} catch {}
+
+try {
+  const errCount = (db.prepare('SELECT COUNT(*) as c FROM error_wiki').get() as any).c;
+  if (errCount === 0) {
+    const insErr = db.prepare('INSERT INTO error_wiki (engine, error_title, cause, solution, code_fix, author, helpful_count) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    insErr.run(
+      'Unity',
+      'NullReferenceException: Object reference not set to an instance of an object',
+      'Inspector에서 컴포넌트 참조가 비어 있거나, Awake() 이전에 다른 스크립트의 변수를 참조할 때 발생합니다.',
+      'GetComponent<T>()를 Awake()에서 먼저 캐싱하거나, null 조건 연산자(?.) 및 TryGetComponent를 사용해 안전하게 방어하세요.',
+      'if (TryGetComponent<Rigidbody2D>(out var rb)) {
+    rb.velocity = Vector2.up * 10f;
+}',
+      'PixelKnight',
+      42
+    );
+    insErr.run(
+      'Unity',
+      '셰이더/머티리얼이 분홍색(Magenta / Pink)으로 깨져서 보이는 현상',
+      'Built-in 렌더 파이프라인용 에셋을 URP(Universal Render Pipeline) 프로젝트로 가져왔을 때 셰이더 호환이 깨져서 발생합니다.',
+      '상단 메뉴 Window → Rendering → Render Pipeline Converter를 열고 [Built-in to URP → Material Upgrade]를 체크한 뒤 Convert Assets를 클릭하면 1초 만에 해결됩니다.',
+      '// 메뉴 경로: Edit > Rendering > Materials > Convert Selected Built-in Materials to URP',
+      'ShaderWizard',
+      37
+    );
+    insErr.run(
+      'Unity',
+      'Android IL2CPP 빌드 실패 (Gradle build failed / NDK not found)',
+      'Unity Hub에서 설치된 Android NDK 버전과 External Tools 경로가 일치하지 않거나 프로젝트 경로에 한글/공백이 포함될 때 발생합니다.',
+      '1) 프로젝트 폴더 경로를 영문으로 변경 2) Edit → Preferences → External Tools에서 Android SDK/NDK/JDK 체크박스를 껐다가 다시 켜서 경로를 리셋하세요.',
+      '// Player Settings > Publishing Settings > Custom Main Gradle Template 체크 해제 후 재시도',
+      'PixelKnight',
+      29
+    );
+    insErr.run(
+      'Unreal 5',
+      'PackagingResults: Error: Unknown Cook Failure (ExitCode=25)',
+      '삭제된 에셋을 참조하는 블루프린트 Redirector가 남아 있거나 구조체(Struct) 변경 후 컴파일되지 않은 노드가 있을 때 발생합니다.',
+      'Content 폴더 우클릭 → [Fix Up Redirectors in Folder] 실행 후, Saved 및 Intermediate 폴더를 삭제하고 프로젝트를 다시 열어 패키징하세요.',
+      '// Output Log에서 Ctrl+F로 "Error:" 또는 "Warning: Unable to find package"를 검색해 깨진 블루프린트 확인',
+      'ShaderWizard',
+      31
+    );
+    insErr.run(
+      'Godot 4',
+      '한글 텍스트가 네모 박스(□□□)로 깨지거나 HTML5 웹 빌드 시 멈추는 현상',
+      '기본 시스템 폰트에 한글 글리프가 없거나, Godot 4.0~4.2 웹 내보내기 시 SharedArrayBuffer(멀티스레드) 헤더가 서버에 없을 때 발생합니다.',
+      '1) Pretendard 또는 갈무리(Galmuri) .ttf 폰트를 Project Settings → GUI → Theme → Custom Font에 등록 2) Godot 4.3 이상에서 Web Export 시 [Thread Support] 옵션을 끄고(Single-thread) 내보내면 모든 웹 호스팅에서 즉시 작동합니다.',
+      '# Godot 4.3 Web Export 설정:
+# Export -> Web -> Variant -> Thread Support: OFF (체크 해제)',
+      'GodotCrafter',
+      35
+    );
+  }
+} catch {}
+
+app.get('/api/errors', (_req, res) => {
+  const rows = db.prepare('SELECT * FROM error_wiki ORDER BY helpful_count DESC, id DESC LIMIT 40').all();
+  res.json(rows);
+});
+
+app.post('/api/errors', (req, res) => {
+  const { engine, error_title, cause, solution, code_fix, author } = req.body || {};
+  if (!error_title || !solution) return res.status(400).json({ error: 'error_title and solution required' });
+  db.prepare(
+    'INSERT INTO error_wiki (engine, error_title, cause, solution, code_fix, author) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(
+    String(engine || 'Unity').trim(),
+    String(error_title).trim(),
+    String(cause || '개발 중 자주 발생하는 설정/참조 오류').trim(),
+    String(solution).trim(),
+    code_fix ? String(code_fix).trim() : null,
+    String(author || 'IndieDev').trim()
+  );
+  const rows = db.prepare('SELECT * FROM error_wiki ORDER BY helpful_count DESC, id DESC LIMIT 40').all();
+  res.status(201).json(rows);
+});
+
+app.post('/api/errors/:id/helpful', (req, res) => {
+  db.prepare('UPDATE error_wiki SET helpful_count = COALESCE(helpful_count, 0) + 1 WHERE id = ?').run(req.params.id);
+  const row = db.prepare('SELECT helpful_count FROM error_wiki WHERE id = ?').get(req.params.id) as any;
+  res.json({ helpful_count: row?.helpful_count || 1 });
 });
 
 app.get('/api/showcases', (_req, res) => {
@@ -1851,15 +1955,16 @@ app.delete('/api/users/me', authenticateToken, (req: any, res: any) => {
 
 // Update User Portfolio Profile
 app.put('/api/users/profile', authenticateToken, (req: any, res: any) => {
-  const { bio, engine, github_url, steam_url, itch_url } = req.body || {};
+  const { bio, engine, github_url, steam_url, itch_url, support_url } = req.body || {};
   db.prepare(
-    'UPDATE users SET bio = ?, engine = ?, github_url = ?, steam_url = ?, itch_url = ? WHERE id = ?'
+    'UPDATE users SET bio = ?, engine = ?, github_url = ?, steam_url = ?, itch_url = ?, support_url = ? WHERE id = ?'
   ).run(
     (bio || '').trim(),
     (engine || 'Unity').trim(),
     (github_url || '').trim(),
     (steam_url || '').trim(),
     (itch_url || '').trim(),
+    (support_url || '').trim(),
     req.user.id
   );
   res.json({ success: true });
@@ -1868,7 +1973,7 @@ app.put('/api/users/profile', authenticateToken, (req: any, res: any) => {
 // User Profile Route
 app.get('/api/users/:username', (req, res) => {
   const username = req.params.username;
-  const userStmt = db.prepare('SELECT id, username, profile_image, bio, engine, github_url, steam_url, itch_url, created_at FROM users WHERE username = ?');
+  const userStmt = db.prepare('SELECT id, username, profile_image, bio, engine, github_url, steam_url, itch_url, support_url, created_at FROM users WHERE username = ?');
   const user: any = userStmt.get(username);
   if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -1911,6 +2016,12 @@ app.get('/api/users/:username', (req, res) => {
       id: user.id.toString(),
       username: user.username,
       profile_image: user.profile_image,
+      bio: user.bio,
+      engine: user.engine,
+      github_url: user.github_url,
+      steam_url: user.steam_url,
+      itch_url: user.itch_url,
+      support_url: user.support_url,
       created_at: user.created_at
     },
     stats: {

@@ -8,6 +8,7 @@ export interface DevLog {
   likes: number;
   views?: number;
   demo_url?: string;
+  support_url?: string;
   is_pinned?: number | boolean;
   poll_question?: string;
   poll_option_a?: string;
@@ -68,6 +69,7 @@ export interface UserProfile {
     github_url?: string;
     steam_url?: string;
     itch_url?: string;
+    support_url?: string;
     created_at: string;
   };
   stats: {

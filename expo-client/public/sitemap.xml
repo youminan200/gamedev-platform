@@ -25,6 +25,12 @@
     <priority>0.95</priority>
   </url>
   <url>
+    <loc>https://gamedev-platform-expo-client.vercel.app/sfx-studio.html</loc>
+    <lastmod>2026-10-21</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
     <loc>https://gamedev-platform-expo-client.vercel.app/arcade.html</loc>
     <lastmod>2026-10-21</lastmod>
     <changefreq>weekly</changefreq>

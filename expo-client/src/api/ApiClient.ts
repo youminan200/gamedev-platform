@@ -358,7 +358,7 @@ export const ApiClient = {
     return await response.json();
   },
 
-  updateUserProfile: async (data: { bio?: string; engine?: string; github_url?: string; steam_url?: string; itch_url?: string }): Promise<void> => {
+  updateUserProfile: async (data: { bio?: string; engine?: string; github_url?: string; steam_url?: string; itch_url?: string; support_url?: string }): Promise<void> => {
     const response = await fetch(`${BASE_URL}/users/profile`, {
       method: 'PUT',
       headers: {
@@ -484,6 +484,29 @@ export const ApiClient = {
     const next = ApiClient.getBlockedUsers().filter((u) => u !== targetUsername);
     setStorageItem('devground_blocked_users', JSON.stringify(next));
     return next;
+  },
+
+
+  getErrors: async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/errors`);
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  postError: async (data: { engine: string; error_title: string; cause: string; solution: string; code_fix?: string; author?: string }): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/errors`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  markErrorHelpful: async (id: number | string): Promise<{ helpful_count: number }> => {
+    const response = await fetch(`${BASE_URL}/errors/${id}/helpful`, { method: 'POST' });
+    if (!response.ok) return { helpful_count: 1 };
+    return await response.json();
   },
 
   getUserProfile: async (username: string): Promise<any> => {

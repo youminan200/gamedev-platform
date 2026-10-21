@@ -245,6 +245,12 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
             <Text style={[styles.editBtnText, { color: '#FFF' }]}>🎮 데모 플레이 ↗</Text>
           </TouchableOpacity>
         ) : null}
+        <TouchableOpacity
+          style={[styles.editBtn, { backgroundColor: '#FEF3C7' }]}
+          onPress={() => Linking.openURL(devlog.support_url || devlog.demo_url || 'https://store.steampowered.com/genre/Indie/')}
+        >
+          <Text style={[styles.editBtnText, { color: '#B45309' }]}>☕ 창작자 후원 / 스팀 찜하기 ↗</Text>
+        </TouchableOpacity>
         <TouchableOpacity style={[styles.editBtn, { backgroundColor: '#EEF2FF' }]} onPress={handleTranslate} disabled={translating}>
           <Text style={[styles.editBtnText, { color: '#4F46E5' }]}>
             {translating ? '🌐 번역 중...' : translatedBody ? '🔄 원문 보기 (Original)' : '🌐 한↔영 원클릭 번역 (Translate)'}

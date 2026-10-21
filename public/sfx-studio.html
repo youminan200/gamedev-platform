@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>🔊 DevGround 8비트 게임 효과음(SFX) 제작 스튜디오 (.WAV 무료 다운로드)</title>
+  <meta name="description" content="설치 없이 웹에서 점프, 레이저, 폭발, 코인, 보스 경보 등 인디게임 8비트 레트로 효과음(SFX)을 즉시 합성하고 .WAV 오디오 파일로 무료 다운로드하세요." />
+  <style>
+    * { box-sizing: border-box; user-select: none; }
+    body { margin: 0; padding: 16px; background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    .studio { max-width: 760px; margin: 0 auto; background: #1e293b; border: 1px solid #334155; border-radius: 18px; padding: 20px; }
+    h1 { font-size: 20px; margin: 0 0 6px 0; color: #38bdf8; }
+    .sub { font-size: 12px; color: #94a3b8; margin-bottom: 14px; }
+    .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .btn { background: #334155; color: #f8fafc; border: 1px solid #475569; padding: 9px 14px; border-radius: 10px; font-weight: 800; font-size: 13px; cursor: pointer; }
+    .btn:hover { background: #475569; }
+    .btn-primary { background: #38bdf8; color: #0f172a; border: none; }
+    .btn-success { background: #10b981; color: #0f172a; border: none; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .control { background: #0f172a; padding: 12px; border-radius: 12px; border: 1px solid #334155; }
+    .control label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; }
+    input[type=range] { width: 100%; accent-color: #38bdf8; }
+    select { width: 100%; padding: 6px; background: #1e293b; color: #fff; border: 1px solid #475569; border-radius: 8px; font-weight: 700; }
+    canvas { width: 100%; height: 90px; background: #020617; border-radius: 12px; border: 1px solid #334155; margin-bottom: 14px; display: block; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="studio">
+    <h1>🔊 8-Bit 레트로 효과음(SFX) 합성 스튜디오</h1>
+    <div class="sub">프리셋 버튼을 누르거나 슬라이더를 조절한 뒤 <strong>[📥 .WAV 파일 다운로드]</strong>를 누르면 Unity / Unreal / Godot에 바로 쓸 수 있는 오디오 파일이 저장됩니다!</div>
+
+    <div class="presets">
+      <button class="btn" onclick="applyPreset('jump')">🦘 점프 (Jump)</button>
+      <button class="btn" onclick="applyPreset('laser')">⚡ 레이저/공격 (Laser)</button>
+      <button class="btn" onclick="applyPreset('explosion')">💥 폭발/타격 (Hit/Boom)</button>
+      <button class="btn" onclick="applyPreset('coin')">🪙 코인/아이템 (Coin)</button>
+      <button class="btn" onclick="applyPreset('powerup')">🌟 레벨업/버프 (PowerUp)</button>
+      <button class="btn btn-primary" onclick="applyPreset('random')">🎲 랜덤 효과음 뽑기</button>
+    </div>
+
+    <canvas id="waveCanvas" width="700" height="90"></canvas>
+
+    <div class="grid">
+      <div class="control">
+        <label><span>파형 (Wave Type)</span></label>
+        <select id="waveType" onchange="playAndRender()">
+          <option value="square">Square (8비트 칩튠)</option>
+          <option value="sawtooth">Sawtooth (날카로운 신스)</option>
+          <option value="triangle">Triangle (부드러운 레트로)</option>
+          <option value="noise">White Noise (폭발/타격음)</option>
+        </select>
+      </div>
+      <div class="control">
+        <label><span>시작 주파수 (Start Freq)</span><span id="vFreq">440 Hz</span></label>
+        <input type="range" id="startFreq" min="80" max="1600" value="440" oninput="updateLabels(); playAndRender()" />
+      </div>
+      <div class="control">
+        <label><span>목표 주파수 (End Freq)</span><span id="vEndFreq">880 Hz</span></label>
+        <input type="range" id="endFreq" min="40" max="2000" value="880" oninput="updateLabels(); playAndRender()" />
+      </div>
+      <div class="control">
+        <label><span>길이 (Duration)</span><span id="vDur">0.28 초</span></label>
+        <input type="range" id="duration" min="0.08" max="1.0" step="0.02" value="0.28" oninput="updateLabels(); playAndRender()" />
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-primary" onclick="playAndRender()">▶️ 효과음 들어보기 (Play)</button>
+      <button class="btn btn-success" onclick="downloadWav()">📥 .WAV 효과음 파일 무료 다운로드</button>
+    </div>
+  </div>
+
+  <script>
+    let lastSamples = new Float32Array(0);
+    const sampleRate = 44100;
+
+    function updateLabels() {
+      document.getElementById('vFreq').innerText = document.getElementById('startFreq').value + ' Hz';
+      document.getElementById('vEndFreq').innerText = document.getElementById('endFreq').value + ' Hz';
+      document.getElementById('vDur').innerText = document.getElementById('duration').value + ' 초';
+    }
+
+    function synthesize() {
+      const type = document.getElementById('waveType').value;
+      const f0 = parseFloat(document.getElementById('startFreq').value);
+      const f1 = parseFloat(document.getElementById('endFreq').value);
+      const dur = parseFloat(document.getElementById('duration').value);
+      const len = Math.floor(sampleRate * dur);
+      const buf = new Float32Array(len);
+      let phase = 0;
+      for (let i = 0; i < len; i++) {
+        const t = i / len;
+        const freq = f0 + (f1 - f0) * Math.pow(t, 0.85);
+        phase += (2 * Math.PI * freq) / sampleRate;
+        const env = Math.pow(1 - t, 1.3);
+        let sample = 0;
+        if (type === 'square') sample = Math.sin(phase) >= 0 ? 0.6 : -0.6;
+        else if (type === 'sawtooth') sample = ((phase / Math.PI) % 2 - 1) * 0.6;
+        else if (type === 'triangle') sample = (2 / Math.PI) * Math.asin(Math.sin(phase)) * 0.7;
+        else sample = (Math.random() * 2 - 1) * 0.7 * (Math.sin(phase * 0.2) >= 0 ? 1 : 0.4);
+        buf[i] = sample * env;
+      }
+      lastSamples = buf;
+      drawWaveform(buf);
+      return buf;
+    }
+
+    function drawWaveform(buf) {
+      const c = document.getElementById('waveCanvas');
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#020617';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.strokeStyle = '#38bdf8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      const step = Math.max(1, Math.floor(buf.length / c.width));
+      for (let x = 0; x < c.width; x++) {
+        const idx = Math.min(buf.length - 1, x * step);
+        const y = (0.5 - buf[idx] * 0.42) * c.height;
+        if (x === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+    function playAndRender() {
+      const samples = synthesize();
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const actx = new AudioCtx();
+        const audioBuf = actx.createBuffer(1, samples.length, sampleRate);
+        audioBuf.getChannelData(0).set(samples);
+        const src = actx.createBufferSource();
+        src.buffer = audioBuf;
+        src.connect(actx.destination);
+        src.start();
+      } catch (e) {}
+    }
+
+    function applyPreset(name) {
+      const w = document.getElementById('waveType');
+      const f0 = document.getElementById('startFreq');
+      const f1 = document.getElementById('endFreq');
+      const d = document.getElementById('duration');
+      if (name === 'jump') { w.value = 'square'; f0.value = 260; f1.value = 780; d.value = 0.24; }
+      else if (name === 'laser') { w.value = 'sawtooth'; f0.value = 1100; f1.value = 140; d.value = 0.22; }
+      else if (name === 'explosion') { w.value = 'noise'; f0.value = 240; f1.value = 50; d.value = 0.52; }
+      else if (name === 'coin') { w.value = 'square'; f0.value = 660; f1.value = 1320; d.value = 0.28; }
+      else if (name === 'powerup') { w.value = 'triangle'; f0.value = 330; f1.value = 1480; d.value = 0.46; }
+      else {
+        const types = ['square', 'sawtooth', 'triangle', 'noise'];
+        w.value = types[Math.floor(Math.random() * types.length)];
+        f0.value = Math.floor(100 + Math.random() * 1200);
+        f1.value = Math.floor(80 + Math.random() * 1500);
+        d.value = (0.14 + Math.random() * 0.45).toFixed(2);
+      }
+      updateLabels();
+      playAndRender();
+    }
+
+    function downloadWav() {
+      if (!lastSamples.length) synthesize();
+      const numSamples = lastSamples.length;
+      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buffer);
+      const writeStr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + numSamples * 2, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, numSamples * 2, true);
+      for (let i = 0; i < numSamples; i++) {
+        const s = Math.max(-1, Math.min(1, lastSamples[i]));
+        view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      const blob = new Blob([buffer], { type: 'audio/wav' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'devground_sfx_' + Date.now().toString().slice(-4) + '.wav';
+      a.click();
+    }
+
+    synthesize();
+  </script>
+</body>
+</html>

@@ -21,6 +21,7 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
   const [githubInput, setGithubInput] = useState('');
   const [steamInput, setSteamInput] = useState('');
   const [itchInput, setItchInput] = useState('');
+  const [supportInput, setSupportInput] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
   const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -40,6 +41,7 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
       setGithubInput(data?.user?.github_url || '');
       setSteamInput(data?.user?.steam_url || '');
       setItchInput(data?.user?.itch_url || '');
+      setSupportInput(data?.user?.support_url || '');
       setBioInput(data?.user?.bio || '');
       setEngineInput(data?.user?.engine || 'Unity');
       setGithubInput(data?.user?.github_url || '');
@@ -348,6 +350,13 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
               onChangeText={setItchInput}
               autoCapitalize="none"
             />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 14, fontSize: 14 }}
+              placeholder="☕ 후원 링크 / 스팀 위시리스트 주소 (Buy Me a Coffee · 투네이션 등)"
+              value={supportInput}
+              onChangeText={setSupportInput}
+              autoCapitalize="none"
+            />
             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
               <TouchableOpacity onPress={() => setEditProfileVisible(false)} style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '700' }}>취소</Text>
@@ -363,6 +372,7 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
                       github_url: githubInput,
                       steam_url: steamInput,
                       itch_url: itchInput,
+                      support_url: supportInput,
                     });
                     setEditProfileVisible(false);
                     fetchProfile();

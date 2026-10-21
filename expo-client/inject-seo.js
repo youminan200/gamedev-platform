@@ -116,6 +116,7 @@ if (fs.existsSync(htmlPath)) {
       <li><a href="/free-game-assets.html">무료 게임 에셋 허브 (2D 도트 픽셀아트 타일셋, 3D 로우폴리 모델, 8비트 BGM/효과음 오디오 미리듣기, Unity C# 코드 스니펫)</a></li>
       <li><a href="/game-devlog-showcase.html">인디게임 공식 홈페이지 &amp; 웹데모(WebGL/HTML5/Steam/Itch.io) 쇼케이스 홍보관 및 팀원 모집 보드</a></li>
       <li><a href="/arcade.html">DevGround 내장 미니게임 오락실: Bug Slayer (인디 개발자 버그 피하기 실시간 랭킹 게임)</a></li>
+      <li><a href="/sfx-studio.html">무료 8비트 게임 효과음(SFX) 제작 스튜디오 (.WAV 오디오 즉시 합성 및 다운로드)</a></li>
       <li><a href="/privacy.html">개인정보처리방침 및 이용약관 (Privacy Policy &amp; Terms)</a></li>
     </ul>
     <article>
@@ -133,6 +134,10 @@ if (fs.existsSync(htmlPath)) {
     <article>
       <h3>[Free Asset] 16x16 다크 판타지 던전 타일셋, 로우폴리 3D 무기 에셋, 8비트 효과음 스타터 팩, 코요테 타임 C# 스크립트</h3>
       <p>상업/비상업 인디게임 프로젝트에 바로 사용할 수 있는 무료 2D, 3D, Audio, UI, Code 게임 개발 에셋 모음.</p>
+    </article>
+    <article>
+      <h3>[Error Wiki] Unity NullReferenceException, URP 분홍색(Magenta) 셰이더 깨짐, Android IL2CPP 빌드 에러, Unreal ExitCode=25, Godot 4 한글 폰트 깨짐 해결법</h3>
+      <p>게임 개발 중 자주 발생하는 유니티·언리얼·고도 엔진 에러 원인과 1분 해결 코드 백과사전.</p>
     </article>
   </section>`;
 
