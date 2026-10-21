@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEVGROUND // INTERACTIVE WEB DEMO PLAYER</title>
+  <style>
+    @font-face {
+      font-family: 'DungGeunMo';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    }
+    * { box-sizing: border-box; user-select: none; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: #0D0F17;
+      color: #F3F4F6;
+      font-family: 'DungGeunMo', 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .console-frame {
+      width: 100%;
+      max-width: 720px;
+      background: #1A1D2B;
+      border: 2px solid #00E5FF;
+      border-radius: 6px;
+      padding: 12px;
+      box-shadow: 4px 4px 0px #05060A;
+    }
+    .hud-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 8px;
+      border-bottom: 2px solid #3A415E;
+      margin-bottom: 10px;
+    }
+    .game-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    button {
+      font-family: 'DungGeunMo', monospace;
+      font-size: 12px;
+      background: #252A3E;
+      color: #F3F4F6;
+      border: 1.5px solid #3A415E;
+      border-radius: 4px;
+      padding: 6px 10px;
+      cursor: pointer;
+    }
+    button.active {
+      background: #FF4D6D;
+      color: #FFF;
+      border-color: #FF4D6D;
+      font-weight: 900;
+    }
+    canvas {
+      width: 100%;
+      max-width: 680px;
+      height: 380px;
+      background: #11131C;
+      border: 2px solid #FFD166;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto;
+      image-rendering: pixelated;
+      touch-action: none;
+    }
+    .touch-controls {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+    .touch-btn {
+      background: #252A3E;
+      border: 2px solid #00E5FF;
+      color: #00E5FF;
+      font-weight: 900;
+      padding: 8px 16px;
+      border-radius: 4px;
+    }
+    .touch-btn:active {
+      background: #00E5FF;
+      color: #11131C;
+    }
+  </style>
+</head>
+<body>
+  <div class="console-frame">
+    <div class="hud-bar">
+      <div class="game-tabs">
+        <button id="tab-shadow" onclick="switchGame('shadow')">🗡️ Shadow Dungeon (로그라이크)</button>
+        <button id="tab-cozy" onclick="switchGame('cozy')">🌱 Cozy Pixel Valley (농장)</button>
+        <button id="tab-arena" onclick="switchGame('arena')">⚡ Cel-Shader Arena (슈팅)</button>
+      </div>
+      <span id="scoreText" style="color:#FFD166; font-weight:900; font-size:13px;">SCORE: 0</span>
+    </div>
+
+    <canvas id="gameCanvas" width="680" height="380"></canvas>
+
+    <div class="touch-controls">
+      <button class="touch-btn" onpointerdown="keys.ArrowLeft=true" onpointerup="keys.ArrowLeft=false">◀ LEFT</button>
+      <button class="touch-btn" onpointerdown="keys.ArrowUp=true" onpointerup="keys.ArrowUp=false">▲ UP</button>
+      <button class="touch-btn" onpointerdown="keys.ArrowDown=true" onpointerup="keys.ArrowDown=false">▼ DOWN</button>
+      <button class="touch-btn" onpointerdown="keys.ArrowRight=true" onpointerup="keys.ArrowRight=false">▶ RIGHT</button>
+      <button class="touch-btn" style="border-color:#FF4D6D; color:#FF4D6D;" onclick="triggerAction()">⚔️ ACTION / ATTACK (Space/Click)</button>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    let mode = params.get('game') || 'shadow';
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const keys = {};
+
+    window.addEventListener('keydown', e => {
+      keys[e.key] = true;
+      if (e.key === ' ') triggerAction();
+    });
+    window.addEventListener('keyup', e => { keys[e.key] = false; });
+
+    let player = { x: 320, y: 190, hp: 100, score: 0, dir: 1 };
+    let entities = [];
+    let particles = [];
+    let crops = [];
+
+    function initGame(m) {
+      mode = m;
+      ['shadow', 'cozy', 'arena'].forEach(k => {
+        const el = document.getElementById('tab-' + k);
+        if (el) el.classList.toggle('active', k === m);
+      });
+      player = { x: 320, y: 190, hp: 100, score: 0, dir: 1 };
+      entities = [];
+      particles = [];
+      crops = [];
+
+      if (m === 'shadow') {
+        for (let i = 0; i < 6; i++) spawnMonster();
+      } else if (m === 'cozy') {
+        for (let y = 80; y <= 280; y += 60) {
+          for (let x = 140; x <= 520; x += 70) {
+            crops.push({ x, y, stage: Math.floor(Math.random() * 3), timer: 0 });
+          }
+        }
+      } else if (m === 'arena') {
+        for (let i = 0; i < 5; i++) spawnDrone();
+      }
+    }
+
+    function spawnMonster() {
+      entities.push({
+        x: Math.random() * 620 + 30,
+        y: Math.random() * 320 + 30,
+        vx: (Math.random() - 0.5) * 2.2,
+        vy: (Math.random() - 0.5) * 2.2,
+        hp: 2,
+        color: '#FF4D6D'
+      });
+    }
+
+    function spawnDrone() {
+      entities.push({
+        x: Math.random() < 0.5 ? 20 : 660,
+        y: Math.random() * 340 + 20,
+        vx: 0,
+        vy: 0,
+        hp: 1,
+        color: '#00E5FF'
+      });
+    }
+
+    function spawnBurst(x, y, color) {
+      for (let i = 0; i < 10; i++) {
+        particles.push({
+          x, y,
+          vx: (Math.random() - 0.5) * 6,
+          vy: (Math.random() - 0.5) * 6,
+          life: 20,
+          color
+        });
+      }
+    }
+
+    function triggerAction() {
+      if (mode === 'shadow') {
+        spawnBurst(player.x + player.dir * 26, player.y, '#FFD166');
+        entities.forEach((en, idx) => {
+          const dist = Math.hypot(en.x - player.x, en.y - player.y);
+          if (dist < 68) {
+            en.hp--;
+            spawnBurst(en.x, en.y, '#FF4D6D');
+            if (en.hp <= 0) {
+              player.score += 100;
+              entities.splice(idx, 1);
+              spawnMonster();
+            }
+          }
+        });
+      } else if (mode === 'cozy') {
+        crops.forEach(c => {
+          if (Math.hypot(c.x - player.x, c.y - player.y) < 48) {
+            if (c.stage >= 2) {
+              c.stage = 0;
+              player.score += 50;
+              spawnBurst(c.x, c.y, '#10B981');
+            } else {
+              c.stage++;
+              spawnBurst(c.x, c.y, '#00E5FF');
+            }
+          }
+        });
+      } else if (mode === 'arena') {
+        // Shoot laser in 4 directions
+        [[8,0],[-8,0],[0,8],[0,-8],[6,6],[-6,6],[6,-6],[-6,-6]].forEach(([vx, vy]) => {
+          particles.push({ x: player.x, y: player.y, vx, vy, life: 35, color: '#00E5FF', bullet: true });
+        });
+      }
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const tx = ((e.clientX - rect.left) / rect.width) * canvas.width;
+      const ty = ((e.clientY - rect.top) / rect.height) * canvas.height;
+      player.x += (tx - player.x) * 0.35;
+      player.y += (ty - player.y) * 0.35;
+      triggerAction();
+    });
+
+    function switchGame(m) {
+      initGame(m);
+    }
+
+    function loop() {
+      const spd = 3.6;
+      if (keys.ArrowLeft || keys.a) { player.x -= spd; player.dir = -1; }
+      if (keys.ArrowRight || keys.d) { player.x += spd; player.dir = 1; }
+      if (keys.ArrowUp || keys.w) player.y -= spd;
+      if (keys.ArrowDown || keys.s) player.y += spd;
+      player.x = Math.max(20, Math.min(660, player.x));
+      player.y = Math.max(20, Math.min(360, player.y));
+
+      ctx.fillStyle = mode === 'cozy' ? '#132A1E' : mode === 'arena' ? '#0F172A' : '#11131C';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Grid lines
+      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+      for (let x = 0; x < canvas.width; x += 34) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 34) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      if (mode === 'cozy') {
+        crops.forEach(c => {
+          c.timer++;
+          if (c.timer > 180 && c.stage < 2) { c.stage++; c.timer = 0; }
+          ctx.fillStyle = '#3E2723';
+          ctx.fillRect(c.x - 18, c.y - 18, 36, 36);
+          ctx.fillStyle = c.stage === 0 ? '#A16207' : c.stage === 1 ? '#4ADE80' : '#FFD166';
+          ctx.fillRect(c.x - 10, c.y - 10, 20, 20);
+        });
+      }
+
+      if (mode === 'shadow' || mode === 'arena') {
+        entities.forEach((en, idx) => {
+          if (mode === 'arena') {
+            const angle = Math.atan2(player.y - en.y, player.x - en.x);
+            en.x += Math.cos(angle) * 1.4;
+            en.y += Math.sin(angle) * 1.4;
+          } else {
+            en.x += en.vx;
+            en.y += en.vy;
+            if (en.x < 20 || en.x > 660) en.vx *= -1;
+            if (en.y < 20 || en.y > 360) en.vy *= -1;
+          }
+          ctx.fillStyle = en.color;
+          ctx.fillRect(en.x - 12, en.y - 12, 24, 24);
+          ctx.fillStyle = '#FFF';
+          ctx.fillRect(en.x - 6, en.y - 4, 4, 4);
+          ctx.fillRect(en.x + 2, en.y - 4, 4, 4);
+        });
+      }
+
+      // Particles & Bullets
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - 3, p.y - 3, 6, 6);
+
+        if (p.bullet) {
+          entities.forEach((en, eIdx) => {
+            if (Math.hypot(en.x - p.x, en.y - p.y) < 18) {
+              p.life = 0;
+              player.score += 120;
+              spawnBurst(en.x, en.y, '#FFD166');
+              entities.splice(eIdx, 1);
+              spawnDrone();
+            }
+          });
+        }
+        if (p.life <= 0) particles.splice(i, 1);
+      }
+
+      // Draw Player Sprite
+      ctx.fillStyle = '#FFD166';
+      ctx.fillRect(player.x - 14, player.y - 14, 28, 28);
+      ctx.fillStyle = '#11131C';
+      ctx.fillRect(player.x - 6, player.y - 4, 4, 6);
+      ctx.fillRect(player.x + 4, player.y - 4, 4, 6);
+
+      // Banner Overlay
+      ctx.fillStyle = 'rgba(17,19,28,0.8)';
+      ctx.fillRect(10, 10, 430, 28);
+      ctx.fillStyle = '#00E5FF';
+      ctx.font = '12px DungGeunMo, monospace';
+      const guide = mode === 'shadow'
+        ? '🗡️ 방향키/터치로 이동 + SPACE/클릭으로 던전 슬라임 처치!'
+        : mode === 'cozy'
+          ? '🌱 밭으로 이동해 SPACE/클릭으로 물주기 & 황금작물 수확!'
+          : '⚡ 방향키/터치 이동 + SPACE/클릭으로 8방향 셀셰이더 레이저 발사!';
+      ctx.fillText(guide, 18, 28);
+
+      document.getElementById('scoreText').textContent = 'SCORE: ' + player.score;
+      requestAnimationFrame(loop);
+    }
+
+    initGame(mode);
+    loop();
+  </script>
+</body>
+</html>

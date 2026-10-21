@@ -55,15 +55,25 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [copiedErrId, setCopiedErrId] = useState<string | null>(null);
 
   const BUILTIN_UNITY_ERRORS: any[] = [
+    // 1. Unity C# Compiler Errors (CS Codes)
     { id: 'u1', engine: 'Unity (C# CS코드)', error_title: 'CS0103: The name "..." does not exist in the current context', cause: '선언하지 않은 변수/함수명을 사용했거나 대소문자 오타(gameObject vs gameobject), 또는 지역변수 중괄호 { } 범위를 벗어났을 때 발생합니다.', solution: '1) 대소문자 철자를 확인하세요. 2) 특정 함수 안에서 선언한 변수를 다른 함수에서 쓰려면 클래스 상단 멤버 변수로 선언하세요.', code_fix: 'private float moveSpeed = 5f; // 클래스 상단에 선언', helpful_count: 68 },
-    { id: 'u2', engine: 'Unity (C# CS코드)', error_title: 'CS0246: The type or namespace name "..." could not be found', cause: 'UI(Button, Image), TextMeshPro, SceneManager 등을 사용할 때 스크립트 최상단 using 구문이 빠졌거나 .asmdef 참조가 누락되었습니다.', solution: '스크립트 맨 위에 using UnityEngine.UI; / using TMPro; / using UnityEngine.SceneManagement; 를 추가하세요.', code_fix: 'using UnityEngine;\nusing UnityEngine.UI;\nusing UnityEngine.SceneManagement;\nusing TMPro;', helpful_count: 64 },
-    { id: 'u3', engine: 'Unity (C# CS코드)', error_title: 'CS1061: "..." does not contain a definition for "..."', cause: '해당 컴포넌트에 없는 함수/변수를 호출했거나, 내가 만든 스크립트 이름(예: Camera.cs)이 Unity 기본 클래스 이름과 겹쳐 충돌났습니다.', solution: '호출 대상 컴포넌트가 맞는지 확인하고, 내 스크립트 이름이 Unity 내장 클래스명과 같다면 파일명을 변경하세요.', code_fix: 'GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;', helpful_count: 59 },
+    { id: 'u2', engine: 'Unity (C# CS코드)', error_title: 'CS0246: The type or namespace name "..." could not be found', cause: 'UI(Button, Image), TextMeshPro, SceneManager, InputSystem 등을 사용할 때 스크립트 최상단 using 구문이 빠졌거나 .asmdef 참조가 누락되었습니다.', solution: '스크립트 맨 위에 using UnityEngine.UI; / using TMPro; / using UnityEngine.SceneManagement; 를 추가하세요.', code_fix: 'using UnityEngine;\nusing UnityEngine.UI;\nusing UnityEngine.SceneManagement;\nusing TMPro;', helpful_count: 64 },
+    { id: 'u3', engine: 'Unity (C# CS코드)', error_title: 'CS1061: "..." does not contain a definition for "..."', cause: '해당 컴포넌트에 없는 함수/변수를 호출했거나, 내가 만든 스크립트 이름(예: Camera.cs, Input.cs)이 Unity 기본 클래스 이름과 겹쳐 충돌났습니다.', solution: '호출 대상 컴포넌트가 맞는지 확인하고, 내 스크립트 이름이 Unity 내장 클래스명과 같다면 파일명을 변경하세요.', code_fix: 'GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;', helpful_count: 59 },
     { id: 'u4', engine: 'Unity (C# CS코드)', error_title: 'CS0029: Cannot implicitly convert type "double" to "float" (또는 float to int)', cause: 'C#에서 소수점 숫자 뒤에 f를 붙이지 않으면 double로 인식되어 float 변수에 대입할 수 없습니다.', solution: '소수점 숫자 뒤에 반드시 f를 붙이고(예: 3.5f), int에 넣을 때는 Mathf.RoundToInt()를 사용하세요.', code_fix: 'float speed = 5.5f;\nint dmg = Mathf.RoundToInt(speed);', helpful_count: 55 },
     { id: 'u5', engine: 'Unity (C# CS코드)', error_title: 'CS1612: Cannot modify the return value of "Transform.position" because it is not a variable', cause: 'transform.position.x = 5f; 처럼 구조체(Vector3) 반환값의 일부만 직접 수정하려고 할 때 발생합니다.', solution: 'Vector3 변수에 먼저 담아서 수정한 뒤 transform.position에 통째로 대입하세요.', code_fix: 'Vector3 pos = transform.position;\npos.x = 5f;\ntransform.position = pos;', helpful_count: 61 },
-    { id: 'u6', engine: 'Unity (C# CS코드)', error_title: 'CS0120: An object reference is required for the non-static field, method, or property', cause: '생성된 오브젝트 인스턴스가 아니라 클래스 이름 자체로 일반 함수/변수를 호출했습니다.', solution: 'GetComponent<T>() 또는 FindFirstObjectByType<T>()로 실제 오브젝트를 찾아 호출하세요.', code_fix: 'Player p = FindFirstObjectByType<Player>();\np.Jump();', helpful_count: 48 },
-    { id: 'u7', engine: 'Unity (C# CS코드)', error_title: 'CS0161: Not all code paths return a value', cause: '반환값이 있는 함수에서 if문 안에만 return이 있고 함수 끝에 기본 return이 빠졌습니다.', solution: '함수 맨 마지막 줄에 기본 return 문을 추가하세요.', code_fix: 'bool Check() {\n    if (hp > 0) return true;\n    return false;\n}', helpful_count: 43 },
+    { id: 'u6', engine: 'Unity (C# CS코드)', error_title: 'CS0120: An object reference is required for the non-static field, method, or property', cause: '생성된 오브젝트 인스턴스가 아니라 클래스 이름 자체로 일반(non-static) 함수/변수를 호출했습니다.', solution: 'GetComponent<T>(), 싱글톤 Instance, 또는 FindFirstObjectByType<T>()로 실제 오브젝트를 찾아 호출하세요.', code_fix: 'Player p = FindFirstObjectByType<Player>();\np.Jump();', helpful_count: 48 },
+    { id: 'u7', engine: 'Unity (C# CS코드)', error_title: 'CS0161: Not all code paths return a value', cause: '반환값(int, bool 등)이 있는 함수에서 if문 안에만 return이 있고 함수 끝에 기본 return이 빠졌습니다.', solution: '함수 맨 마지막 줄에 기본 return 문을 추가하세요.', code_fix: 'bool Check() {\n    if (hp > 0) return true;\n    return false;\n}', helpful_count: 43 },
     { id: 'u8', engine: 'Unity (C# CS코드)', error_title: 'CS0618 / CS0619: "..." is obsolete (Unity 6 구버전 API 경고/에러)', cause: 'Unity 6에서 구버전 API(rb.velocity, FindObjectOfType 등)가 최신 API로 변경되었습니다.', solution: 'rb.velocity -> rb.linearVelocity, FindObjectOfType -> FindFirstObjectByType 으로 변경하세요.', code_fix: 'rb.linearVelocity = new Vector2(x, rb.linearVelocity.y);', helpful_count: 52 },
     { id: 'u9', engine: 'Unity (C# CS코드)', error_title: 'CS1002 / CS1513 / CS1525: ; expected / } expected / Invalid expression term', cause: '코드 줄 끝에 세미콜론(;)이 빠졌거나 중괄호 { } 짝이 맞지 않을 때 발생합니다.', solution: '에러에 적힌 줄 번호(또는 바로 윗줄) 끝에 ; 가 있는지, 닫는 중괄호 } 개수가 맞는지 확인하세요.', code_fix: 'int hp = 100; // 세미콜론과 중괄호 짝 확인', helpful_count: 50 },
+    { id: 'u24', engine: 'Unity (C# CS코드)', error_title: 'CS0101 / CS0111: The namespace already contains a definition / Type already defines a member', cause: '프로젝트 폴더 안에 동일한 클래스 이름(.cs)이 2개 존재하거나, 한 스크립트 안에 똑같은 이름의 함수(예: Update 두 번)가 중복 작성되었습니다.', solution: '중복된 스크립트 파일을 삭제/이름변경하거나, 스크립트 내 중복된 함수 하나를 합치세요.', code_fix: '// 프로젝트 창에서 동일한 클래스명이 두 번 선언되었는지 검색', helpful_count: 47 },
+    { id: 'u25', engine: 'Unity (C# CS코드)', error_title: 'CS1501 / CS1503: No overload for method takes N arguments / Argument cannot convert from A to B', cause: '함수 호출 시 전달한 매개변수(인자) 개수가 다르거나, 잘못된 타입(예: GameObject 자리에 Transform 전달)을 넣었습니다.', solution: '함수 정의부의 매개변수 개수와 타입을 확인하세요. (예: Instantiate(prefab, transform.position, Quaternion.identity))', code_fix: 'Instantiate(prefab, transform.position, Quaternion.identity);', helpful_count: 51 },
+    { id: 'u26', engine: 'Unity (C# CS코드)', error_title: 'CS0266: Cannot implicitly convert type "Object" to "GameObject". An explicit conversion exists', cause: 'Resources.Load() 또는 구버전 Instantiate 반환값을 형변환 없이 변수에 대입했습니다.', solution: '제네릭 문법 Resources.Load<GameObject>("Path") 또는 Instantiate<GameObject>(prefab)를 사용하세요.', code_fix: 'GameObject go = Resources.Load<GameObject>("Prefabs/Slime");', helpful_count: 41 },
+    { id: 'u27', engine: 'Unity (C# CS코드)', error_title: 'CS0122: "..." is inaccessible due to its protection level (접근 제한자 오류)', cause: '다른 스크립트의 private 또는 protected 변수/함수에 외부에서 접근하려고 할 때 발생합니다.', solution: '대상 변수나 함수를 public으로 변경하거나 public 프로퍼티(Getter)를 만드세요.', code_fix: 'public int CurrentHp { get; private set; } = 100;', helpful_count: 58 },
+    { id: 'u28', engine: 'Unity (C# CS코드)', error_title: 'CS0165: Use of unassigned local variable (초기화되지 않은 지역변수 사용)', cause: '함수 안에서 선언만 하고 초기값(= 0, = null 등)을 넣지 않은 지역변수를 읽으려 했습니다.', solution: '지역변수 선언과 동시에 초기값을 대입하세요.', code_fix: 'int totalDamage = 0; // 선언 시 초기값 대입', helpful_count: 39 },
+    { id: 'u29', engine: 'Unity (C# CS코드)', error_title: 'CS0535: "..." does not implement interface member (인터페이스 구현 누락)', cause: 'IPointerClickHandler, IDamageable 등 인터페이스를 상속받고 필수 함수를 작성하지 않았거나 public을 빼먹었습니다.', solution: '인터페이스에 정의된 메서드를 반드시 public으로 정확히 구현하세요.', code_fix: 'public void OnPointerClick(PointerEventData eventData) { }', helpful_count: 42 },
+    { id: 'u30', engine: 'Unity (C# CS코드)', error_title: 'MonoBehaviour 파일명과 클래스명 불일치 ("Can\'t add script component because the script class cannot be found")', cause: 'C# 스크립트 파일 이름(예: PlayerMove.cs)과 코드 안의 public class 이름이 서로 다르면 오브젝트에 부착할 수 없습니다.', solution: '파일 이름과 public class 이름을 대소문자까지 100% 똑같이 맞추세요.', code_fix: '// 파일명이 PlayerMove.cs 이면:\npublic class PlayerMove : MonoBehaviour { }', helpful_count: 89 },
+
+    // 2. Unity Runtime Exceptions
     { id: 'u10', engine: 'Unity (런타임 예외)', error_title: 'NullReferenceException: Object reference not set to an instance of an object', cause: 'Inspector 슬롯이 비어 있거나(None), GetComponent<T>()가 실패해 null인 변수를 사용할 때 발생합니다.', solution: '콘솔 에러를 더블클릭해 해당 줄의 변수 중 어떤 것이 null인지 확인하고 Inspector 연결 또는 Awake() 초기화를 추가하세요.', code_fix: 'void Awake() { if (!rb) rb = GetComponent<Rigidbody2D>(); }', helpful_count: 95 },
     { id: 'u11', engine: 'Unity (런타임 예외)', error_title: 'MissingReferenceException: The object of type "..." has been destroyed', cause: 'Destroy()로 이미 파괴된 오브젝트를 코루틴이나 이벤트에서 계속 참조할 때 발생합니다.', solution: '접근 전 if (target != null) 체크를 추가하고 OnDestroy()에서 코루틴/이벤트를 해제하세요.', code_fix: 'if (target != null) target.transform.Translate(Vector3.up);', helpful_count: 57 },
     { id: 'u12', engine: 'Unity (런타임 예외)', error_title: 'UnassignedReferenceException: The variable "..." has not been assigned', cause: 'Inspector 창의 스크립트 변수 슬롯이 비어 있는(None) 상태로 게임을 실행했습니다.', solution: 'Hierarchy에서 오브젝트를 선택하고 Inspector의 빈 슬롯에 프리팹/오브젝트를 드래그해 연결하세요.', code_fix: '[SerializeField] private GameObject prefab; // Inspector 연결 필수', helpful_count: 63 },
@@ -71,13 +81,41 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
     { id: 'u14', engine: 'Unity (런타임 예외)', error_title: 'InvalidOperationException: You are trying to read Input using the UnityEngine.Input class (Input System 충돌)', cause: '신규 Input System 패키지를 켜놓고 구버전 Input.GetKeyDown() 코드를 사용했습니다.', solution: 'Edit > Project Settings > Player > Other Settings > Active Input Handling을 "Both"로 변경하면 즉시 해결됩니다!', code_fix: '// Project Settings > Player > Active Input Handling -> Both 선택', helpful_count: 82 },
     { id: 'u15', engine: 'Unity (런타임 예외)', error_title: 'InvalidOperationException: Collection was modified; enumeration operation may not execute', cause: 'foreach문으로 리스트를 돌면서 동시에 list.Remove()나 Add()를 호출했습니다.', solution: 'foreach 대신 역방향 for문(for int i = list.Count - 1; i >= 0; i--)을 사용해 안전하게 삭제하세요.', code_fix: 'for (int i = list.Count - 1; i >= 0; i--) { list.RemoveAt(i); }', helpful_count: 49 },
     { id: 'u16', engine: 'Unity (런타임 예외)', error_title: 'MissingComponentException / StackOverflowException / KeyNotFoundException', cause: '필수 컴포넌트 누락, 무한 재귀 호출, 또는 Dictionary에 없는 키를 조회할 때 발생합니다.', solution: 'Inspector에서 컴포넌트를 추가하고, Dictionary는 TryGetValue()로 안전하게 조회하세요.', code_fix: 'if (dict.TryGetValue(key, out var val)) { /* 안전 사용 */ }', helpful_count: 46 },
+    { id: 'u31', engine: 'Unity (런타임 예외)', error_title: 'Coroutine couldn\'t be started because the game object "..." is inactive!', cause: 'SetActive(false)로 꺼져 있는 게임오브젝트에서 StartCoroutine()을 호출할 때 발생합니다.', solution: '먼저 gameObject.SetActive(true)로 활성화한 뒤 StartCoroutine()을 호출하거나, 항상 켜져 있는 매니저 오브젝트에서 코루틴을 실행하세요.', code_fix: 'gameObject.SetActive(true);\nStartCoroutine(SpawnRoutine());', helpful_count: 66 },
+    { id: 'u32', engine: 'Unity (런타임 예외)', error_title: 'DontDestroyOnLoad 사용 시 씬을 이동할 때마다 매니저/BGM 오브젝트가 중복 생성되는 버그', cause: '처음 씬으로 돌아올 때 기존 DontDestroyOnLoad 오브젝트가 남아있는데 씬에 배치된 오브젝트가 또 생성됩니다.', solution: 'Awake()에서 static Instance가 이미 존재하면 자기 자신(Destroy(gameObject))을 즉시 파괴하고 return 하세요.', code_fix: 'if (Instance != null && Instance != this) { Destroy(gameObject); return; }\nInstance = this;\nDontDestroyOnLoad(gameObject);', helpful_count: 74 },
+    { id: 'u33', engine: 'Unity (런타임 예외)', error_title: '일시정지(Time.timeScale = 0) 상태에서 코루틴(WaitForSeconds)과 UI 애니메이션이 멈추는 현상', cause: 'WaitForSeconds와 일반 Animator는 Time.timeScale의 영향을 받아 0이 되면 완전히 멈춥니다.', solution: '코루틴에서는 WaitForSecondsRealtime()을 사용하고, UI Animator의 Update Mode를 "Unscaled Time"으로 변경하세요.', code_fix: 'yield return new WaitForSecondsRealtime(1.0f);', helpful_count: 69 },
+    { id: 'u34', engine: 'Unity (런타임 예외)', error_title: 'FormatException: Input string was not in a correct format (int.Parse / float.Parse 에러)', cause: '숫자가 아닌 빈 문자열("")이나 공백/문자가 섞인 텍스트를 int.Parse()로 변환하려 했습니다.', solution: '에러가 나지 않는 int.TryParse(str, out int result)를 사용하세요.', code_fix: 'if (int.TryParse(inputField.text, out int score)) { /* 안전 변환 */ }', helpful_count: 44 },
+
+    // 3. Unity Physics / UI / Shader
     { id: 'u17', engine: 'Unity (물리/UI/셰이더)', error_title: 'OnTriggerEnter2D / OnCollisionEnter 충돌 감지가 전혀 작동하지 않는 현상', cause: '두 오브젝트 중 최소 하나에 Rigidbody(2D)가 없거나, 2D 게임에서 3D용 OnTriggerEnter를 사용했습니다.', solution: '두 오브젝트에 Collider2D를 넣고 움직이는 쪽에 Rigidbody2D를 추가한 뒤 OnTriggerEnter2D(Collider2D other)를 사용하세요.', code_fix: 'private void OnTriggerEnter2D(Collider2D other) {\n    if (other.CompareTag("Player")) { }\n}', helpful_count: 88 },
-    { id: 'u18', engine: 'Unity (물리/UI/셰이더)', error_title: 'UI 버튼(Button)이 클릭되지 않는 현상 (UGUI 먹통)', cause: '씬에 EventSystem이 없거나 투명한 다른 UI 이미지(Raycast Target 켜짐)가 버튼 위를 가리고 있습니다.', solution: 'Hierarchy에 EventSystem이 있는지 확인하고, 버튼을 가리는 배경/텍스트의 Raycast Target 체크를 해제하세요.', code_fix: '// 장식용 Image/Text의 Raycast Target 체크 해제', helpful_count: 73 },
+    { id: 'u18', engine: 'Unity (물리/UI/셰이더)', error_title: 'UI 버튼(Button)이 클릭되지 않는 현상 (UGUI 먹통)', cause: '씬에 EventSystem이 없거나 투명한 다른 UI 이미지/패널(Raycast Target 켜짐)이 버튼 위를 가리고 있습니다.', solution: 'Hierarchy에 EventSystem이 있는지 확인하고, 버튼을 가리는 배경/텍스트의 Raycast Target 체크를 해제하세요.', code_fix: '// 장식용 Image/Text의 Raycast Target 체크 해제', helpful_count: 73 },
     { id: 'u19', engine: 'Unity (물리/UI/셰이더)', error_title: '셰이더/머티리얼이 분홍색(Magenta / Pink)으로 깨지는 현상', cause: 'Built-in 에셋을 URP 프로젝트에 가져와 셰이더가 호환되지 않을 때 발생합니다.', solution: 'Window > Rendering > Render Pipeline Converter에서 Material Upgrade를 실행하면 1초 만에 복구됩니다.', code_fix: '// Window > Rendering > Render Pipeline Converter 실행', helpful_count: 79 },
     { id: 'u20', engine: 'Unity (물리/UI/셰이더)', error_title: '캐릭터 이동 시 카메라 떨림(Jitter) 또는 빠른 총알이 벽을 뚫는 현상(Tunneling)', cause: '카메라를 Update에서 이동시켰거나, 빠른 물체의 Rigidbody Collision Detection이 Discrete로 되어 있습니다.', solution: '카메라 추적은 LateUpdate()에 작성하고, 빠른 총알의 Rigidbody Collision Detection을 Continuous로 설정하세요.', code_fix: 'void LateUpdate() { transform.position = target.position + offset; }', helpful_count: 62 },
+    { id: 'u35', engine: 'Unity (물리/UI/셰이더)', error_title: 'TextMeshPro(TMP)에서 한글이 네모(□□□) 또는 X표시로 깨져서 안 나오는 현상', cause: '기본 LiberationSans SDF 폰트 에셋에는 영문만 들어있고 한글 글리프가 포함되어 있지 않습니다.', solution: 'Window > TextMeshPro > Font Asset Creator에서 한글 폰트(.ttf)를 넣고 Dynamic 모드로 SDF 에셋을 생성해 연결하세요.', code_fix: '// Font Asset Creator -> Atlas Population Mode: Dynamic 설정', helpful_count: 86 },
+    { id: 'u36', engine: 'Unity (물리/UI/셰이더)', error_title: '해상도나 스마트폰 화면 비율이 바뀔 때마다 UI 크기와 위치가 다 찌그러지는 현상', cause: 'Canvas의 Canvas Scaler가 Constant Pixel Size로 되어 있어 해상도 대응이 안 되고 있습니다.', solution: 'Canvas Scaler의 UI Scale Mode를 "Scale With Screen Size"로 바꾸고 Reference Resolution(예: 1920x1080), Match를 0.5로 설정하세요.', code_fix: '// Canvas Scaler -> Scale With Screen Size (Match 0.5)', helpful_count: 77 },
+    { id: 'u37', engine: 'Unity (물리/UI/셰이더)', error_title: 'NavMeshAgent: "SetDestination" can only be called on an active agent that has been placed on a NavMesh', cause: '베이크(Bake)된 NavMesh 영역 밖에 몬스터가 스폰되었거나 NavMeshAgent가 초기화되기 전에 이동을 명령했습니다.', solution: 'Window > AI > Navigation에서 Bake 여부를 확인하고, 스폰 시 NavMeshAgent.Warp(spawnPos)로 위치를 고정하세요.', code_fix: 'agent.Warp(spawnPoint.position);\nagent.SetDestination(player.position);', helpful_count: 53 },
+    { id: 'u38', engine: 'Unity (물리/UI/셰이더)', error_title: '2D 캐릭터가 타일맵(Tilemap) 바닥 위를 걸어갈 때 보이지 않는 턱에 걸려 멈추는 현상', cause: '개별 타일마다 사각 콜라이더가 생성되어 타일 경계면 모서리에 캐릭터 BoxCollider2D가 걸리는 현상입니다.', solution: 'Tilemap 오브젝트에 CompositeCollider2D를 추가하고 TilemapCollider2D에서 "Used By Composite"(Unity 6: Merge)를 체크하세요!', code_fix: '// TilemapCollider2D + CompositeCollider2D 조합 (Rigidbody2D는 Static)', helpful_count: 71 },
+
+    // 4. Unity 2D / Animation / Audio
+    { id: 'u39', engine: 'Unity (애니/사운드/2D)', error_title: '2D 도트(픽셀아트) 스프라이트가 선명하지 않고 뿌옇게 흐려지는 현상', cause: '스프라이트 기본 Filter Mode가 Bilinear(보간)로 되어 있고 Compression(압축)이 켜져 있기 때문입니다.', solution: '스프라이트 Inspector에서 Filter Mode를 "Point (no filter)"로, Compression을 "None"으로 변경 후 Apply를 누르세요!', code_fix: '// Sprite Import Settings: Filter Mode = Point (no filter), Compression = None', helpful_count: 91 },
+    { id: 'u40', engine: 'Unity (애니/사운드/2D)', error_title: '2D 타일맵(Tilemap) 이동 시 타일 사이에 미세한 흰 줄/빈틈(Seam)이 깜빡이는 현상', cause: '카메라 이동 중 소수점 픽셀 샘플링 오차로 인접 타일 외곽의 투명 픽셀이 읽히는 현상입니다.', solution: '1) Project Settings > Quality에서 Anti Aliasing(MSAA)을 끄고 2) Sprite Atlas를 생성해 타일 스프라이트를 묶고 Padding을 주세요.', code_fix: '// Pixel Perfect Camera 부착 + Sprite Atlas 패킹 적용', helpful_count: 75 },
+    { id: 'u41', engine: 'Unity (애니/사운드/2D)', error_title: 'Animator에서 공격/점프 애니메이션이 키를 눌러도 한 박자 늦게 전환되는 현상', cause: 'Animator 상태 전환 화살표(Transition)에 "Has Exit Time"이 체크되어 있어 이전 애니메이션이 끝날 때까지 기다리기 때문입니다.', solution: 'Transition 화살표를 클릭하고 Inspector에서 "Has Exit Time" 체크를 해제한 뒤 Transition Duration을 0으로 줄이세요.', code_fix: '// Animator Transition: Has Exit Time 체크 해제, Duration = 0', helpful_count: 84 },
+    { id: 'u42', engine: 'Unity (애니/사운드/2D)', error_title: '효과음(AudioSource.Play)을 연속 재생할 때 앞 소리가 끊기거나 씹히는 현상', cause: 'AudioSource.Play()는 기존 재생 중이던 오디오를 멈추고 처음부터 다시 틀기 때문입니다.', solution: '총소리/타격음처럼 겹쳐서 나야 하는 효과음은 반드시 audioSource.PlayOneShot(clip)을 사용하세요!', code_fix: 'audioSource.PlayOneShot(hitSfxClip, 0.8f);', helpful_count: 68 },
+
+    // 5. Unity Build / Mobile / WebGL / Data
     { id: 'u21', engine: 'Unity (빌드/배포)', error_title: 'Android IL2CPP / Gradle 빌드 실패 (NDK not found / CommandInvokationFailure / Duplicate class)', cause: '프로젝트 경로에 한글/공백이 포함되어 있거나 Android SDK/NDK 경로 및 플러그인 라이브러리가 충돌했습니다.', solution: '1) 프로젝트 폴더를 순수 영문 경로로 이동 2) External Tools에서 SDK/NDK 체크 리셋 3) Android Resolver > Force Resolve 실행', code_fix: '// 프로젝트 폴더명에 한글(바탕화면 등)이 없도록 영문 경로로 이동', helpful_count: 76 },
-    { id: 'u22', engine: 'Unity (빌드/배포)', error_title: 'WebGL 빌드 후 90%에서 멈추거나 Decompression Fallback 에러 발생', cause: '웹 호스팅 서버가 Brotli 압축 헤더를 지원하지 않을 때 발생합니다.', solution: 'Player Settings > Publishing Settings에서 Decompression Fallback을 체크하거나 Compression Format을 Disabled로 바꾸세요.', code_fix: '// Publishing Settings > Decompression Fallback 체크!', helpful_count: 67 },
-    { id: 'u23', engine: 'Unreal / Godot', error_title: 'Unreal ExitCode=25 (Unknown Cook Failure) / Godot 4 Nil 참조 및 한글 네모 깨짐', cause: '언리얼 깨진 Redirector 참조 또는 Godot @onready 이전 노드 참조 / 폰트 미등록 문제입니다.', solution: 'Unreal: Content 폴더 Fix Up Redirectors 실행 / Godot: @onready 사용 및 Web Export 시 Thread Support 해제', code_fix: '@onready var anim = $AnimationPlayer', helpful_count: 45 }
+    { id: 'u22', engine: 'Unity (빌드/배포)', error_title: 'WebGL 빌드 후 90%에서 멈추거나 Decompression Fallback 에러 발생', cause: '웹 호스팅 서버가 Brotli/Gzip 압축 헤더를 지원하지 않을 때 발생합니다.', solution: 'Player Settings > Publishing Settings에서 Decompression Fallback을 체크하거나 Compression Format을 Disabled로 바꾸세요.', code_fix: '// Publishing Settings > Decompression Fallback 체크!', helpful_count: 67 },
+    { id: 'u43', engine: 'Unity (빌드/배포)', error_title: '에디터에서는 잘 되던 게임이 PC/모바일 빌드(Build)만 하면 씬 전환이나 데이터 로드가 안 되는 현상', cause: 'Build Settings의 Scenes In Build 목록에 이동할 씬이 등록되지 않았거나, 에디터 전용 경로(AssetDatabase / Application.dataPath)를 사용했습니다.', solution: '1) File > Build Settings에 모든 씬을 추가하세요. 2) 세이브 파일 경로는 반드시 Application.persistentDataPath를 사용하세요.', code_fix: 'string path = Path.Combine(Application.persistentDataPath, "save.json");', helpful_count: 72 },
+    { id: 'u44', engine: 'Unity (빌드/배포)', error_title: '스크립트에 "using UnityEditor;"가 포함되어 있어 빌드가 실패하는 에러 (CS0234 in Player Build)', cause: 'UnityEditor 네임스페이스는 에디터 전용이라 실제 빌드(PC/Android/WebGL) 시에는 존재하지 않아 컴파일 에러가 납니다.', solution: '해당 스크립트를 Editor 폴더 안으로 옮기거나, #if UNITY_EDITOR ... #endif 전처리기로 감싸주세요.', code_fix: '#if UNITY_EDITOR\nusing UnityEditor;\n#endif', helpful_count: 81 },
+    { id: 'u45', engine: 'Unity (빌드/배포)', error_title: 'JsonUtility.ToJson / FromJson 사용 시 데이터가 빈 값({})으로 저장되거나 리스트 직렬화가 안 되는 현상', cause: '데이터 클래스 위에 [System.Serializable] 어트리뷰트가 없거나, 변수가 private / 프로퍼티({get; set;})로 선언되어 있습니다.', solution: '클래스 상단에 [System.Serializable]을 붙이고 저장할 변수는 일반 public 필드로 선언하세요.', code_fix: '[System.Serializable]\npublic class SaveData { public int gold; public List<string> items; }', helpful_count: 65 },
+    { id: 'u46', engine: 'Unity (빌드/배포)', error_title: 'Google Play 콘솔 업로드 시 Target API Level 34+ 또는 64-bit(ARM64) 미지원 거절 에러', cause: '구글 플레이 스토어 정책상 최신 API 레벨과 IL2CPP ARM64 아키텍처가 필수입니다.', solution: 'Player Settings > Android > Other Settings에서 Scripting Backend를 IL2CPP로 바꾸고 ARM64 체크 및 Target API Level을 34 이상으로 올리세요.', code_fix: '// Scripting Backend: IL2CPP + Target Architectures: ARM64 체크', helpful_count: 60 },
+
+    // 6. Unreal Engine 5 & Godot 4
+    { id: 'u23', engine: 'Unreal / Godot', error_title: 'Unreal ExitCode=25 (Unknown Cook Failure) 패키징 빌드 실패', cause: '삭제/이동된 에셋의 깨진 Redirector 참조가 남아있거나 블루프린트 컴파일 에러가 있는 상태로 패키징했습니다.', solution: 'Content 폴더 우클릭 > Fix Up Redirectors 실행 후 Saved/Intermediate 폴더를 지우고 다시 패키징하세요.', code_fix: '// Content Browser -> Content 우클릭 -> Fix Up Redirectors', helpful_count: 58 },
+    { id: 'u47', engine: 'Unreal / Godot', error_title: 'Unreal Blueprint Runtime Error: "Accessed None trying to read property ..."', cause: '유니티의 NullReferenceException과 동일한 에러로, 유효하지 않은(비어 있는) 오브젝트 참조 변수를 블루프린트에서 읽었습니다.', solution: '변수 사용 전 "Is Valid" 노드를 연결해 유효할 때만 실행되도록 방어하거나 BeginPlay 초기화 순서를 확인하세요.', code_fix: '// Blueprint: [Is Valid ?] 노드로 Null 체크 후 실행 핀 연결', helpful_count: 64 },
+    { id: 'u48', engine: 'Unreal / Godot', error_title: 'Unreal C++ Live Coding 컴파일 후 에디터를 껐다 켜면 추가한 컴포넌트/변수가 사라지는 현상', cause: 'Live Coding(Ctrl+Alt+F11)은 임시 메모리 패치만 수행하므로 에디터 종료 후 재실행 시 바이너리가 초기화됩니다.', solution: '헤더(.h)나 UPROPERTY 수정 시에는 에디터를 끄고 Visual Studio / Rider에서 직접 Build(Ctrl+Shift+B)하세요.', code_fix: '// .h 헤더 수정 시 IDE에서 직접 Build 솔루션 실행 권장', helpful_count: 52 },
+    { id: 'u49', engine: 'Unreal / Godot', error_title: 'Godot 4: "Invalid get index \'...\' (on base: \'Nil\')" 또는 Node not found 에러', cause: '_ready()가 호출되기 전에 자식 노드를 참조했거나 노드 경로($Sprite2D) 이름이 변경되었습니다.', solution: '변수 앞에 @onready 어노테이션을 붙이고 씬 트리의 실제 노드 이름과 경로가 일치하는지 확인하세요.', code_fix: '@onready var sprite: Sprite2D = $Sprite2D', helpful_count: 61 },
+    { id: 'u50', engine: 'Unreal / Godot', error_title: 'Godot 4: CharacterBody2D "move_and_slide()"에 인자를 넣으면 발생하는 에러 (Too many arguments)', cause: 'Godot 3에서는 move_and_slide(velocity)였으나 Godot 4부터는 내장 velocity 속성을 사용하고 인자를 받지 않습니다.', solution: 'velocity = direction * speed 대입 후 인자 없이 move_and_slide()만 호출하세요.', code_fix: 'velocity = input_dir * SPEED\nmove_and_slide()', helpful_count: 59 }
   ];
 
   const handleUniversalDiagnose = async () => {
@@ -96,25 +134,31 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       });
 
       if (!matchedItem) {
-        if (lower.includes('nullreference')) matchedItem = BUILTIN_UNITY_ERRORS[9];
-        else if (lower.includes('missingreference')) matchedItem = BUILTIN_UNITY_ERRORS[10];
-        else if (lower.includes('unassignedreference')) matchedItem = BUILTIN_UNITY_ERRORS[11];
-        else if (lower.includes('indexoutofrange') || lower.includes('argumentoutofrange')) matchedItem = BUILTIN_UNITY_ERRORS[12];
-        else if (lower.includes('input') && lower.includes('invalidoperation')) matchedItem = BUILTIN_UNITY_ERRORS[13];
-        else if (lower.includes('collection was modified')) matchedItem = BUILTIN_UNITY_ERRORS[14];
-        else if (lower.includes('does not exist in the current context')) matchedItem = BUILTIN_UNITY_ERRORS[0];
-        else if (lower.includes('could not be found')) matchedItem = BUILTIN_UNITY_ERRORS[1];
-        else if (lower.includes('does not contain a definition')) matchedItem = BUILTIN_UNITY_ERRORS[2];
-        else if (lower.includes('cannot implicitly convert')) matchedItem = BUILTIN_UNITY_ERRORS[3];
-        else if (lower.includes('cannot modify the return value')) matchedItem = BUILTIN_UNITY_ERRORS[4];
-        else if (lower.includes('object reference is required')) matchedItem = BUILTIN_UNITY_ERRORS[5];
-        else if (lower.includes('not all code paths')) matchedItem = BUILTIN_UNITY_ERRORS[6];
-        else if (lower.includes('obsolete')) matchedItem = BUILTIN_UNITY_ERRORS[7];
-        else if (lower.includes('expected')) matchedItem = BUILTIN_UNITY_ERRORS[8];
-        else if (lower.includes('il2cpp') || lower.includes('gradle') || lower.includes('ndk')) matchedItem = BUILTIN_UNITY_ERRORS[20];
-        else if (lower.includes('webgl') || lower.includes('decompression')) matchedItem = BUILTIN_UNITY_ERRORS[21];
-        else if (lower.includes('pink') || lower.includes('magenta') || lower.includes('분홍')) matchedItem = BUILTIN_UNITY_ERRORS[18];
-        else if (lower.includes('trigger') || lower.includes('collision') || lower.includes('충돌')) matchedItem = BUILTIN_UNITY_ERRORS[16];
+        matchedItem = allPool.find((item) => {
+          const haystack = (item.error_title + ' ' + item.cause + ' ' + item.solution).toLowerCase();
+          if (lower.includes('nullreference') && haystack.includes('nullreference')) return true;
+          if (lower.includes('missingreference') && haystack.includes('missingreference')) return true;
+          if (lower.includes('unassignedreference') && haystack.includes('unassignedreference')) return true;
+          if ((lower.includes('indexoutofrange') || lower.includes('argumentoutofrange') || lower.includes('배열')) && haystack.includes('indexoutofrange')) return true;
+          if ((lower.includes('input') || lower.includes('키입력')) && haystack.includes('input system')) return true;
+          if ((lower.includes('collection was modified') || lower.includes('foreach')) && haystack.includes('collection was modified')) return true;
+          if ((lower.includes('inactive') || lower.includes('코루틴')) && haystack.includes('inactive')) return true;
+          if ((lower.includes('dontdestroy') || lower.includes('중복')) && haystack.includes('dontdestroyonload')) return true;
+          if ((lower.includes('timescale') || lower.includes('일시정지')) && haystack.includes('timescale')) return true;
+          if ((lower.includes('pink') || lower.includes('magenta') || lower.includes('분홍')) && haystack.includes('magenta')) return true;
+          if ((lower.includes('trigger') || lower.includes('collision') || lower.includes('충돌')) && haystack.includes('ontriggerenter2d')) return true;
+          if ((lower.includes('button') || lower.includes('버튼') || lower.includes('클릭')) && haystack.includes('raycast target')) return true;
+          if ((lower.includes('한글') || lower.includes('네모') || lower.includes('tmp')) && haystack.includes('textmeshpro')) return true;
+          if ((lower.includes('타일맵') || lower.includes('tilemap') || lower.includes('흰 줄') || lower.includes('줄')) && haystack.includes('tilemap')) return true;
+          if ((lower.includes('흐릿') || lower.includes('도트') || lower.includes('픽셀')) && haystack.includes('point (no filter)')) return true;
+          if ((lower.includes('unityeditor') || lower.includes('cs0234')) && haystack.includes('unityeditor')) return true;
+          if ((lower.includes('json') || lower.includes('저장')) && haystack.includes('jsonutility')) return true;
+          if ((lower.includes('il2cpp') || lower.includes('gradle') || lower.includes('ndk')) && haystack.includes('il2cpp')) return true;
+          if ((lower.includes('webgl') || lower.includes('90%')) && haystack.includes('webgl')) return true;
+          if ((lower.includes('accessed none') || lower.includes('언리얼')) && haystack.includes('accessed none')) return true;
+          if ((lower.includes('godot') || lower.includes('move_and_slide') || lower.includes('nil')) && haystack.includes('godot')) return true;
+          return false;
+        });
       }
 
       let koreanTranslation = '';
@@ -1205,44 +1249,57 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       </Modal>
 
       <Modal visible={Boolean(previewGame)} animationType="fade" transparent onRequestClose={() => setPreviewGame(null)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-          <View style={{ width: '100%', maxWidth: 900, height: '85%', backgroundColor: '#0F172A', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#1E293B' }}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 860, height: '88%', backgroundColor: '#11131C', borderRadius: 6, overflow: 'hidden', borderWidth: 2, borderColor: '#00E5FF' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 14, paddingVertical: 11, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
               <View style={{ flex: 1, marginRight: 10 }}>
-                <Text numberOfLines={1} style={{ color: '#F8FAFC', fontSize: 15, fontWeight: '800' }}>
+                <Text numberOfLines={1} style={{ color: '#FFD166', fontSize: 14.5, fontWeight: '900', fontFamily: 'monospace' }}>
                   🕹️ {previewGame?.title} ({previewGame?.engine})
                 </Text>
-                <Text numberOfLines={1} style={{ color: '#94A3B8', fontSize: 11 }}>
-                  {previewGame?.homepage_url} (외부 보안 정책으로 화면이 안 보이면 우측 '새 탭으로 열기'를 눌러주세요)
+                <Text numberOfLines={1} style={{ color: '#9CA3AF', fontSize: 11, fontFamily: 'monospace', marginTop: 2 }}>
+                  인터랙티브 웹 데모 플레이어 실행 중 (방향키 / 마우스 클릭 / 터치 조작 지원)
                 </Text>
               </View>
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                 <TouchableOpacity
                   onPress={() => previewGame?.homepage_url && Linking.openURL(previewGame.homepage_url)}
-                  style={{ backgroundColor: '#38BDF8', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}
+                  style={{ backgroundColor: '#00E5FF', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 4 }}
                 >
-                  <Text style={{ color: '#0F172A', fontSize: 12, fontWeight: '800' }}>🌐 새 탭으로 열기 ↗</Text>
+                  <Text style={{ color: '#11131C', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>[🌐 원본 사이트 새 탭 ↗]</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => setPreviewGame(null)}
-                  style={{ backgroundColor: '#334155', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 }}
+                  style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 }}
                 >
-                  <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '800' }}>✕ 닫기</Text>
+                  <Text style={{ color: '#FFF', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>[X 닫기]</Text>
                 </TouchableOpacity>
               </View>
             </View>
-            <View style={{ flex: 1, backgroundColor: '#FFF' }}>
-              {Platform.OS === 'web' && previewGame?.homepage_url
-                ? React.createElement('iframe', {
-                    src: previewGame.homepage_url,
-                    style: { width: '100%', height: '100%', border: 'none' },
-                    allow: 'fullscreen; autoplay; gamepad',
-                  })
+            <View style={{ flex: 1, backgroundColor: '#0D0F17' }}>
+              {Platform.OS === 'web' && previewGame
+                ? (() => {
+                    const rawUrl = String(previewGame.homepage_url || '');
+                    const titleLower = String(previewGame.title || '').toLowerCase();
+                    const isBlockedExternal = /itch\.io|steampowered\.com|godotengine\.org|github\.com|naver\.com|youtube\.com/i.test(rawUrl);
+                    let resolvedSrc = rawUrl;
+                    if (titleLower.includes('cozy') || rawUrl.includes('godot')) {
+                      resolvedSrc = '/demo-showcase.html?game=cozy';
+                    } else if (titleLower.includes('arena') || titleLower.includes('cel-shader') || rawUrl.includes('steampowered')) {
+                      resolvedSrc = '/demo-showcase.html?game=arena';
+                    } else if (titleLower.includes('shadow') || isBlockedExternal || !rawUrl.startsWith('http')) {
+                      resolvedSrc = '/demo-showcase.html?game=shadow';
+                    }
+                    return React.createElement('iframe', {
+                      src: resolvedSrc,
+                      style: { width: '100%', height: '100%', border: 'none', backgroundColor: '#0D0F17' },
+                      allow: 'fullscreen; autoplay; gamepad',
+                    });
+                  })()
                 : null}
             </View>
           </View>
         </View>
-            </Modal>
+      </Modal>
 
       <Modal visible={arcadeOpen} animationType="fade" transparent onRequestClose={() => setArcadeOpen(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.8)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
@@ -1580,13 +1637,53 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               {/* Search & Category Filter */}
               <TextInput
                 style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 8, fontSize: 13 }}
-                placeholder="🔎 에러 코드/증상 즉시 검색 (예: CS0103, CS0246, Null, 분홍색, 충돌, 버튼, IL2CPP, WebGL...)"
+                placeholder="🔎 에러 코드/증상 즉시 검색 (예: CS0103, CS0246, Null, 분홍색, 충돌, 버튼, 타일맵, 한글, IL2CPP, WebGL...)"
                 value={errorSearch}
                 onChangeText={setErrorSearch}
               />
 
+              {/* Quick Symptom Search Chips */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
+                {[
+                  { label: '전체보기', q: '' },
+                  { label: '#CS0103 변수없음', q: 'CS0103' },
+                  { label: '#CS0246 using누락', q: 'CS0246' },
+                  { label: '#CS1061 함수없음', q: 'CS1061' },
+                  { label: '#NullReference', q: 'NullReference' },
+                  { label: '#InputSystem충돌', q: 'Input' },
+                  { label: '#분홍색(Magenta)', q: '분홍색' },
+                  { label: '#버튼클릭먹통', q: '버튼' },
+                  { label: '#충돌감지안됨', q: 'OnTriggerEnter2D' },
+                  { label: '#한글네모깨짐', q: 'TextMeshPro' },
+                  { label: '#도트흐릿함', q: 'Point' },
+                  { label: '#타일맵흰줄/턱걸림', q: '타일맵' },
+                  { label: '#코루틴비활성에러', q: 'inactive' },
+                  { label: '#DontDestroy중복', q: 'DontDestroyOnLoad' },
+                  { label: '#IL2CPP빌드실패', q: 'IL2CPP' },
+                  { label: '#WebGL90%멈춤', q: 'WebGL' },
+                  { label: '#JSON저장안됨', q: 'JsonUtility' },
+                ].map((chip) => (
+                  <TouchableOpacity
+                    key={chip.label}
+                    onPress={() => { setErrorCatFilter('전체'); setErrorSearch(chip.q); }}
+                    style={{
+                      backgroundColor: errorSearch === chip.q && chip.q !== '' ? '#FFD166' : Theme.colors.pillBg,
+                      borderWidth: 1,
+                      borderColor: Theme.colors.border,
+                      paddingHorizontal: 8,
+                      paddingVertical: 4,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 10.5, fontWeight: '800', color: errorSearch === chip.q && chip.q !== '' ? '#11131C' : Theme.colors.text, fontFamily: 'monospace' }}>
+                      {chip.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
               <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 12 }}>
-                {['전체', 'Unity (C# CS코드)', 'Unity (런타임 예외)', 'Unity (물리/UI/셰이더)', 'Unity (빌드/배포)', 'Unreal / Godot'].map((cat) => (
+                {['전체', 'Unity (C# CS코드)', 'Unity (런타임 예외)', 'Unity (물리/UI/셰이더)', 'Unity (애니/사운드/2D)', 'Unity (빌드/배포)', 'Unreal / Godot'].map((cat) => (
                   <TouchableOpacity
                     key={cat}
                     onPress={() => setErrorCatFilter(cat)}

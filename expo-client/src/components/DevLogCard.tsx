@@ -35,6 +35,7 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
   const [votesA, setVotesA] = useState<number>(Number(devLog.poll_votes_a || 0));
   const [votesB, setVotesB] = useState<number>(Number(devLog.poll_votes_b || 0));
   const [votedChoice, setVotedChoice] = useState<'A' | 'B' | null>(null);
+  const [imgError, setImgError] = useState<boolean>(false);
 
   const handleQuickVote = async (e: any, option: 'A' | 'B') => {
     e?.stopPropagation?.();
@@ -96,24 +97,69 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
           )}
         </View>
 
-        {/* Thumbnail */}
-        {devLog.image_url ? (
+        {/* Thumbnail or Dynamic Pixel Workshop Banner */}
+        {devLog.image_url && !imgError ? (
           <View style={{ backgroundColor: Theme.colors.pillBg, borderBottomWidth: 1.5, borderBottomColor: Theme.colors.border }}>
             <Image
               source={{ uri: devLog.image_url }}
               style={styles.thumbnailImage}
               resizeMode={devLog.image_url.startsWith('data:image/') ? 'contain' : 'cover'}
+              onError={() => setImgError(true)}
             />
           </View>
-        ) : (
-          <View style={[styles.thumbnail, { backgroundColor: Theme.colors.pillBg, borderBottomColor: Theme.colors.border }]}>
-            <Text style={[styles.thumbnailText, { color: Theme.colors.textLight }]}>// NO_SIGNAL // DEVLOG_ARCHIVE</Text>
-          </View>
-        )}
+        ) : (() => {
+          const isUnreal = devLog.tags?.some(t => t.toLowerCase().includes('unreal'));
+          const isGodot = devLog.tags?.some(t => t.toLowerCase().includes('godot'));
+          const isShowcase = devLog.tags?.includes('쇼케이스') || Boolean(devLog.demo_url);
+          const bannerBg = isUnreal ? '#1E1B4B' : isGodot ? '#0C2D48' : isShowcase ? '#2E1035' : '#162032';
+          const accentColor = isUnreal ? '#A855F7' : isGodot ? '#00E5FF' : isShowcase ? '#FF4D6D' : '#FFD166';
+          const spriteIcon = isUnreal ? '⚡🤖🌌' : isGodot ? '🌱🏰✨' : isShowcase ? '🕹️⚔️🐉' : '👾🗡️🛡️';
+          const engineLabel = isUnreal ? 'UNREAL_ENGINE_5 // SHADER_BUILD' : isGodot ? 'GODOT_4 // PIXEL_NODE_TREE' : isShowcase ? 'PLAYABLE_SHOWCASE // WEB_ARCADE' : 'UNITY_ENGINE // 2D_3D_DEVLOG';
+          return (
+            <View
+              style={[
+                styles.thumbnail,
+                {
+                  backgroundColor: bannerBg,
+                  borderBottomColor: Theme.colors.border,
+                  paddingHorizontal: 16,
+                  paddingVertical: 14,
+                  justifyContent: 'space-between',
+                  alignItems: 'flex-start',
+                },
+              ]}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                <Text style={{ fontSize: 10.5, fontWeight: '900', color: accentColor, fontFamily: 'monospace' }}>
+                  [{engineLabel}]
+                </Text>
+                <Text style={{ fontSize: 18 }}>{spriteIcon}</Text>
+              </View>
+              <Text numberOfLines={2} style={{ fontSize: 13.5, fontWeight: '800', color: '#F8FAFC', lineHeight: 19 }}>
+                {devLog.content ? devLog.content.replace(/```[\s\S]*?```/g, '[코드 스니펫 포함]').slice(0, 90) : devLog.title}
+              </Text>
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                <View style={{ backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 3, borderWidth: 1, borderColor: accentColor }}>
+                  <Text style={{ fontSize: 10, fontWeight: '900', color: accentColor, fontFamily: 'monospace' }}>
+                    ▶ CLICK_TO_OPEN_LOG
+                  </Text>
+                </View>
+                {devLog.code_snippet ? (
+                  <Text style={{ fontSize: 10, color: '#38BDF8', fontFamily: 'monospace', fontWeight: '800' }}>+ C# CODE</Text>
+                ) : null}
+              </View>
+            </View>
+          );
+        })()}
 
         {/* Content */}
         <View style={styles.content}>
           <Text style={[styles.title, { color: Theme.colors.text }]}>{devLog.title}</Text>
+          {devLog.content ? (
+            <Text numberOfLines={2} style={{ fontSize: 12.5, color: Theme.colors.textLight, marginBottom: 10, lineHeight: 18 }}>
+              {devLog.content.replace(/```[\s\S]*?```/g, '[💻 코드 블록 포함] ')}
+            </Text>
+          ) : null}
 
           <View style={styles.metaRow}>
             <TouchableOpacity
