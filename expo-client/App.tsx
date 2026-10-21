@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Platform, StatusBar, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, Platform, StatusBar, Image, ActivityIndicator, TouchableOpacity, Modal, ScrollView } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Network from 'expo-network';
 import { Theme } from './src/theme';
@@ -33,6 +33,9 @@ export default function App() {
   const [pendingAssetId, setPendingAssetId] = useState<string | null>(null);
   const [maintenanceMsg, setMaintenanceMsg] = useState<string | null>(null);
   const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
+  const [updatePopupVisible, setUpdatePopupVisible] = useState<boolean>(true);
+  const [updatePopupTitle, setUpdatePopupTitle] = useState<string>("🎉 오늘의 업데이트 안내 (v1.2.0)");
+  const [updatePopupItems, setUpdatePopupItems] = useState<string[]>(["🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가","👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람","▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가","🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용","⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원"]);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -42,6 +45,24 @@ export default function App() {
           const data = await res.json();
           setMaintenanceMsg(data.maintenance ? (data.message || '🚧 현재 서버 점검 중입니다.') : null);
           setNoticeMsg(data.notice_active ? (data.notice_message || null) : null);
+          if (data.popup_active === false) {
+            setUpdatePopupVisible(false);
+          } else {
+            const title = data.popup_title || "🎉 오늘의 업데이트 안내 (v1.2.0)";
+            const rawContent = data.popup_content || "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원";
+            setUpdatePopupTitle(title);
+            setUpdatePopupItems(String(rawContent).split('\n').map((s: string) => s.trim()).filter(Boolean));
+            try {
+              const todayKey = new Date().toISOString().slice(0, 10) + '_' + title;
+              if (typeof window !== 'undefined' && window.localStorage?.getItem('devground_hide_popup') === todayKey) {
+                setUpdatePopupVisible(false);
+              } else {
+                setUpdatePopupVisible(true);
+              }
+            } catch {
+              setUpdatePopupVisible(true);
+            }
+          }
         }
       } catch {}
     };
@@ -255,6 +276,9 @@ export default function App() {
         {noticeMsg && !maintenanceMsg && (
           <View style={{ backgroundColor: '#4F46E5', paddingVertical: 8, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
             <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 12, textAlign: 'center', flex: 1 }}>{noticeMsg}</Text>
+            <TouchableOpacity onPress={() => setUpdatePopupVisible(true)} style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginLeft: 8 }}>
+              <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 11 }}>🎉 업데이트 내역 보기</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => setNoticeMsg(null)} style={{ marginLeft: 8 }}>
               <Text style={{ color: '#E0E7FF', fontWeight: '800', fontSize: 12 }}>✕</Text>
             </TouchableOpacity>
@@ -270,6 +294,73 @@ export default function App() {
             onPostClick={handlePostClick}
           />
         )}
+
+        <Modal visible={updatePopupVisible} animationType="fade" transparent onRequestClose={() => setUpdatePopupVisible(false)}>
+          <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <View style={{ width: '100%', maxWidth: 460, backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 20, elevation: 10 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+                <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
+                  <Text style={{ color: '#4F46E5', fontWeight: '800', fontSize: 11 }}>TODAY'S UPDATE</Text>
+                </View>
+                <TouchableOpacity onPress={() => setUpdatePopupVisible(false)}>
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: '#64748B' }}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={{ fontSize: 20, fontWeight: '800', color: '#0F172A', marginBottom: 6 }}>
+                {updatePopupTitle}
+              </Text>
+              <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>
+                DevGround에 새롭게 추가된 기능들을 지금 바로 체험해 보세요!
+              </Text>
+
+              <ScrollView style={{ maxHeight: 280, marginBottom: 18 }}>
+                {updatePopupItems.map((item, idx) => (
+                  <View
+                    key={idx}
+                    style={{
+                      backgroundColor: '#F8FAFC',
+                      borderWidth: 1,
+                      borderColor: '#E2E8F0',
+                      borderRadius: 14,
+                      paddingVertical: 11,
+                      paddingHorizontal: 14,
+                      marginBottom: 8,
+                    }}
+                  >
+                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#1E293B', lineHeight: 19 }}>
+                      {item}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    try {
+                      const todayKey = new Date().toISOString().slice(0, 10) + '_' + updatePopupTitle;
+                      if (typeof window !== 'undefined' && window.localStorage) {
+                        window.localStorage.setItem('devground_hide_popup', todayKey);
+                      }
+                    } catch {}
+                    setUpdatePopupVisible(false);
+                  }}
+                  style={{ paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, backgroundColor: '#F1F5F9' }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>오늘 하루 보지 않기</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => setUpdatePopupVisible(false)}
+                  style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12, backgroundColor: '#4F46E5', alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>확인하고 둘러보기 🚀</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </SafeAreaProvider>
   );

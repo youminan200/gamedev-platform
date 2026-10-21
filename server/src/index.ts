@@ -393,7 +393,20 @@ app.get('/api/system-status', (_req, res) => {
   const message = getSetting('maintenance_message', '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.');
   const notice_active = getSetting('notice_active', '1') === '1';
   const notice_message = getSetting('notice_message', '📢 [공지] 인디게임 데모 플레이 링크 공유 및 팀원 모집 기능이 업데이트되었습니다!');
-  res.json({ maintenance, message, notice_active, notice_message });
+  const popup_active = getSetting('popup_active', '1') === '1';
+  const popup_title = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.2.0)");
+  const popup_content = getSetting('popup_content', "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원");
+  res.json({ maintenance, message, notice_active, notice_message, popup_active, popup_title, popup_content });
+});
+
+app.post('/admin/popup', express.urlencoded({ extended: true }), (req, res) => {
+  const active = req.body?.active === '1' ? '1' : '0';
+  const title = (req.body?.title || "🎉 오늘의 업데이트 안내 (v1.2.0)").trim();
+  const content = (req.body?.content || "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원").trim();
+  setSetting('popup_active', active);
+  setSetting('popup_title', title);
+  setSetting('popup_content', content);
+  res.redirect('/admin');
 });
 
 app.post('/admin/notice', express.urlencoded({ extended: true }), (req, res) => {
@@ -437,6 +450,9 @@ app.get('/admin', (_req, res) => {
   const totalAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
   const totalComments = (db.prepare('SELECT COUNT(*) as count FROM comments').get() as any).count;
   const isMaintenance = getSetting('maintenance_mode', '0') === '1';
+  const isPopupActive = getSetting('popup_active', '1') === '1';
+  const popupTitle = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.2.0)");
+  const popupContent = getSetting('popup_content', "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원");
   const isNoticeActive = getSetting('notice_active', '1') === '1';
   const noticeMsg = getSetting('notice_message', '📢 [공지] 인디게임 데모 플레이 링크 공유 및 팀원 모집 기능이 업데이트되었습니다!');
   const maintenanceMsg = getSetting('maintenance_message', '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.');
@@ -548,6 +564,21 @@ app.get('/admin', (_req, res) => {
         <button type="submit" class="btn ${isMaintenance ? 'btn-success' : 'btn-danger'}">
           ${isMaintenance ? '✅ 점검 해제하고 정상 운영으로 전환' : '🚧 서버 점검 모드 켜기 (홈페이지에 점검 배너 표시)'}
         </button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>🎉 홈페이지 '오늘의 업데이트' 팝업 제어 — 현재 상태: <span style="color:${isPopupActive ? '#10b981' : '#94a3b8'}">${isPopupActive ? '✅ 팝업 노출 중 (ON)' : '🔕 숨김 (OFF)'}</span></h2>
+      <form method="POST" action="/admin/popup">
+        <input type="hidden" name="active" value="${isPopupActive ? '0' : '1'}" />
+        <label style="font-size:13px;color:#94a3b8;">팝업 제목:</label>
+        <input class="input-text" type="text" name="title" value="${popupTitle.replace(/"/g, '&quot;')}" />
+        <label style="font-size:13px;color:#94a3b8;">업데이트 항목 (줄바꿈으로 구분):</label>
+        <textarea class="input-text" name="content" rows="5">${popupContent.replace(/</g, '&lt;')}</textarea>
+        <button type="submit" class="btn ${isPopupActive ? 'btn-outline' : 'btn-success'}">
+          ${isPopupActive ? '🔕 업데이트 팝업 끄기 (OFF)' : '🎉 업데이트 팝업 띄우기 (ON)'}
+        </button>
+        <button type="submit" name="active" value="1" class="btn" style="margin-left:8px;">💾 내용 저장 & 팝업 유지</button>
       </form>
     </div>
 
