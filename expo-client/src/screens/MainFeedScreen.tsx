@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Modal, ScrollView, Linking } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Modal, ScrollView, Linking, Image } from 'react-native';
 import { DevLog } from '../models/DevLog';
 import { ApiClient } from '../api/ApiClient';
 import { Theme } from '../theme';
@@ -31,6 +31,14 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [toolboxVisible, setToolboxVisible] = useState(false);
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
+  const [showcases, setShowcases] = useState<any[]>([]);
+  const [showcaseModalOpen, setShowcaseModalOpen] = useState(false);
+  const [scTitle, setScTitle] = useState('');
+  const [scEngine, setScEngine] = useState('Unity');
+  const [scUrl, setScUrl] = useState('');
+  const [scThumb, setScThumb] = useState('');
+  const [scDesc, setScDesc] = useState('');
+  const [submittingSc, setSubmittingSc] = useState(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
   const [shouts, setShouts] = useState<any[]>([]);
@@ -38,6 +46,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [sendingShout, setSendingShout] = useState(false);
 
   useEffect(() => {
+    ApiClient.getShowcases().then(setShowcases).catch(() => {});
     ApiClient.getShoutbox().then(setShouts).catch(() => {});
     fetch('https://gamedev-platform.onrender.com/api/system-status?track=0')
       .then((r) => r.json())
@@ -302,6 +311,74 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
         })}
       </ScrollView>
 
+
+
+      {/* Indie Game Homepage & Web Demo Showcase Strip */}
+      <View style={{ marginBottom: 16 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.primary }}>
+            {lang === 'en' ? '🕹️ Indie Game Websites & Web Demos' : '🕹️ 인디게임 공식 홈페이지 & 웹데모 홍보관'}
+          </Text>
+          <TouchableOpacity
+            onPress={() => setShowcaseModalOpen(true)}
+            style={{ backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}
+          >
+            <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
+              {lang === 'en' ? '+ Add My Game Site' : '+ 내 게임 홈페이지 등록'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+          {showcases.map((game: any) => (
+            <View
+              key={game.id}
+              style={{
+                width: 240,
+                backgroundColor: Theme.colors.pillBg,
+                borderRadius: 16,
+                overflow: 'hidden',
+                paddingBottom: 12,
+              }}
+            >
+              {game.thumbnail_url ? (
+                <Image source={{ uri: game.thumbnail_url }} style={{ width: '100%', height: 100 }} resizeMode="cover" />
+              ) : null}
+              <View style={{ paddingHorizontal: 12, paddingTop: 10 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '800', color: Theme.colors.primary }}>{game.engine}</Text>
+                  <Text style={{ fontSize: 10, color: Theme.colors.textLight }}>👁️ {game.plays || 0}회 방문</Text>
+                </View>
+                <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.text }}>
+                  {game.title}
+                </Text>
+                <Text numberOfLines={2} style={{ fontSize: 11, color: Theme.colors.textLight, marginTop: 3, height: 30 }}>
+                  {game.description || '인디게임 공식 홈페이지 및 데모 페이지'}
+                </Text>
+                <TouchableOpacity
+                  onPress={async () => {
+                    try {
+                      const r = await ApiClient.visitShowcase(game.id);
+                      setShowcases((prev) => prev.map((x) => (x.id === game.id ? { ...x, plays: r.plays } : x)));
+                    } catch {}
+                    Linking.openURL(game.homepage_url).catch(() => {});
+                  }}
+                  style={{
+                    backgroundColor: Theme.colors.primary,
+                    marginTop: 8,
+                    paddingVertical: 7,
+                    borderRadius: 10,
+                    alignItems: 'center',
+                  }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
+                    {lang === 'en' ? '🌐 Visit Game Site / Play ↗' : '🌐 게임 홈페이지 / 데모 열기 ↗'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      </View>
 
       {/* Live Developer Shoutbox Widget */}
       <View style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 12, marginBottom: 14 }}>
@@ -639,6 +716,81 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                 <Text style={{ fontSize: 12, fontWeight: '800', color: Theme.colors.primary }}>열기 ↗</Text>
               </TouchableOpacity>
             ))}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={showcaseModalOpen} animationType="fade" transparent onRequestClose={() => setShowcaseModalOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ width: '100%', maxWidth: 440, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text, marginBottom: 12 }}>
+              🕹️ 내 인디게임 홈페이지 / 웹데모 홍보 등록
+            </Text>
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 14 }}
+              placeholder="게임 제목 (예: Shadow Dungeon)"
+              value={scTitle}
+              onChangeText={setScTitle}
+            />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 14 }}
+              placeholder="게임 홈페이지 / Itch.io / Steam 주소 (https://...)"
+              value={scUrl}
+              onChangeText={setScUrl}
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 14 }}
+              placeholder="대표 썸네일 이미지 주소 (https://... 선택사항)"
+              value={scThumb}
+              onChangeText={setScThumb}
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 14 }}
+              placeholder="사용 엔진 (예: Unity / Unreal 5 / Godot)"
+              value={scEngine}
+              onChangeText={setScEngine}
+            />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 14, fontSize: 14 }}
+              placeholder="한줄 게임 소개"
+              value={scDesc}
+              onChangeText={setScDesc}
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
+              <TouchableOpacity onPress={() => setShowcaseModalOpen(false)} style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '700' }}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={submittingSc}
+                onPress={async () => {
+                  if (!scTitle.trim() || !scUrl.trim()) return;
+                  try {
+                    setSubmittingSc(true);
+                    const updated = await ApiClient.postShowcase({
+                      title: scTitle.trim(),
+                      developer: username || 'Indie Creator',
+                      engine: scEngine.trim() || 'Unity',
+                      homepage_url: scUrl.trim(),
+                      thumbnail_url: scThumb.trim() || undefined,
+                      description: scDesc.trim(),
+                    });
+                    if (updated.length > 0) setShowcases(updated);
+                    setShowcaseModalOpen(false);
+                    setScTitle('');
+                    setScUrl('');
+                    setScThumb('');
+                    setScDesc('');
+                  } catch {} finally {
+                    setSubmittingSc(false);
+                  }
+                }}
+                style={{ backgroundColor: '#10B981', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 12 }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '800' }}>{submittingSc ? '등록 중...' : '홍보관에 등록하기'}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>

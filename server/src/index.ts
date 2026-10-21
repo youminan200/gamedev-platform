@@ -348,6 +348,18 @@ app.get('/api/stats', (_req, res) => {
 });
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS game_showcases (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    developer TEXT NOT NULL,
+    engine TEXT DEFAULT 'Unity',
+    homepage_url TEXT NOT NULL,
+    thumbnail_url TEXT,
+    description TEXT,
+    plays INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS shoutbox (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nickname TEXT NOT NULL,
@@ -373,6 +385,70 @@ try {
     db.prepare('INSERT INTO shoutbox (nickname, message) VALUES (?, ?)').run('GodotCrafter', 'DevGround 오픈 축하합니다! 인디 개발자분들 자주 소통해요 🙌');
   }
 } catch {}
+
+try {
+  const scCount = (db.prepare('SELECT COUNT(*) as c FROM game_showcases').get() as any).c;
+  if (scCount === 0) {
+    const ins = db.prepare('INSERT INTO game_showcases (title, developer, engine, homepage_url, thumbnail_url, description) VALUES (?, ?, ?, ?, ?, ?)');
+    ins.run(
+      'Shadow Dungeon: Roguelike Web Demo',
+      'PixelKnight',
+      'Unity WebGL',
+      'https://itch.io/games/html5',
+      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80',
+      '설치 없이 브라우저에서 바로 즐길 수 있는 2D 도트 액션 로그라이크 데모 홈페이지입니다.'
+    );
+    ins.run(
+      'Cozy Pixel Valley (Official Homepage)',
+      'GodotCrafter',
+      'Godot 4.3',
+      'https://godotengine.org/showcase/',
+      'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
+      '1인 개발 힐링 농장 시뮬레이션 공식 홈페이지 및 개발 로드맵 소개 페이지입니다.'
+    );
+    ins.run(
+      'Cel-Shader Arena (Steam & Web Showcase)',
+      'ShaderWizard',
+      'Unreal 5',
+      'https://store.steampowered.com/indie',
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+      '카툰 렌더링 스타일리시 액션 신작 공식 스토어 및 트레일러 홈페이지입니다.'
+    );
+  }
+} catch {}
+
+app.get('/api/showcases', (_req, res) => {
+  const rows = db.prepare('SELECT * FROM game_showcases ORDER BY id DESC LIMIT 30').all();
+  res.json(rows);
+});
+
+app.post('/api/showcases', (req, res) => {
+  const { title, developer, engine, homepage_url, thumbnail_url, description } = req.body || {};
+  if (!title || !homepage_url) return res.status(400).json({ error: 'title and homepage_url required' });
+  db.prepare(
+    'INSERT INTO game_showcases (title, developer, engine, homepage_url, thumbnail_url, description) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(
+    String(title).trim(),
+    String(developer || 'Indie Creator').trim(),
+    String(engine || 'Unity').trim(),
+    String(homepage_url).trim(),
+    thumbnail_url ? String(thumbnail_url).trim() : 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80',
+    String(description || '').trim()
+  );
+  const rows = db.prepare('SELECT * FROM game_showcases ORDER BY id DESC LIMIT 30').all();
+  res.status(201).json(rows);
+});
+
+app.post('/api/showcases/:id/visit', (req, res) => {
+  db.prepare('UPDATE game_showcases SET plays = COALESCE(plays, 0) + 1 WHERE id = ?').run(req.params.id);
+  const row = db.prepare('SELECT plays FROM game_showcases WHERE id = ?').get(req.params.id) as any;
+  res.json({ plays: row?.plays || 1 });
+});
+
+app.post('/admin/delete-showcase/:id', (req, res) => {
+  db.prepare('DELETE FROM game_showcases WHERE id = ?').run(req.params.id);
+  res.redirect('/admin');
+});
 
 app.get('/api/shoutbox', (_req, res) => {
   const items = db.prepare('SELECT id, nickname, message, created_at FROM shoutbox ORDER BY id DESC LIMIT 15').all();

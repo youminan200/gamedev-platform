@@ -380,6 +380,28 @@ export const ApiClient = {
     return await response.json();
   },
 
+  getShowcases: async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/showcases`);
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  postShowcase: async (data: { title: string; developer: string; engine: string; homepage_url: string; thumbnail_url?: string; description?: string }): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/showcases`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  visitShowcase: async (id: number | string): Promise<{ plays: number }> => {
+    const response = await fetch(`${BASE_URL}/showcases/${id}/visit`, { method: 'POST' });
+    if (!response.ok) return { plays: 1 };
+    return await response.json();
+  },
+
   getShoutbox: async (): Promise<any[]> => {
     const response = await fetch(`${BASE_URL}/shoutbox`);
     if (!response.ok) return [];

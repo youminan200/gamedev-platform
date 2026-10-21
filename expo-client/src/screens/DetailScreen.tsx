@@ -57,6 +57,37 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
 
   const currentUsername = ApiClient.getUsername();
   const [shared, setShared] = useState(false);
+  const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
+  const [translatedBody, setTranslatedBody] = useState<string | null>(null);
+  const [translating, setTranslating] = useState(false);
+
+  const handleTranslate = async () => {
+    if (translatedBody) {
+      setTranslatedTitle(null);
+      setTranslatedBody(null);
+      return;
+    }
+    if (!devlog?.content && !devlog?.title) return;
+    try {
+      setTranslating(true);
+      const isKorean = /[가-힣]/.test((devlog.title || '') + (devlog.content || ''));
+      const targetLang = isKorean ? 'en' : 'ko';
+      const translateText = async (txt: string) => {
+        const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${encodeURIComponent(txt)}`;
+        const r = await fetch(url);
+        const j = await r.json();
+        return (j?.[0] || []).map((seg: any) => seg?.[0] || '').join('');
+      };
+      const [tTitle, tBody] = await Promise.all([
+        translateText(devlog.title || ''),
+        translateText(devlog.content || '')
+      ]);
+      setTranslatedTitle(tTitle);
+      setTranslatedBody(tBody);
+    } catch {} finally {
+      setTranslating(false);
+    }
+  };
 
   const handleShare = async () => {
     const shareUrl = `https://gamedev-platform-expo-client.vercel.app/?devlog=${id}`;
@@ -184,7 +215,7 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
 
   const renderHeader = () => (
     <View style={styles.postContent}>
-      <Text style={styles.title}>{devlog.title}</Text>
+      <Text style={styles.title}>{translatedTitle || devlog.title}</Text>
       <View style={styles.authorRow}>
         <Text style={styles.author}>👤 {devlog.author} • 👁️ {devlog.views ?? 0}회 조회 • {devlog.created_at ? new Date(devlog.created_at).toLocaleDateString() : ''}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -213,6 +244,11 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
             <Text style={[styles.editBtnText, { color: '#FFF' }]}>🎮 데모 플레이 ↗</Text>
           </TouchableOpacity>
         ) : null}
+        <TouchableOpacity style={[styles.editBtn, { backgroundColor: '#EEF2FF' }]} onPress={handleTranslate} disabled={translating}>
+          <Text style={[styles.editBtnText, { color: '#4F46E5' }]}>
+            {translating ? '🌐 번역 중...' : translatedBody ? '🔄 원문 보기 (Original)' : '🌐 한↔영 원클릭 번역 (Translate)'}
+          </Text>
+        </TouchableOpacity>
         <TouchableOpacity style={styles.editBtn} onPress={handleShare}>
           <Text style={styles.editBtnText}>{shared ? '✅ 링크 복사됨' : '🔗 이 글 공유하기'}</Text>
         </TouchableOpacity>
@@ -251,7 +287,7 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
           <Text style={{ color: '#FFF', fontWeight: '800' }}>▶️ 유튜브 플레이 영상 보기</Text>
         </TouchableOpacity>
       ) : null}
-      {renderFormattedContent(devlog.content, styles.body)}
+      {renderFormattedContent(translatedBody || devlog.content, styles.body)}
       {devlog.poll_question ? (
         <NeumorphView radius={16} style={{ padding: 16, marginBottom: 20 }}>
           <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.primary, marginBottom: 6 }}>
