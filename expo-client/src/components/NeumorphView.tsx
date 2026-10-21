@@ -8,7 +8,7 @@ interface Props {
   radius?: number;
 }
 
-export const NeumorphView: React.FC<Props> = ({ children, style, radius = 16 }) => {
+export const NeumorphView: React.FC<Props> = ({ children, style, radius = 6 }) => {
   const flatStyle = (StyleSheet.flatten(style) || {}) as any;
   const {
     padding,
@@ -27,9 +27,10 @@ export const NeumorphView: React.FC<Props> = ({ children, style, radius = 16 }) 
   } = flatStyle;
 
   const surfaceColor = backgroundColor || Theme.colors.surface;
+  const boxRadius = Math.min(radius, 8);
 
   const innerContentStyle: ViewStyle = {
-    borderRadius: radius,
+    borderRadius: Math.max(0, boxRadius - 2),
     backgroundColor: surfaceColor,
     ...(padding !== undefined ? { padding } : {}),
     ...(paddingHorizontal !== undefined ? { paddingHorizontal } : {}),
@@ -47,44 +48,30 @@ export const NeumorphView: React.FC<Props> = ({ children, style, radius = 16 }) 
   return (
     <View
       style={[
-        styles.outerShadow,
+        styles.arcadeBox,
         {
-          borderRadius: radius,
+          borderRadius: boxRadius,
+          borderColor: Theme.colors.border,
           shadowColor: Theme.colors.shadowDark,
           backgroundColor: surfaceColor,
         },
         outerStyle,
       ]}
     >
-      <View
-        style={[
-          styles.innerShadow,
-          {
-            borderRadius: radius,
-            shadowColor: Theme.colors.shadowLight,
-            backgroundColor: surfaceColor,
-          },
-        ]}
-      >
-        <View style={[styles.content, innerContentStyle]}>
-          {children}
-        </View>
+      <View style={[styles.content, innerContentStyle]}>
+        {children}
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  outerShadow: {
-    shadowOffset: { width: 6, height: 6 },
-    shadowOpacity: 0.6,
-    shadowRadius: 10,
-    elevation: 8,
-  },
-  innerShadow: {
-    shadowOffset: { width: -4, height: -4 },
-    shadowOpacity: 0.7,
-    shadowRadius: 8,
+  arcadeBox: {
+    borderWidth: 2,
+    shadowOffset: { width: 4, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
+    elevation: 4,
   },
   content: {
     overflow: 'hidden',

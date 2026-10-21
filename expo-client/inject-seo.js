@@ -9,6 +9,16 @@ if (fs.existsSync(htmlPath)) {
   let html = fs.readFileSync(htmlPath, 'utf8');
 
   const seoTags = `
+  <style>
+    @font-face {
+      font-family: 'DungGeunMo';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+      font-weight: normal;
+      font-style: normal;
+    }
+    * { box-sizing: border-box; }
+    body { background-color: #11131C; }
+  </style>
   <meta name="application-name" content="DevGround (데브그라운드)" />
   <meta name="author" content="DevGround Indie Game Developer Community" />
   <meta name="description" content="DevGround(데브그라운드)는 인디 게임 개발자 커뮤니티입니다. Unity(유니티), Unreal Engine(언리얼), Godot(고도) 게임 개발일지(DevLog), 무료 2D·3D·오디오·코드 게임 에셋 공유, 인디게임 웹데모 홍보관, 팀원 모집 보드를 설치·로그인 없이 무료로 이용하세요." />

@@ -33,7 +33,7 @@ export default function App() {
   const [pendingAssetId, setPendingAssetId] = useState<string | null>(null);
   const [maintenanceMsg, setMaintenanceMsg] = useState<string | null>(null);
   const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
-  const [updatePopupVisible, setUpdatePopupVisible] = useState<boolean>(true);
+  const [updatePopupVisible, setUpdatePopupVisible] = useState<boolean>(false);
   const [updatePopupTitle, setUpdatePopupTitle] = useState<string>("🎉 오늘의 업데이트 안내 (v1.3.0 대규모 업데이트)");
   const [updatePopupItems, setUpdatePopupItems] = useState<string[]>(["🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가","👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람","▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가","🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용","⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원"]);
 
@@ -65,11 +65,7 @@ export default function App() {
             setUpdatePopupItems(String(rawContent).split('\n').map((s: string) => s.trim()).filter(Boolean));
             try {
               const todayKey = new Date().toISOString().slice(0, 10) + '_' + title;
-              if (typeof window !== 'undefined' && window.localStorage?.getItem('devground_hide_popup') === todayKey) {
-                setUpdatePopupVisible(false);
-              } else {
-                setUpdatePopupVisible(true);
-              }
+              setUpdatePopupVisible(false);
             } catch {
               setUpdatePopupVisible(true);
             }
@@ -285,18 +281,18 @@ export default function App() {
           </View>
         )}
         {noticeMsg && !maintenanceMsg && (
-          <View style={{ backgroundColor: '#4F46E5', paddingVertical: 7, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
-            <Text numberOfLines={1} style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 11.5, flex: 1 }}>
-              {noticeMsg}
+          <View style={{ backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E', paddingVertical: 6, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+            <Text numberOfLines={1} style={{ color: '#00E5FF', fontWeight: '800', fontSize: 11, fontFamily: 'monospace', flex: 1 }}>
+              {'> SYS_NOTICE: ' + noticeMsg.replace(/^📢s*[공지]s*/, '')}
             </Text>
             <TouchableOpacity
               onPress={() => setUpdatePopupVisible(true)}
-              style={{ backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 }}
+              style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1, borderColor: '#11131C', flexShrink: 0 }}
             >
-              <Text numberOfLines={1} style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 10.5 }}>🎉 업데이트</Text>
+              <Text numberOfLines={1} style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 10, fontFamily: 'monospace' }}>[PATCH_LOG]</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => setNoticeMsg(null)} style={{ paddingHorizontal: 4, flexShrink: 0 }}>
-              <Text style={{ color: '#E0E7FF', fontWeight: '800', fontSize: 13 }}>✕</Text>
+              <Text style={{ color: '#9BA3B8', fontWeight: '900', fontSize: 12, fontFamily: 'monospace' }}>[X]</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -312,68 +308,48 @@ export default function App() {
         )}
 
         <Modal visible={updatePopupVisible} animationType="fade" transparent onRequestClose={() => setUpdatePopupVisible(false)}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.68)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-            <View style={{ width: '100%', maxWidth: 400, maxHeight: '82%', backgroundColor: '#FFFFFF', borderRadius: 20, padding: 18, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, elevation: 10 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 }}>
-                  <Text style={{ color: '#4F46E5', fontWeight: '800', fontSize: 10.5 }}>TODAY'S UPDATE</Text>
+          <View style={{ flex: 1, backgroundColor: 'rgba(5, 6, 10, 0.82)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+            <View style={{ width: '100%', maxWidth: 400, maxHeight: '82%', backgroundColor: '#1A1D2B', borderRadius: 6, borderWidth: 2, borderColor: '#FF4D6D', padding: 18 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                <View style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 3 }}>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '900', fontSize: 10, fontFamily: 'monospace' }}>PATCH_NOTES // v1.5</Text>
                 </View>
                 <TouchableOpacity onPress={() => setUpdatePopupVisible(false)} style={{ padding: 4 }}>
-                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#64748B' }}>✕</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '900', color: '#9BA3B8', fontFamily: 'monospace' }}>[X]</Text>
                 </TouchableOpacity>
               </View>
 
-              <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A', marginBottom: 4, lineHeight: 23 }}>
+              <Text style={{ fontSize: 16, fontWeight: '800', color: '#F4F4F6', marginBottom: 6, lineHeight: 22 }}>
                 {updatePopupTitle}
               </Text>
-              <Text style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>
-                DevGround에 새롭게 추가된 기능들을 지금 바로 체험해 보세요!
-              </Text>
 
-              <ScrollView style={{ maxHeight: 210, marginBottom: 12 }} showsVerticalScrollIndicator={true}>
+              <ScrollView style={{ maxHeight: 220, marginBottom: 14 }} showsVerticalScrollIndicator={true}>
                 {updatePopupItems.map((item, idx) => (
                   <View
                     key={idx}
                     style={{
-                      backgroundColor: '#F8FAFC',
-                      borderWidth: 1,
-                      borderColor: '#E2E8F0',
-                      borderRadius: 12,
+                      backgroundColor: '#11131C',
+                      borderWidth: 1.5,
+                      borderColor: '#3A415E',
+                      borderRadius: 4,
                       paddingVertical: 9,
                       paddingHorizontal: 12,
                       marginBottom: 6,
                     }}
                   >
-                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#1E293B', lineHeight: 17 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#F4F4F6', lineHeight: 18 }}>
                       {item}
                     </Text>
                   </View>
                 ))}
               </ScrollView>
 
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-                <TouchableOpacity
-                  onPress={() => {
-                    try {
-                      const todayKey = new Date().toISOString().slice(0, 10) + '_' + updatePopupTitle;
-                      if (typeof window !== 'undefined' && window.localStorage) {
-                        window.localStorage.setItem('devground_hide_popup', todayKey);
-                      }
-                    } catch {}
-                    setUpdatePopupVisible(false);
-                  }}
-                  style={{ paddingVertical: 11, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#F1F5F9', flexShrink: 0 }}
-                >
-                  <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>오늘 하루 닫기</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() => setUpdatePopupVisible(false)}
-                  style={{ flex: 1, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#4F46E5', alignItems: 'center', justifyContent: 'center' }}
-                >
-                  <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>확인하고 시작하기 🚀</Text>
-                </TouchableOpacity>
-              </View>
+              <TouchableOpacity
+                onPress={() => setUpdatePopupVisible(false)}
+                style={{ paddingVertical: 11, borderRadius: 4, backgroundColor: '#FF4D6D', alignItems: 'center', borderWidth: 1.5, borderColor: '#11131C' }}
+              >
+                <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '900', color: '#FFFFFF', fontFamily: 'monospace' }}>[ ENTER_WORKSHOP // 닫기 ]</Text>
+              </TouchableOpacity>
             </View>
           </View>
         </Modal>

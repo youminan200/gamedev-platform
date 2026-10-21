@@ -31,6 +31,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [toolboxVisible, setToolboxVisible] = useState(false);
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
+  const [activeSection, setActiveSection] = useState<'feed' | 'showcase' | 'tools'>('feed');
   const [showcases, setShowcases] = useState<any[]>([]);
   const [showcaseModalOpen, setShowcaseModalOpen] = useState(false);
   const [scTitle, setScTitle] = useState('');
@@ -399,236 +400,255 @@ p.Jump();', helpful_count: 48 },
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      {/* Row 1: Compact Brand Title + Right Quick Action Buttons */}
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-        <View style={{ flex: 1, marginRight: 8 }}>
-          <Text numberOfLines={1} style={{ fontSize: 21, fontWeight: '800', color: Theme.colors.primary }}>
-            📜 DevLogs Hub
-          </Text>
-          <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: Theme.colors.textLight, marginTop: 2 }}>
-            {lang === 'en' ? `👁️ Today ${visitStats.today} • Total ${visitStats.total}` : `👁️ 오늘 ${visitStats.today}명 • 누적 ${visitStats.total}명 방문`}
-          </Text>
+      {/* Top Indie Workshop Console Bar */}
+      <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+          <View style={{ flex: 1, marginRight: 8 }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
+                <Text style={{ color: '#FFF', fontSize: 9.5, fontWeight: '900', fontFamily: 'monospace' }}>INDIE_HUB</Text>
+              </View>
+              <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>
+                ONLINE: {visitStats.today} // TOTAL: {visitStats.total}
+              </Text>
+            </View>
+            <Text numberOfLines={1} style={{ fontSize: 20, fontWeight: '900', color: Theme.colors.text, fontFamily: 'monospace', marginTop: 4, letterSpacing: 0.5 }}>
+              DEVGROUND // 도트·인디공방_
+            </Text>
+          </View>
+
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+            {username ? (
+              <TouchableOpacity
+                style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 4 }}
+                onPress={handleOpenNotifications}
+              >
+                <Text style={{ color: Theme.colors.text, fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
+                  ALRT{unreadCount > 0 ? `(${unreadCount})` : ''}
+                </Text>
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity
+              style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 4 }}
+              onPress={handleToggleTheme}
+            >
+              <Text style={{ color: Theme.colors.text, fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
+                {Theme.isDark ? 'LIGHT' : 'DARK'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{ backgroundColor: copied ? '#10B981' : Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 4 }}
+              onPress={handleShare}
+            >
+              <Text style={{ color: copied ? '#FFF' : Theme.colors.text, fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
+                {copied ? 'COPIED' : 'SHARE'}
+              </Text>
+            </TouchableOpacity>
+            {onAuthClick && (
+              <TouchableOpacity
+                style={{
+                  backgroundColor: username ? Theme.colors.pillBg : Theme.colors.primary,
+                  borderWidth: 1.5,
+                  borderColor: Theme.colors.border,
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 4,
+                }}
+                onPress={onAuthClick}
+              >
+                <Text numberOfLines={1} style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
+                  {username ? `@${username.slice(0, 7)}` : 'LOGIN'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
         </View>
 
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-          {username ? (
-            <TouchableOpacity
-              style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14 }}
-              onPress={handleOpenNotifications}
-            >
-              <Text style={{ color: Theme.colors.text, fontWeight: '800', fontSize: 12 }}>
-                🔔{unreadCount > 0 ? ` ${unreadCount}` : ''}
-              </Text>
-            </TouchableOpacity>
-          ) : null}
+        {/* 3-Mode Console Switcher (Replaces stacked banners!) */}
+        <View style={{ flexDirection: 'row', gap: 6 }}>
           <TouchableOpacity
-            style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14 }}
-            onPress={handleToggleTheme}
+            onPress={() => setActiveSection('feed')}
+            style={{
+              flex: 1,
+              backgroundColor: activeSection === 'feed' ? Theme.colors.primary : Theme.colors.pillBg,
+              borderWidth: 1.5,
+              borderColor: activeSection === 'feed' ? Theme.colors.primary : Theme.colors.border,
+              paddingVertical: 8,
+              borderRadius: 4,
+              alignItems: 'center',
+            }}
           >
-            <Text style={{ color: Theme.colors.text, fontWeight: '800', fontSize: 12 }}>
-              {Theme.isDark ? '☀️' : '🌙'}
+            <Text numberOfLines={1} style={{ fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace', color: activeSection === 'feed' ? '#FFF' : Theme.colors.text }}>
+              [01] 개발일지
             </Text>
           </TouchableOpacity>
+
           <TouchableOpacity
-            style={{ backgroundColor: copied ? '#10B981' : Theme.colors.pillBg, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14 }}
-            onPress={handleShare}
+            onPress={() => setActiveSection('showcase')}
+            style={{
+              flex: 1,
+              backgroundColor: activeSection === 'showcase' ? '#00E5FF' : Theme.colors.pillBg,
+              borderWidth: 1.5,
+              borderColor: activeSection === 'showcase' ? '#00E5FF' : Theme.colors.border,
+              paddingVertical: 8,
+              borderRadius: 4,
+              alignItems: 'center',
+            }}
           >
-            <Text style={{ color: copied ? '#FFFFFF' : Theme.colors.text, fontWeight: '800', fontSize: 12 }}>
-              {copied ? '✅ 복사됨' : '🔗 공유'}
+            <Text numberOfLines={1} style={{ fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace', color: activeSection === 'showcase' ? '#11131C' : Theme.colors.text }}>
+              [02] 웹데모·홍보관
             </Text>
           </TouchableOpacity>
-          {onAuthClick && (
-            <TouchableOpacity
-              style={{
-                backgroundColor: username ? Theme.colors.pillBg : Theme.colors.primary,
-                paddingHorizontal: 11,
-                paddingVertical: 6,
-                borderRadius: 14,
-              }}
-              onPress={onAuthClick}
-            >
-              <Text numberOfLines={1} style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
-                {username ? `👤 ${username.slice(0, 8)}` : '🔑 로그인'}
-              </Text>
-            </TouchableOpacity>
-          )}
+
+          <TouchableOpacity
+            onPress={() => setActiveSection('tools')}
+            style={{
+              flex: 1,
+              backgroundColor: activeSection === 'tools' ? '#FFD166' : Theme.colors.pillBg,
+              borderWidth: 1.5,
+              borderColor: activeSection === 'tools' ? '#FFD166' : Theme.colors.border,
+              paddingVertical: 8,
+              borderRadius: 4,
+              alignItems: 'center',
+            }}
+          >
+            <Text numberOfLines={1} style={{ fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace', color: activeSection === 'tools' ? '#11131C' : Theme.colors.text }}>
+              [03] 에러사전·오락실
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
-      {/* Row 2: Horizontal Scrollable Feature Dock (Never squishes or overflows!) */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 6, paddingVertical: 2 }}
-        style={{ marginBottom: 10 }}
-      >
-        <TouchableOpacity
-          onPress={handleOpenErrorWiki}
-          style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#C2410C' }}>🛠️ Unity 에러 해결사전</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleOpenArcade}
-          style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#15803D' }}>🕹️ 미니오락실</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setSfxStudioOpen(true)}
-          style={{ backgroundColor: '#F3E8FF', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#7E22CE' }}>🔊 효과음 제작기</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleOpenTeamBoard}
-          style={{ backgroundColor: '#FCE7F3', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#BE185D' }}>🤝 팀원모집 보드</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setIdeaMachineOpen(true)}
-          style={{ backgroundColor: '#FEF9C3', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#A16207' }}>🎲 신작 아이디어 뽑기</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleOpenLeaderboard}
-          style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#D97706' }}>🏆 개발자 랭킹</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setToolboxVisible(true)}
-          style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#4F46E5' }}>🧰 무료 개발도구함</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={handleInstallAppClick}
-          style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
-        >
-          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#0369A1' }}>📲 무료 앱 설치</Text>
-        </TouchableOpacity>
-      </ScrollView>
+      {/* SECTION 01: DEVLOGS FEED CONTROLS */}
+      {activeSection === 'feed' && (
+        <>
+          <NeumorphView radius={6} style={styles.searchBox}>
+            <TextInput
+              style={[styles.searchInput, { fontFamily: 'monospace' }]}
+              placeholder="> SEARCH_LOGS (키워드, 엔진, 태그 입력...)"
+              placeholderTextColor={Theme.colors.textLight}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+            />
+          </NeumorphView>
 
-      {/* Search Input */}
-      <NeumorphView radius={12} style={styles.searchBox}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search devlogs, games, tags..."
-          placeholderTextColor={Theme.colors.textLight}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-      </NeumorphView>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 10 }}>
+            {[
+              { label: 'ALL_LOGS', tag: null },
+              { label: 'UNITY', tag: 'Unity' },
+              { label: 'UNREAL', tag: 'Unreal' },
+              { label: 'GODOT', tag: 'Godot' },
+              { label: 'SHOWCASE', tag: '쇼케이스' },
+              { label: 'WEB_DEMO', tag: '데모버전' },
+              { label: 'RECRUIT', tag: '팀원모집' },
+            ].map((item) => {
+              const active = selectedTag === item.tag;
+              return (
+                <TouchableOpacity
+                  key={item.label}
+                  onPress={() => setSelectedTag(active ? null : item.tag)}
+                  style={{
+                    backgroundColor: active ? Theme.colors.primary : Theme.colors.surface,
+                    borderWidth: 1.5,
+                    borderColor: active ? Theme.colors.primary : Theme.colors.border,
+                    paddingHorizontal: 10,
+                    paddingVertical: 5,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '900', fontFamily: 'monospace', color: active ? '#FFF' : Theme.colors.text }}>
+                    #{item.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
 
-
-
-      {/* Quick Category Filter Pills (All / Demo Play / Team Recruit / Engines) */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 12 }}>
-        {[
-          { label: '📋 전체 글', tag: null },
-          { label: '🏆 이달의 쇼케이스', tag: '쇼케이스' },
-          { label: '🎮 데모 플레이', tag: '데모버전' },
-          { label: '🤝 팀원 모집', tag: '팀원모집' },
-          { label: 'Unity', tag: 'Unity' },
-          { label: 'Unreal', tag: 'Unreal' },
-          { label: 'Godot', tag: 'Godot' },
-        ].map((item) => {
-          const active = selectedTag === item.tag;
-          return (
+          <View style={styles.sortRow}>
             <TouchableOpacity
-              key={item.label}
-              onPress={() => setSelectedTag(active ? null : item.tag)}
-              style={{
-                backgroundColor: active ? Theme.colors.primary : Theme.colors.pillBg,
-                paddingHorizontal: 13,
-                paddingVertical: 7,
-                borderRadius: 16,
-              }}
+              style={[styles.sortButton, sortBy === 'latest' && styles.activeSortButton]}
+              onPress={() => setSortBy('latest')}
             >
-              <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#FFF' : Theme.colors.text }}>
-                {item.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-
-
-
-      {/* Global GameDev Free Assets & Game Jam News Bar */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 12 }}>
-        {[
-          { label: lang === 'en' ? '🎁 Unreal/Fab Monthly Free Assets' : '🎁 언리얼/Fab 이달의 무료 에셋', url: 'https://www.fab.com/' },
-          { label: lang === 'en' ? '🎁 Unity Top Free Assets' : '🎁 유니티 인기 무료 에셋 모음', url: 'https://assetstore.unity.com/top-assets/top-free' },
-          { label: lang === 'en' ? '🏆 Global Indie Game Jams (Itch.io)' : '🏆 글로벌 인디 게임잼 일정 (Itch.io)', url: 'https://itch.io/jams' },
-          { label: lang === 'en' ? '🔥 Steam Upcoming Indie Games' : '🔥 스팀 출시 예정 인디게임 트렌드', url: 'https://store.steampowered.com/genre/Indie/' },
-        ].map((news) => (
-          <TouchableOpacity
-            key={news.label}
-            onPress={() => Linking.openURL(news.url)}
-            style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}
-          >
-            <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>{news.label} ↗</Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-
-      {/* Indie Game Homepage & Web Demo Showcase Strip */}
-      <View style={{ marginBottom: 14 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-          <Text numberOfLines={1} style={{ fontSize: 13.5, fontWeight: '800', color: Theme.colors.primary }}>
-            🕹️ 인디게임 & 웹데모 홍보관
-          </Text>
-          <View style={{ flexDirection: 'row', gap: 6, flexShrink: 0 }}>
-            <TouchableOpacity
-              onPress={handleCopyFeaturedBadge}
-              style={{ backgroundColor: badgeCopied ? '#10B981' : '#EEF2FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}
-            >
-              <Text numberOfLines={1} style={{ color: badgeCopied ? '#FFF' : '#4F46E5', fontSize: 10.5, fontWeight: '800' }}>
-                {badgeCopied ? '✅ 복사됨' : '🎖️ 배지 복사'}
-              </Text>
+              <Text style={[styles.sortButtonText, sortBy === 'latest' && styles.activeSortButtonText]}>[LATEST // 최신]</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              onPress={() => setShowcaseModalOpen(true)}
-              style={{ backgroundColor: '#10B981', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 }}
+              style={[styles.sortButton, sortBy === 'popular' && styles.activeSortButton]}
+              onPress={() => setSortBy('popular')}
             >
-              <Text numberOfLines={1} style={{ color: '#FFF', fontSize: 10.5, fontWeight: '800' }}>
-                + 내 게임 등록
+              <Text style={[styles.sortButtonText, sortBy === 'popular' && styles.activeSortButtonText]}>[HOT // 인기]</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.sortButton, sortBy === 'bookmarked' && styles.activeSortButton]}
+              onPress={() => setSortBy('bookmarked')}
+            >
+              <Text style={[styles.sortButtonText, sortBy === 'bookmarked' && styles.activeSortButtonText]}>
+                [SAVED ({bookmarkedIds.length})]
               </Text>
             </TouchableOpacity>
           </View>
-        </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-          {showcases.map((game: any) => (
-            <View
-              key={game.id}
-              style={{
-                width: 240,
-                backgroundColor: Theme.colors.pillBg,
-                borderRadius: 16,
-                overflow: 'hidden',
-                paddingBottom: 12,
-              }}
-            >
-              {game.thumbnail_url ? (
-                <Image source={{ uri: game.thumbnail_url }} style={{ width: '100%', height: 80 }} resizeMode="cover" />
-              ) : null}
-              <View style={{ paddingHorizontal: 12, paddingTop: 10 }}>
+        </>
+      )}
+
+      {/* SECTION 02: INDIE GAME SHOWCASE & LIVE TERMINAL */}
+      {activeSection === 'showcase' && (
+        <View style={{ marginBottom: 14 }}>
+          <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: Theme.colors.border, borderRadius: 6, padding: 14, marginBottom: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#00E5FF', fontFamily: 'monospace' }}>
+                  // INDIE_GAME_SHOWCASE_ARCADE
+                </Text>
+                <Text style={{ fontSize: 12, color: Theme.colors.textLight, marginTop: 2 }}>
+                  개발 중인 인디게임 홈페이지·스팀·Itch.io 웹데모를 등록하고 사이트 안에서 바로 실행해보세요.
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <TouchableOpacity
+                  onPress={handleCopyFeaturedBadge}
+                  style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 }}
+                >
+                  <Text style={{ color: Theme.colors.text, fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>
+                    {badgeCopied ? '[COPIED!]' : '[COPY_BADGE]'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setShowcaseModalOpen(true)}
+                  style={{ backgroundColor: Theme.colors.primary, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>
+                    [+ REGISTER_GAME]
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {showcases.map((game: any) => (
+              <View
+                key={game.id}
+                style={{
+                  backgroundColor: Theme.colors.background,
+                  borderWidth: 1.5,
+                  borderColor: Theme.colors.border,
+                  borderRadius: 6,
+                  padding: 12,
+                  marginBottom: 10,
+                }}
+              >
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <Text style={{ fontSize: 10, fontWeight: '800', color: Theme.colors.primary }}>{game.engine}</Text>
-                  <Text style={{ fontSize: 10, color: Theme.colors.textLight }}>👁️ {game.plays || 0}회 방문</Text>
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>
+                    [{game.engine}] // BY @{game.developer}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: Theme.colors.textLight, fontFamily: 'monospace' }}>
+                    PLAYS: {game.plays || 0}
+                  </Text>
                 </View>
-                <Text numberOfLines={1} style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.text }}>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>
                   {game.title}
                 </Text>
-                <Text numberOfLines={2} style={{ fontSize: 11, color: Theme.colors.textLight, marginTop: 3, height: 30 }}>
-                  {game.description || '인디게임 공식 홈페이지 및 데모 페이지'}
+                <Text style={{ fontSize: 12, color: Theme.colors.textLight, marginBottom: 10 }}>
+                  {game.description || '인디게임 공식 홈페이지 및 웹데모 쇼케이스'}
                 </Text>
-                <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                <View style={{ flexDirection: 'row', gap: 8 }}>
                   <TouchableOpacity
                     onPress={async () => {
                       try {
@@ -637,143 +657,143 @@ p.Jump();', helpful_count: 48 },
                       } catch {}
                       setPreviewGame(game);
                     }}
-                    style={{
-                      flex: 1,
-                      backgroundColor: '#4F46E5',
-                      paddingVertical: 7,
-                      borderRadius: 10,
-                      alignItems: 'center',
-                    }}
+                    style={{ flex: 1, backgroundColor: '#00E5FF', paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
                   >
-                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
-                      {lang === 'en' ? '🖥️ Preview Here' : '🖥️ 안에서 바로보기'}
+                    <Text style={{ color: '#11131C', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>
+                      [▶ LAUNCH_IN_APP // 바로실행]
                     </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    onPress={async () => {
-                      try {
-                        const r = await ApiClient.visitShowcase(game.id);
-                        setShowcases((prev) => prev.map((x) => (x.id === game.id ? { ...x, plays: r.plays } : x)));
-                      } catch {}
-                      Linking.openURL(game.homepage_url).catch(() => {});
-                    }}
-                    style={{
-                      backgroundColor: Theme.colors.pillBg,
-                      paddingHorizontal: 10,
-                      paddingVertical: 7,
-                      borderRadius: 10,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
+                    onPress={() => Linking.openURL(game.homepage_url).catch(() => {})}
+                    style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 12, justifyContent: 'center', borderRadius: 4 }}
                   >
-                    <Text style={{ color: Theme.colors.text, fontSize: 11, fontWeight: '800' }}>↗ 새창</Text>
+                    <Text style={{ color: Theme.colors.text, fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>[↗ WEB]</Text>
                   </TouchableOpacity>
                 </View>
               </View>
+            ))}
+          </View>
+
+          {/* Live Developer Terminal Shoutbox */}
+          <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: Theme.colors.border, borderRadius: 6, padding: 14 }}>
+            <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace', marginBottom: 8 }}>
+              {'> LIVE_DEV_TERMINAL // 한줄 개발 현황 로그'}
+            </Text>
+            {shouts.slice(0, 4).map((s: any) => (
+              <Text key={s.id} numberOfLines={1} style={{ fontSize: 12, color: Theme.colors.text, fontFamily: 'monospace', marginBottom: 4 }}>
+                <Text style={{ fontWeight: '900', color: '#00E5FF' }}>@{s.nickname}: </Text>
+                {s.message}
+              </Text>
+            ))}
+            <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+              <TextInput
+                style={{ flex: 1, backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, color: Theme.colors.text, fontFamily: 'monospace' }}
+                placeholder="> 오늘의 개발 진척도 입력..."
+                placeholderTextColor={Theme.colors.textLight}
+                value={shoutText}
+                onChangeText={setShoutText}
+              />
+              <TouchableOpacity
+                disabled={sendingShout}
+                onPress={async () => {
+                  if (!shoutText.trim()) return;
+                  try {
+                    setSendingShout(true);
+                    const list = await ApiClient.postShoutbox(username || 'INDIE_DEV', shoutText.trim());
+                    if (list.length > 0) setShouts(list);
+                    setShoutText('');
+                  } catch {} finally {
+                    setSendingShout(false);
+                  }
+                }}
+                style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 14, justifyContent: 'center', borderRadius: 4 }}
+              >
+                <Text style={{ color: '#FFF', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>SEND</Text>
+              </TouchableOpacity>
             </View>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* Live Developer Shoutbox Widget */}
-      <View style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 12, marginBottom: 14 }}>
-        <Text style={{ fontSize: 12, fontWeight: '800', color: Theme.colors.primary, marginBottom: 6 }}>
-          {lang === 'en' ? '⚡ Live Indie Dev Shoutbox (No login required)' : '⚡ 실시간 개발자 한줄 응원톡 (로그인 없이 작성 가능)'}
-        </Text>
-        {shouts.slice(0, 3).map((s: any) => (
-          <Text key={s.id} numberOfLines={1} style={{ fontSize: 12, color: Theme.colors.text, marginBottom: 3 }}>
-            <Text style={{ fontWeight: '800', color: Theme.colors.primary }}>{s.nickname}: </Text>
-            {s.message}
-          </Text>
-        ))}
-        <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
-          <TextInput
-            style={{ flex: 1, backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, color: Theme.colors.text }}
-            placeholder="오늘의 개발 진척도나 응원 한마디를 남겨보세요..."
-            placeholderTextColor={Theme.colors.textLight}
-            value={shoutText}
-            onChangeText={setShoutText}
-          />
-          <TouchableOpacity
-            disabled={sendingShout}
-            onPress={async () => {
-              if (!shoutText.trim()) return;
-              try {
-                setSendingShout(true);
-                const list = await ApiClient.postShoutbox(username || '인디개발자', shoutText.trim());
-                if (list.length > 0) setShouts(list);
-                setShoutText('');
-              } catch {} finally {
-                setSendingShout(false);
-              }
-            }}
-            style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 12, justifyContent: 'center', borderRadius: 10 }}
-          >
-            <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>등록</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Top 3 Popular DevLogs Banner */}
-      {logs.length > 0 && (
-        <View style={{ marginBottom: 14 }}>
-          <Text style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.primary, marginBottom: 8 }}>
-            {lang === 'en' ? '🔥 Top 3 Trending DevLogs' : '🔥 인기 개발일지 TOP 3'}
-          </Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
-            {[...logs]
-              .sort((a, b) => (b.likes || 0) - (a.likes || 0))
-              .slice(0, 3)
-              .map((topItem, index) => (
-                <TouchableOpacity
-                  key={topItem.id}
-                  onPress={() => onDevLogClick(topItem.id)}
-                  style={{
-                    backgroundColor: Theme.colors.pillBg,
-                    paddingHorizontal: 14,
-                    paddingVertical: 10,
-                    borderRadius: 14,
-                    maxWidth: 240,
-                  }}
-                >
-                  <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.text }}>
-                    {index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : '🥉 '}
-                    {topItem.title}
-                  </Text>
-                  <Text style={{ fontSize: 11, color: Theme.colors.textLight, marginTop: 4 }}>
-                    by {topItem.author} • ❤️ {topItem.likes || 0}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-          </ScrollView>
+          </View>
         </View>
       )}
 
-      {/* Sort Buttons */}
-      <View style={styles.sortRow}>
-        <TouchableOpacity 
-          style={[styles.sortButton, sortBy === 'latest' && styles.activeSortButton]}
-          onPress={() => setSortBy('latest')}
-        >
-          <Text style={[styles.sortButtonText, sortBy === 'latest' && styles.activeSortButtonText]}>⚡ Latest</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.sortButton, sortBy === 'popular' && styles.activeSortButton]}
-          onPress={() => setSortBy('popular')}
-        >
-          <Text style={[styles.sortButtonText, sortBy === 'popular' && styles.activeSortButtonText]}>🔥 Most Liked</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity 
-          style={[styles.sortButton, sortBy === 'bookmarked' && styles.activeSortButton]}
-          onPress={() => setSortBy('bookmarked')}
-        >
-          <Text style={[styles.sortButtonText, sortBy === 'bookmarked' && styles.activeSortButtonText]}>
-            ⭐ 찜한 글 ({bookmarkedIds.length})
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* SECTION 03: INDIE DEV LAB & TOOLS CARTRIDGE GRID */}
+      {activeSection === 'tools' && (
+        <View style={{ marginBottom: 14, gap: 10 }}>
+          {[
+            {
+              code: 'MOD_01 // ERR_DOCTOR',
+              title: 'Unity · Unreal · Godot 만능 에러 해결 센터',
+              desc: '콘솔 에러 로그를 붙여넣으면 발생 줄 번호·한글 번역·수정 코드를 1초 만에 진단합니다. (23종 필수 에러 수록)',
+              accent: '#FF4D6D',
+              onPress: handleOpenErrorWiki
+            },
+            {
+              code: 'MOD_02 // 8BIT_SFX_SYNTH',
+              title: '8-Bit 레트로 효과음(SFX) 합성 스튜디오',
+              desc: '점프·레이저·폭발·코인 효과음을 파형으로 조절하고 상업용 무료 .WAV 오디오 파일로 즉시 추출합니다.',
+              accent: '#00E5FF',
+              onPress: () => setSfxStudioOpen(true)
+            },
+            {
+              code: 'MOD_03 // ARCADE_CABINET',
+              title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
+              desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
+              accent: '#10B981',
+              onPress: handleOpenArcade
+            },
+            {
+              code: 'MOD_04 // PARTY_RECRUIT',
+              title: '인디 게임 팀원 모집 & 협업 보드',
+              desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
+              accent: '#FFD166',
+              onPress: handleOpenTeamBoard
+            },
+            {
+              code: 'MOD_05 // IDEA_SLOT_MACHINE',
+              title: '게임잼 & 신작 아이디어 랜덤 조합기',
+              desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
+              accent: '#A855F7',
+              onPress: () => setIdeaMachineOpen(true)
+            },
+            {
+              code: 'MOD_06 // HALL_OF_FAME & APP',
+              title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
+              desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
+              accent: '#38BDF8',
+              onPress: handleInstallAppClick
+            }
+          ].map((mod) => (
+            <TouchableOpacity
+              key={mod.code}
+              activeOpacity={0.85}
+              onPress={mod.onPress}
+              style={{
+                backgroundColor: Theme.colors.surface,
+                borderWidth: 2,
+                borderColor: Theme.colors.border,
+                borderLeftWidth: 6,
+                borderLeftColor: mod.accent,
+                borderRadius: 6,
+                padding: 14,
+              }}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                <Text style={{ fontSize: 10.5, fontWeight: '900', color: mod.accent, fontFamily: 'monospace' }}>
+                  [{mod.code}]
+                </Text>
+                <Text style={{ fontSize: 11, fontWeight: '900', color: Theme.colors.textLight, fontFamily: 'monospace' }}>
+                  [LAUNCH →]
+                </Text>
+              </View>
+              <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>
+                {mod.title}
+              </Text>
+              <Text style={{ fontSize: 12, color: Theme.colors.textLight, lineHeight: 17 }}>
+                {mod.desc}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
     </View>
   );
 
@@ -788,7 +808,7 @@ p.Jump();', helpful_count: 48 },
   return (
     <View style={styles.container}>
       <FlatList
-        data={sortedLogs}
+        data={activeSection === 'feed' ? sortedLogs : []}
         keyExtractor={item => item.id}
         ListHeaderComponent={renderHeader}
         renderItem={({ item }) => (
@@ -802,7 +822,7 @@ p.Jump();', helpful_count: 48 },
             onAuthorClick={handleOpenAuthorModal}
           />
         )}
-        ListEmptyComponent={
+        ListEmptyComponent={activeSection !== 'feed' ? null : 
           <View style={{ padding: 40, alignItems: 'center' }}>
             <Text style={{ color: Theme.colors.textLight, fontWeight: '600', fontSize: 15 }}>
               {sortBy === 'bookmarked' ? '아직 ⭐ 찜한 개발일지가 없습니다.' : '등록된 개발일지가 없습니다.'}

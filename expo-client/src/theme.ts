@@ -1,41 +1,43 @@
 export type ThemeMode = 'light' | 'dark';
 
+// Retro GameBoy / Playdate Paper Workshop (Light)
 const LIGHT_COLORS = {
-  background: '#E0E5EC',
-  surface: '#E0E5EC',
-  pillBg: '#D1D9E6',
-  border: '#D1D9E6',
-  text: '#334155',
-  textLight: '#64748B',
-  primary: '#4F46E5',
-  accent: '#2563EB',
-  shadowDark: '#A3B1C6',
-  shadowLight: '#FFFFFF',
-  error: '#FF4757'
+  background: '#F4EFE6',
+  surface: '#FFFFFF',
+  pillBg: '#E6DFD3',
+  border: '#1E2230',
+  text: '#181A24',
+  textLight: '#5A6075',
+  primary: '#FA5C5C',
+  accent: '#181A24',
+  shadowDark: '#1E2230',
+  shadowLight: '#1E2230',
+  error: '#E63946'
 };
 
+// Itch.io / Arcade Cabinet Dark Workshop (Default)
 const DARK_COLORS = {
-  background: '#0F172A',
-  surface: '#1E293B',
-  pillBg: '#334155',
-  border: '#334155',
-  text: '#F8FAFC',
-  textLight: '#94A3B8',
-  primary: '#38BDF8',
-  accent: '#60A5FA',
-  shadowDark: '#020617',
-  shadowLight: '#334155',
+  background: '#11131C',
+  surface: '#1A1D2B',
+  pillBg: '#252A3D',
+  border: '#3A415E',
+  text: '#F4F4F6',
+  textLight: '#9BA3B8',
+  primary: '#FF4D6D',
+  accent: '#FFD166',
+  shadowDark: '#05060A',
+  shadowLight: '#3A415E',
   error: '#FF6B81'
 };
 
 const getInitialMode = (): ThemeMode => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const saved = window.localStorage.getItem('devground_theme_mode');
+      const saved = window.localStorage.getItem('devground_theme_mode_v2');
       if (saved === 'dark' || saved === 'light') return saved;
     }
   } catch {}
-  return 'light';
+  return 'dark';
 };
 
 let currentMode: ThemeMode = getInitialMode();
@@ -52,7 +54,7 @@ export const Theme = {
     currentMode = currentMode === 'light' ? 'dark' : 'light';
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem('devground_theme_mode', currentMode);
+        window.localStorage.setItem('devground_theme_mode_v2', currentMode);
       }
     } catch {}
     listeners.forEach((fn) => fn(currentMode));

@@ -12,42 +12,57 @@ interface Props {
 
 export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostClick }) => {
   return (
-    <View style={[styles.container, { backgroundColor: Theme.colors.background, borderTopColor: Theme.colors.border }]}>
-      <TouchableOpacity 
-        style={styles.tabItem} 
+    <View style={[styles.container, { backgroundColor: Theme.colors.surface, borderTopColor: Theme.colors.border }]}>
+      <TouchableOpacity
+        style={[
+          styles.tabItem,
+          currentTab === 'DevLogs' && { backgroundColor: Theme.colors.pillBg, borderColor: Theme.colors.primary, borderWidth: 1.5 }
+        ]}
         onPress={() => onTabChange('DevLogs')}
       >
-        <Text style={styles.tabIcon}>{currentTab === 'DevLogs' ? '📜' : '📄'}</Text>
-        <Text style={[styles.tabLabel, { color: Theme.colors.textLight }, currentTab === 'DevLogs' && { color: Theme.colors.primary, fontWeight: '800' }]}>
-          DevLogs
+        <Text style={[styles.tabCode, { color: currentTab === 'DevLogs' ? Theme.colors.primary : Theme.colors.textLight }]}>
+          [01 // LOGS]
+        </Text>
+        <Text style={[styles.tabLabel, { color: Theme.colors.text }, currentTab === 'DevLogs' && { color: Theme.colors.primary }]}>
+          개발일지 & 공방
         </Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.tabItem} 
-        onPress={() => onTabChange('AssetHub')}
-      >
-        <Text style={styles.tabIcon}>{currentTab === 'AssetHub' ? '🎨' : '🖌️'}</Text>
-        <Text style={[styles.tabLabel, { color: Theme.colors.textLight }, currentTab === 'AssetHub' && { color: Theme.colors.primary, fontWeight: '800' }]}>
-          Asset Hub
-        </Text>
-      </TouchableOpacity>
-
-      <TouchableOpacity 
-        style={[styles.postButton, { backgroundColor: Theme.colors.primary }]} 
+      <TouchableOpacity
+        style={[styles.postButton, { backgroundColor: Theme.colors.primary, borderColor: Theme.colors.border }]}
         onPress={onPostClick}
         activeOpacity={0.85}
       >
-        <Text style={styles.postButtonIcon}>+</Text>
+        <Text style={styles.postButtonIcon}>+ WRITE</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity 
-        style={styles.tabItem} 
+      <TouchableOpacity
+        style={[
+          styles.tabItem,
+          currentTab === 'AssetHub' && { backgroundColor: Theme.colors.pillBg, borderColor: Theme.colors.primary, borderWidth: 1.5 }
+        ]}
+        onPress={() => onTabChange('AssetHub')}
+      >
+        <Text style={[styles.tabCode, { color: currentTab === 'AssetHub' ? Theme.colors.primary : Theme.colors.textLight }]}>
+          [02 // ASSETS]
+        </Text>
+        <Text style={[styles.tabLabel, { color: Theme.colors.text }, currentTab === 'AssetHub' && { color: Theme.colors.primary }]}>
+          무료 에셋 창고
+        </Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[
+          styles.tabItem,
+          currentTab === 'Profile' && { backgroundColor: Theme.colors.pillBg, borderColor: Theme.colors.primary, borderWidth: 1.5 }
+        ]}
         onPress={() => onTabChange('Profile')}
       >
-        <Text style={styles.tabIcon}>{currentTab === 'Profile' ? '👤' : '👤'}</Text>
-        <Text style={[styles.tabLabel, { color: Theme.colors.textLight }, currentTab === 'Profile' && { color: Theme.colors.primary, fontWeight: '800' }]}>
-          Profile
+        <Text style={[styles.tabCode, { color: currentTab === 'Profile' ? Theme.colors.primary : Theme.colors.textLight }]}>
+          [03 // DEV_ID]
+        </Text>
+        <Text style={[styles.tabLabel, { color: Theme.colors.text }, currentTab === 'Profile' && { color: Theme.colors.primary }]}>
+          내 스튜디오
         </Text>
       </TouchableOpacity>
     </View>
@@ -57,50 +72,50 @@ export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostC
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    height: 64,
-    backgroundColor: Theme.colors.background,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.border,
+    height: 62,
+    borderTopWidth: 2,
     alignItems: 'center',
-    justifyContent: 'space-around',
+    justifyContent: 'space-between',
     paddingHorizontal: 8,
+    gap: 6,
   },
   tabItem: {
     flex: 1,
+    height: 46,
+    borderRadius: 6,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 4,
   },
-  tabIcon: {
-    fontSize: 20,
-    marginBottom: 2,
+  tabCode: {
+    fontSize: 9.5,
+    fontWeight: '800',
+    fontFamily: 'monospace',
+    letterSpacing: 0.5,
   },
   tabLabel: {
-    fontSize: 12,
-    fontWeight: '600',
-    color: Theme.colors.textLight,
-  },
-  activeTabLabel: {
-    color: Theme.colors.primary,
+    fontSize: 11.5,
     fontWeight: '800',
+    marginTop: 1,
   },
   postButton: {
-    width: 44,
+    paddingHorizontal: 14,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: Theme.colors.primary,
+    borderRadius: 6,
+    borderWidth: 2,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 1,
+    shadowRadius: 0,
     elevation: 4,
   },
   postButtonIcon: {
     color: '#FFFFFF',
-    fontSize: 24,
-    fontWeight: '700',
-    lineHeight: 26,
-  }
+    fontSize: 12,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+    letterSpacing: 0.5,
+  },
 });
