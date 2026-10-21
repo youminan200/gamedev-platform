@@ -53,6 +53,7 @@ jobs:
           check_url "robots.txt" "https://gamedev-platform-expo-client.vercel.app/robots.txt" "Sitemap:" || FAILED=1
           check_url "sitemap.xml" "https://gamedev-platform-expo-client.vercel.app/sitemap.xml" "urlset" || FAILED=1
           check_url "Google 소유권 확인" "https://gamedev-platform-expo-client.vercel.app/google0a45254e48fad007.html" "google-site-verification" || FAILED=1
+          check_url "Bing/IndexNow 인증 키" "https://gamedev-platform-expo-client.vercel.app/4d8f9a2b7c1e6f3a9d0b5e8c2a4f7d1e.txt" "4d8f9a2b7c1e6f3a9d0b5e8c2a4f7d1e" || FAILED=1
           check_url "백엔드 API (Render)" "https://gamedev-platform.onrender.com/api/stats" "" || FAILED=1
 
           if [ "$FAILED" -ne 0 ]; then
@@ -60,6 +61,25 @@ jobs:
             exit 1
           fi
           echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Submit URLs to Global Search Engines (Bing / DuckDuckGo / Yahoo / Naver via IndexNow)
+        if: always()
+        run: |
+          STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST "https://api.indexnow.org/indexnow" \
+            -H "Content-Type: application/json; charset=utf-8" \
+            -d '{
+              "host": "gamedev-platform-expo-client.vercel.app",
+              "key": "4d8f9a2b7c1e6f3a9d0b5e8c2a4f7d1e",
+              "keyLocation": "https://gamedev-platform-expo-client.vercel.app/4d8f9a2b7c1e6f3a9d0b5e8c2a4f7d1e.txt",
+              "urlList": [
+                "https://gamedev-platform-expo-client.vercel.app/",
+                "https://gamedev-platform-expo-client.vercel.app/?devlog=1",
+                "https://gamedev-platform-expo-client.vercel.app/?devlog=2",
+                "https://gamedev-platform-expo-client.vercel.app/?devlog=3",
+                "https://gamedev-platform-expo-client.vercel.app/?asset=1"
+              ]
+            }')
+          echo "| 글로벌 검색엔진 색인 전송 (Bing/Yahoo/DuckDuckGo/Naver IndexNow) | https://api.indexnow.org/indexnow | ✅ HTTP $STATUS_CODE |" >> $GITHUB_STEP_SUMMARY
 
       - name: Send Email Notification (Optional SMTP)
         if: always() && env.SMTP_USER != '' && env.SMTP_PASS != ''

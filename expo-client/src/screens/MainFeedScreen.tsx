@@ -30,6 +30,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [authorModalLoading, setAuthorModalLoading] = useState(false);
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [toolboxVisible, setToolboxVisible] = useState(false);
+  const [lang, setLang] = useState<'ko' | 'en'>('ko');
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
   const [shouts, setShouts] = useState<any[]>([]);
@@ -186,19 +187,19 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
           <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
             <Text style={{ fontSize: 11, fontWeight: '700', color: Theme.colors.textLight }}>
-              👁️ 오늘 {visitStats.today}명 • 누적 {visitStats.total}명 방문
+              {lang === 'en' ? `👁️ Today ${visitStats.today} • Total ${visitStats.total} visits` : `👁️ 오늘 ${visitStats.today}명 • 누적 ${visitStats.total}명 방문`}
             </Text>
             <TouchableOpacity
               onPress={handleOpenLeaderboard}
               style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>🏆 개발자 랭킹</Text>
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>{lang === 'en' ? '🏆 Top Creators' : '🏆 개발자 랭킹'}</Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setToolboxVisible(true)}
               style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
             >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>🧰 무료 개발도구함</Text>
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>{lang === 'en' ? '🧰 Free Dev Tools' : '🧰 무료 개발도구함'}</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -305,7 +306,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       {/* Live Developer Shoutbox Widget */}
       <View style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 12, marginBottom: 14 }}>
         <Text style={{ fontSize: 12, fontWeight: '800', color: Theme.colors.primary, marginBottom: 6 }}>
-          ⚡ 실시간 개발자 한줄 응원톡 (로그인 없이 작성 가능)
+          {lang === 'en' ? '⚡ Live Indie Dev Shoutbox (No login required)' : '⚡ 실시간 개발자 한줄 응원톡 (로그인 없이 작성 가능)'}
         </Text>
         {shouts.slice(0, 3).map((s: any) => (
           <Text key={s.id} numberOfLines={1} style={{ fontSize: 12, color: Theme.colors.text, marginBottom: 3 }}>
@@ -345,7 +346,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       {logs.length > 0 && (
         <View style={{ marginBottom: 14 }}>
           <Text style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.primary, marginBottom: 8 }}>
-            🔥 인기 개발일지 TOP 3
+            {lang === 'en' ? '🔥 Top 3 Trending DevLogs' : '🔥 인기 개발일지 TOP 3'}
           </Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
             {[...logs]
