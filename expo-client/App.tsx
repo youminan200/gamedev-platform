@@ -34,7 +34,7 @@ export default function App() {
   const [maintenanceMsg, setMaintenanceMsg] = useState<string | null>(null);
   const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
   const [updatePopupVisible, setUpdatePopupVisible] = useState<boolean>(true);
-  const [updatePopupTitle, setUpdatePopupTitle] = useState<string>("🎉 오늘의 업데이트 안내 (v1.2.0)");
+  const [updatePopupTitle, setUpdatePopupTitle] = useState<string>("🎉 오늘의 업데이트 안내 (v1.3.0 대규모 업데이트)");
   const [updatePopupItems, setUpdatePopupItems] = useState<string[]>(["🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가","👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람","▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가","🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용","⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원"]);
 
   useEffect(() => {
@@ -48,7 +48,7 @@ export default function App() {
           if (data.popup_active === false) {
             setUpdatePopupVisible(false);
           } else {
-            const title = data.popup_title || "🎉 오늘의 업데이트 안내 (v1.2.0)";
+            const title = data.popup_title || "🎉 오늘의 업데이트 안내 (v1.3.0 대규모 업데이트)";
             const rawContent = data.popup_content || "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원";
             setUpdatePopupTitle(title);
             setUpdatePopupItems(String(rawContent).split('\n').map((s: string) => s.trim()).filter(Boolean));

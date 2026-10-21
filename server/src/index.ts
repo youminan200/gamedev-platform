@@ -418,14 +418,14 @@ app.get('/api/system-status', (req, res) => {
   const notice_active = getSetting('notice_active', '1') === '1';
   const notice_message = getSetting('notice_message', '📢 [공지] 인디게임 데모 플레이 링크 공유 및 팀원 모집 기능이 업데이트되었습니다!');
   const popup_active = getSetting('popup_active', '1') === '1';
-  const popup_title = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.2.0)");
+  const popup_title = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.3.0 대규모 업데이트)");
   const popup_content = getSetting('popup_content', "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원");
   res.json({ maintenance, message, notice_active, notice_message, popup_active, popup_title, popup_content, today_visits, total_visits });
 });
 
 app.post('/admin/popup', express.urlencoded({ extended: true }), (req, res) => {
   const active = req.body?.active === '1' ? '1' : '0';
-  const title = (req.body?.title || "🎉 오늘의 업데이트 안내 (v1.2.0)").trim();
+  const title = (req.body?.title || "🎉 오늘의 업데이트 안내 (v1.3.0 대규모 업데이트)").trim();
   const content = (req.body?.content || "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원").trim();
   setSetting('popup_active', active);
   setSetting('popup_title', title);
@@ -478,7 +478,7 @@ app.get('/admin', (_req, res) => {
   const totalVisits = Number(getSetting('total_visits', '184')) || 184;
   const isMaintenance = getSetting('maintenance_mode', '0') === '1';
   const isPopupActive = getSetting('popup_active', '1') === '1';
-  const popupTitle = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.2.0)");
+  const popupTitle = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.3.0 대규모 업데이트)");
   const popupContent = getSetting('popup_content', "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원");
   const isNoticeActive = getSetting('notice_active', '1') === '1';
   const noticeMsg = getSetting('notice_message', '📢 [공지] 인디게임 데모 플레이 링크 공유 및 팀원 모집 기능이 업데이트되었습니다!');
