@@ -954,6 +954,231 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             </View>
           </View>
         </View>
+            </Modal>
+
+      <Modal visible={arcadeOpen} animationType="fade" transparent onRequestClose={() => setArcadeOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.8)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 880, backgroundColor: '#0F172A', borderRadius: 20, padding: 18, borderWidth: 1, borderColor: '#334155', maxHeight: '92%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View>
+                <Text style={{ color: '#38BDF8', fontSize: 18, fontWeight: '800' }}>🕹️ DevGround 미니 오락실: Bug Slayer (버그 피하기)</Text>
+                <Text style={{ color: '#94A3B8', fontSize: 12 }}>게임 오버 시 내 최고 점수가 실시간 랭킹에 자동 등록됩니다!</Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8 }}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const s = await ApiClient.getArcadeScores();
+                    setArcadeScores(s);
+                  }}
+                  style={{ backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, borderWidth: 1, borderColor: '#475569' }}
+                >
+                  <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800' }}>🔄 랭킹 새로고침</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setArcadeOpen(false)}
+                  style={{ backgroundColor: '#EF4444', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>✕ 닫기</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <ScrollView>
+              <View style={{ height: 400, backgroundColor: '#020617', borderRadius: 14, overflow: 'hidden', marginBottom: 14 }}>
+                {Platform.OS === 'web'
+                  ? React.createElement('iframe', {
+                      src: '/arcade.html?user=' + encodeURIComponent(username || 'IndieDev'),
+                      style: { width: '100%', height: '100%', border: 'none' },
+                    })
+                  : null}
+              </View>
+              <Text style={{ color: '#FACC15', fontSize: 14, fontWeight: '800', marginBottom: 8 }}>🏆 실시간 최고 점수 TOP 10</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
+                {arcadeScores.map((r, idx) => (
+                  <View
+                    key={r.username + idx}
+                    style={{ backgroundColor: '#1E293B', paddingHorizontal: 12, paddingVertical: 8, borderRadius: 10, borderWidth: 1, borderColor: '#334155', minWidth: 150 }}
+                  >
+                    <Text style={{ color: '#F8FAFC', fontSize: 13, fontWeight: '800' }}>
+                      {idx === 0 ? '🥇 ' : idx === 1 ? '🥈 ' : idx === 2 ? '🥉 ' : '#' + (idx + 1) + ' '}
+                      {r.username}
+                    </Text>
+                    <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800', marginTop: 2 }}>{r.score} pts</Text>
+                  </View>
+                ))}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={teamBoardOpen} animationType="fade" transparent onRequestClose={() => setTeamBoardOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+          <View style={{ width: '100%', maxWidth: 640, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <View>
+                <Text style={{ fontSize: 19, fontWeight: '800', color: Theme.colors.text }}>🤝 인디 게임 개발 팀원 모집 전용 보드</Text>
+                <Text style={{ fontSize: 12, color: Theme.colors.textLight }}>프로그래머 · 2D/3D 아트 · 사운드 · 기획자 협업 파트너를 찾아보세요!</Text>
+              </View>
+              <TouchableOpacity onPress={() => setTeamBoardOpen(false)}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 520 }}>
+              {teams.map((t) => (
+                <View
+                  key={t.id}
+                  style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 14, marginBottom: 10 }}
+                >
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <View style={{ flexDirection: 'row', gap: 6 }}>
+                      <View style={{ backgroundColor: '#FCE7F3', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#BE185D' }}>{t.role_needed}</Text>
+                      </View>
+                      <View style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{t.engine}</Text>
+                      </View>
+                    </View>
+                    <Text style={{ fontSize: 11, color: Theme.colors.textLight, fontWeight: '700' }}>by {t.author}</Text>
+                  </View>
+                  <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>{t.project_title}</Text>
+                  <Text style={{ fontSize: 13, color: Theme.colors.textLight, marginBottom: 10, lineHeight: 18 }}>{t.description}</Text>
+                  <TouchableOpacity
+                    onPress={() => t.contact_url && Linking.openURL(t.contact_url)}
+                    style={{ backgroundColor: Theme.colors.primary, paddingVertical: 8, borderRadius: 10, alignItems: 'center' }}
+                  >
+                    <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>💬 디스코드 / 오픈채팅으로 지원·연락하기 ↗</Text>
+                  </TouchableOpacity>
+                </View>
+              ))}
+
+              <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: Theme.colors.pillBg }}>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 8 }}>➕ 새 팀원 모집 공고 등록하기</Text>
+                <TextInput
+                  style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 8, fontSize: 13 }}
+                  placeholder="프로젝트 제목 (예: 2D 로그라이크 스팀 출시 팀원 구합니다)"
+                  value={teamTitle}
+                  onChangeText={setTeamTitle}
+                />
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                  {['💻 프로그래머', '🎨 2D 픽셀 아티스트', '🧊 3D 모델러', '🎵 사운드/작곡', '📝 기획자'].map((role) => (
+                    <TouchableOpacity
+                      key={role}
+                      onPress={() => setTeamRole(role)}
+                      style={{
+                        backgroundColor: teamRole === role ? Theme.colors.primary : Theme.colors.pillBg,
+                        paddingHorizontal: 10,
+                        paddingVertical: 5,
+                        borderRadius: 10,
+                      }}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '800', color: teamRole === role ? '#FFF' : Theme.colors.text }}>{role}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                  <TextInput
+                    style={{ flex: 1, backgroundColor: '#FFF', borderRadius: 10, padding: 10, fontSize: 13 }}
+                    placeholder="엔진 (Unity / Unreal / Godot)"
+                    value={teamEngine}
+                    onChangeText={setTeamEngine}
+                  />
+                  <TextInput
+                    style={{ flex: 1, backgroundColor: '#FFF', borderRadius: 10, padding: 10, fontSize: 13 }}
+                    placeholder="오픈카톡 / 디스코드 초대 링크 (https://...)"
+                    value={teamContact}
+                    onChangeText={setTeamContact}
+                    autoCapitalize="none"
+                  />
+                </View>
+                <TextInput
+                  style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 13, height: 64 }}
+                  placeholder="모집 상세 내용 및 협업 방식 소개..."
+                  multiline
+                  value={teamDesc}
+                  onChangeText={setTeamDesc}
+                />
+                <TouchableOpacity
+                  disabled={submittingTeam}
+                  onPress={async () => {
+                    if (!teamTitle.trim()) return;
+                    try {
+                      setSubmittingTeam(true);
+                      const next = await ApiClient.postTeam({
+                        project_title: teamTitle.trim(),
+                        role_needed: teamRole,
+                        engine: teamEngine.trim() || 'Unity',
+                        author: username || 'IndieDev',
+                        contact_url: teamContact.trim() || 'https://discord.com',
+                        description: teamDesc.trim(),
+                      });
+                      if (next.length > 0) setTeams(next);
+                      setTeamTitle('');
+                      setTeamContact('');
+                      setTeamDesc('');
+                    } catch {} finally {
+                      setSubmittingTeam(false);
+                    }
+                  }}
+                  style={{ backgroundColor: '#10B981', paddingVertical: 11, borderRadius: 12, alignItems: 'center' }}
+                >
+                  <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 14 }}>{submittingTeam ? '등록 중...' : '🤝 팀원 모집 공고 올리기'}</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={installModalOpen} animationType="fade" transparent onRequestClose={() => setInstallModalOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 18 }}>
+          <View style={{ width: '100%', maxWidth: 460, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text }}>📲 DevGround 모바일·PC 앱 무료 설치</Text>
+              <TouchableOpacity onPress={() => setInstallModalOpen(false)}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <Text style={{ fontSize: 13, color: Theme.colors.textLight, marginBottom: 10, lineHeight: 19 }}>
+              스토어 결제나 무거운 다운로드 없이 스마트폰 카메라로 아래 QR코드를 스캔하거나 홈 화면에 추가해 바로 실행하세요!
+            </Text>
+            <View style={{ alignItems: 'center', marginBottom: 12 }}>
+              <Image
+                source={{ uri: 'https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https%3A%2F%2Fgamedev-platform-expo-client.vercel.app' }}
+                style={{ width: 120, height: 120, borderRadius: 12, backgroundColor: '#FFF', padding: 6 }}
+              />
+              <Text style={{ fontSize: 11, fontWeight: '700', color: Theme.colors.primary, marginTop: 4 }}>📷 휴대폰 카메라로 스캔하면 앱이 바로 열립니다</Text>
+            </View>
+            <View style={{ backgroundColor: Theme.colors.pillBg, padding: 11, borderRadius: 12, marginBottom: 8 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.primary, marginBottom: 3 }}>🤖 안드로이드 (갤럭시 · Chrome)</Text>
+              <Text style={{ fontSize: 12, color: Theme.colors.text, lineHeight: 17 }}>
+                우측 상단 메뉴(⋮) 탭 👉 [앱 설치] 또는 [홈 화면에 추가] 선택 시 바탕화면에 전용 앱으로 즉시 설치됩니다.
+              </Text>
+            </View>
+            <View style={{ backgroundColor: Theme.colors.pillBg, padding: 11, borderRadius: 12, marginBottom: 8 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#10B981', marginBottom: 3 }}>🍎 아이폰 · 아이패드 (Safari)</Text>
+              <Text style={{ fontSize: 12, color: Theme.colors.text, lineHeight: 17 }}>
+                하단 중앙 [공유(⬆️)] 버튼 탭 👉 [홈 화면에 추가]를 누르면 상단 주소창이 없는 진짜 앱으로 실행됩니다.
+              </Text>
+            </View>
+            <View style={{ backgroundColor: Theme.colors.pillBg, padding: 11, borderRadius: 12, marginBottom: 12 }}>
+              <Text style={{ fontSize: 13, fontWeight: '800', color: '#D97706', marginBottom: 3 }}>💻 PC (Chrome · Edge 브라우저)</Text>
+              <Text style={{ fontSize: 12, color: Theme.colors.text, lineHeight: 17 }}>
+                주소창 오른쪽 끝의 [📥 앱 설치] 아이콘을 클릭하면 윈도우/맥 독립 프로그램으로 설치됩니다.
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+              <TouchableOpacity onPress={() => Linking.openURL('https://gamedev-platform-expo-client.vercel.app/privacy.html')}>
+                <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.textLight }}>📜 개인정보처리방침 · 이용약관 보기 ↗</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setInstallModalOpen(false)}
+                style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 18, paddingVertical: 9, borderRadius: 10 }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '800', fontSize: 13 }}>확인</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
       </Modal>
     </View>
   );
