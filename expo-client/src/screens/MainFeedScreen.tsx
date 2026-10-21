@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Modal, ScrollView, Linking, Image } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Modal, ScrollView, Linking, Image, Platform } from 'react-native';
 import { DevLog } from '../models/DevLog';
 import { ApiClient } from '../api/ApiClient';
 import { Theme } from '../theme';
@@ -39,6 +39,17 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [scThumb, setScThumb] = useState('');
   const [scDesc, setScDesc] = useState('');
   const [submittingSc, setSubmittingSc] = useState(false);
+  const [previewGame, setPreviewGame] = useState<any>(null);
+  const [badgeCopied, setBadgeCopied] = useState(false);
+
+  const handleCopyFeaturedBadge = () => {
+    const badgeMd = '[![Featured on DevGround](https://img.shields.io/badge/🎮_Featured_on-DevGround-4F46E5?style=for-the-badge)](https://gamedev-platform-expo-client.vercel.app)';
+    try {
+      navigator?.clipboard?.writeText(badgeMd);
+    } catch {}
+    setBadgeCopied(true);
+    setTimeout(() => setBadgeCopied(false), 2200);
+  };
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
   const [shouts, setShouts] = useState<any[]>([]);
@@ -313,20 +324,49 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
 
 
+
+      {/* Global GameDev Free Assets & Game Jam News Bar */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 12 }}>
+        {[
+          { label: lang === 'en' ? '🎁 Unreal/Fab Monthly Free Assets' : '🎁 언리얼/Fab 이달의 무료 에셋', url: 'https://www.fab.com/' },
+          { label: lang === 'en' ? '🎁 Unity Top Free Assets' : '🎁 유니티 인기 무료 에셋 모음', url: 'https://assetstore.unity.com/top-assets/top-free' },
+          { label: lang === 'en' ? '🏆 Global Indie Game Jams (Itch.io)' : '🏆 글로벌 인디 게임잼 일정 (Itch.io)', url: 'https://itch.io/jams' },
+          { label: lang === 'en' ? '🔥 Steam Upcoming Indie Games' : '🔥 스팀 출시 예정 인디게임 트렌드', url: 'https://store.steampowered.com/genre/Indie/' },
+        ].map((news) => (
+          <TouchableOpacity
+            key={news.label}
+            onPress={() => Linking.openURL(news.url)}
+            style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>{news.label} ↗</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
       {/* Indie Game Homepage & Web Demo Showcase Strip */}
       <View style={{ marginBottom: 16 }}>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
           <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.primary }}>
             {lang === 'en' ? '🕹️ Indie Game Websites & Web Demos' : '🕹️ 인디게임 공식 홈페이지 & 웹데모 홍보관'}
           </Text>
-          <TouchableOpacity
-            onPress={() => setShowcaseModalOpen(true)}
-            style={{ backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}
-          >
-            <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
-              {lang === 'en' ? '+ Add My Game Site' : '+ 내 게임 홈페이지 등록'}
-            </Text>
-          </TouchableOpacity>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            <TouchableOpacity
+              onPress={handleCopyFeaturedBadge}
+              style={{ backgroundColor: badgeCopied ? '#10B981' : '#EEF2FF', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 }}
+            >
+              <Text style={{ color: badgeCopied ? '#FFF' : '#4F46E5', fontSize: 11, fontWeight: '800' }}>
+                {badgeCopied ? '✅ 배지코드 복사됨!' : lang === 'en' ? '🎖️ Copy Badge' : '🎖️ 공식 배지 복사'}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setShowcaseModalOpen(true)}
+              style={{ backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}
+            >
+              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
+                {lang === 'en' ? '+ Add My Game Site' : '+ 내 게임 홈페이지 등록'}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
           {showcases.map((game: any) => (
@@ -354,26 +394,47 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                 <Text numberOfLines={2} style={{ fontSize: 11, color: Theme.colors.textLight, marginTop: 3, height: 30 }}>
                   {game.description || '인디게임 공식 홈페이지 및 데모 페이지'}
                 </Text>
-                <TouchableOpacity
-                  onPress={async () => {
-                    try {
-                      const r = await ApiClient.visitShowcase(game.id);
-                      setShowcases((prev) => prev.map((x) => (x.id === game.id ? { ...x, plays: r.plays } : x)));
-                    } catch {}
-                    Linking.openURL(game.homepage_url).catch(() => {});
-                  }}
-                  style={{
-                    backgroundColor: Theme.colors.primary,
-                    marginTop: 8,
-                    paddingVertical: 7,
-                    borderRadius: 10,
-                    alignItems: 'center',
-                  }}
-                >
-                  <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
-                    {lang === 'en' ? '🌐 Visit Game Site / Play ↗' : '🌐 게임 홈페이지 / 데모 열기 ↗'}
-                  </Text>
-                </TouchableOpacity>
+                <View style={{ flexDirection: 'row', gap: 6, marginTop: 8 }}>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        const r = await ApiClient.visitShowcase(game.id);
+                        setShowcases((prev) => prev.map((x) => (x.id === game.id ? { ...x, plays: r.plays } : x)));
+                      } catch {}
+                      setPreviewGame(game);
+                    }}
+                    style={{
+                      flex: 1,
+                      backgroundColor: '#4F46E5',
+                      paddingVertical: 7,
+                      borderRadius: 10,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
+                      {lang === 'en' ? '🖥️ Preview Here' : '🖥️ 안에서 바로보기'}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={async () => {
+                      try {
+                        const r = await ApiClient.visitShowcase(game.id);
+                        setShowcases((prev) => prev.map((x) => (x.id === game.id ? { ...x, plays: r.plays } : x)));
+                      } catch {}
+                      Linking.openURL(game.homepage_url).catch(() => {});
+                    }}
+                    style={{
+                      backgroundColor: Theme.colors.pillBg,
+                      paddingHorizontal: 10,
+                      paddingVertical: 7,
+                      borderRadius: 10,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <Text style={{ color: Theme.colors.text, fontSize: 11, fontWeight: '800' }}>↗ 새창</Text>
+                  </TouchableOpacity>
+                </View>
               </View>
             </View>
           ))}
@@ -790,6 +851,46 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               >
                 <Text style={{ color: '#FFF', fontWeight: '800' }}>{submittingSc ? '등록 중...' : '홍보관에 등록하기'}</Text>
               </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={Boolean(previewGame)} animationType="fade" transparent onRequestClose={() => setPreviewGame(null)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+          <View style={{ width: '100%', maxWidth: 900, height: '85%', backgroundColor: '#0F172A', borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: '#334155' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#1E293B' }}>
+              <View style={{ flex: 1, marginRight: 10 }}>
+                <Text numberOfLines={1} style={{ color: '#F8FAFC', fontSize: 15, fontWeight: '800' }}>
+                  🕹️ {previewGame?.title} ({previewGame?.engine})
+                </Text>
+                <Text numberOfLines={1} style={{ color: '#94A3B8', fontSize: 11 }}>
+                  {previewGame?.homepage_url} (외부 보안 정책으로 화면이 안 보이면 우측 '새 탭으로 열기'를 눌러주세요)
+                </Text>
+              </View>
+              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+                <TouchableOpacity
+                  onPress={() => previewGame?.homepage_url && Linking.openURL(previewGame.homepage_url)}
+                  style={{ backgroundColor: '#38BDF8', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }}
+                >
+                  <Text style={{ color: '#0F172A', fontSize: 12, fontWeight: '800' }}>🌐 새 탭으로 열기 ↗</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => setPreviewGame(null)}
+                  style={{ backgroundColor: '#334155', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 10 }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 13, fontWeight: '800' }}>✕ 닫기</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+            <View style={{ flex: 1, backgroundColor: '#FFF' }}>
+              {Platform.OS === 'web' && previewGame?.homepage_url
+                ? React.createElement('iframe', {
+                    src: previewGame.homepage_url,
+                    style: { width: '100%', height: '100%', border: 'none' },
+                    allow: 'fullscreen; autoplay; gamepad',
+                  })
+                : null}
             </View>
           </View>
         </View>

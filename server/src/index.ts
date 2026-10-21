@@ -668,6 +668,22 @@ app.get('/admin', (_req, res) => {
   const adminAssets = db.prepare('SELECT a.id, a.title, a.category, a.likes, a.created_at, u.username as author FROM assets a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.id DESC LIMIT 30').all() as any[];
   const adminComments = db.prepare('SELECT c.id, c.content, c.devlog_id, c.created_at, u.username as author FROM comments c LEFT JOIN users u ON c.user_id = u.id ORDER BY c.id DESC LIMIT 20').all() as any[];
   const adminShouts = db.prepare('SELECT id, nickname, message, created_at FROM shoutbox ORDER BY id DESC LIMIT 15').all() as any[];
+  const adminShowcases = db.prepare('SELECT id, title, developer, engine, homepage_url, plays FROM game_showcases ORDER BY id DESC LIMIT 30').all() as any[];
+
+  const showcasesRowsHtml = adminShowcases.map(g => `
+    <tr>
+      <td>#${g.id}</td>
+      <td><span class="badge local">${g.engine}</span></td>
+      <td><a href="${g.homepage_url}" target="_blank"><strong>${g.title}</strong> ↗</a></td>
+      <td>${g.developer}</td>
+      <td>👁️ ${g.plays || 0}회</td>
+      <td>
+        <form method="POST" action="/admin/delete-showcase/${g.id}" style="margin:0;">
+          <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:11px;">🗑️ 삭제</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
 
   const commentsRowsHtml = adminComments.map(c => `
     <tr>
@@ -863,6 +879,14 @@ Share your Unity / Unreal / Godot DevLogs, playable web demos, and free 2D/3D/Au
         <tr><th>ID</th><th>닉네임(아이디)</th><th>구분</th><th>작성 개발일지</th><th>등록 에셋</th><th>가입 일시(UTC)</th></tr>
       </thead>
       <tbody>${rowsHtml}</tbody>
+    </table>
+
+    <h2 style="margin-top:32px;">🕹️ 인디게임 홈페이지 홍보관 관리 (${adminShowcases.length}개)</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>엔진</th><th>게임 제목 (클릭 시 사이트 열기)</th><th>개발자</th><th>방문수</th><th>관리</th></tr>
+      </thead>
+      <tbody>${showcasesRowsHtml}</tbody>
     </table>
 
     <h2 style="margin-top:32px;">📜 등록된 개발일지 관리 (최근 ${adminDevlogs.length}개)</h2>
