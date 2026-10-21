@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<channel>
+  <title>DevGround - 인디 게임 개발자 개발일지 &amp; 무료 에셋 허브</title>
+  <link>https://gamedev-platform-expo-client.vercel.app/</link>
+  <description>인디 게임 개발자들의 실시간 개발일지(DevLog) 및 2D/3D/Audio/UI/Code 무료 에셋 공유 플랫폼</description>
+  <language>ko</language>
+  <atom:link href="https://gamedev-platform-expo-client.vercel.app/rss.xml" rel="self" type="application/rss+xml" />
+  <item>
+    <title>[DevLog #12] 2D 로그라이크 던전 보스 패턴 &amp; 타격감 개선기</title>
+    <link>https://gamedev-platform-expo-client.vercel.app/?devlog=1</link>
+    <guid>https://gamedev-platform-expo-client.vercel.app/?devlog=1</guid>
+    <description>보스 페이즈 전환 시 카메라 쉐이크(Camera Shake)와 히트스톱(Hit-stop) 프레임을 0.06초로 조정해 타격감을 대폭 끌어올렸습니다.</description>
+  </item>
+  <item>
+    <title>언리얼 엔진 5 카툰 렌더링(Cel Shader) 외곽선 최적화 공유</title>
+    <link>https://gamedev-platform-expo-client.vercel.app/?devlog=2</link>
+    <guid>https://gamedev-platform-expo-client.vercel.app/?devlog=2</guid>
+    <description>모바일/저사양 환경에서도 프레임 드랍 없이 깔끔한 애니메이션풍 외곽선을 표현하는 Inverted Hull + 노멀 맵 보정 기법 공유.</description>
+  </item>
+  <item>
+    <title>Godot 4.3으로 1인 개발 중인 픽셀 농장 시뮬레이션 첫 공개!</title>
+    <link>https://gamedev-platform-expo-client.vercel.app/?devlog=3</link>
+    <guid>https://gamedev-platform-expo-client.vercel.app/?devlog=3</guid>
+    <description>타일맵 오토타일링 시스템과 계절별 날씨 변화(비, 눈, 반딧불이)까지 구현 완료한 힐링 농장 시뮬레이션 개발일지.</description>
+  </item>
+</channel>
+</rss>

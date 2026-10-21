@@ -352,6 +352,24 @@ export const ApiClient = {
   },
 
   // Profile API
+  recordAssetDownload: async (id: string): Promise<{ downloads: number }> => {
+    const response = await fetch(`${BASE_URL}/assets/${id}/download`, { method: 'POST' });
+    if (!response.ok) return { downloads: 1 };
+    return await response.json();
+  },
+
+  updateUserProfile: async (data: { bio?: string; engine?: string; github_url?: string; steam_url?: string; itch_url?: string }): Promise<void> => {
+    const response = await fetch(`${BASE_URL}/users/profile`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+      },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) throw new Error('Failed to update profile');
+  },
+
   getUserProfile: async (username: string): Promise<any> => {
     const response = await fetch(`${BASE_URL}/users/${username}`, { headers: ApiClient.getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch user profile');

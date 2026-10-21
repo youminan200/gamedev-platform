@@ -207,6 +207,42 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
         />
       </NeumorphView>
 
+
+      {/* Top 3 Popular DevLogs Banner */}
+      {logs.length > 0 && (
+        <View style={{ marginBottom: 14 }}>
+          <Text style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.primary, marginBottom: 8 }}>
+            🔥 인기 개발일지 TOP 3
+          </Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+            {[...logs]
+              .sort((a, b) => (b.likes || 0) - (a.likes || 0))
+              .slice(0, 3)
+              .map((topItem, index) => (
+                <TouchableOpacity
+                  key={topItem.id}
+                  onPress={() => onDevLogClick(topItem.id)}
+                  style={{
+                    backgroundColor: Theme.colors.pillBg,
+                    paddingHorizontal: 14,
+                    paddingVertical: 10,
+                    borderRadius: 14,
+                    maxWidth: 240,
+                  }}
+                >
+                  <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.text }}>
+                    {index === 0 ? '🥇 ' : index === 1 ? '🥈 ' : '🥉 '}
+                    {topItem.title}
+                  </Text>
+                  <Text style={{ fontSize: 11, color: Theme.colors.textLight, marginTop: 4 }}>
+                    by {topItem.author} • ❤️ {topItem.likes || 0}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+          </ScrollView>
+        </View>
+      )}
+
       {/* Sort Buttons */}
       <View style={styles.sortRow}>
         <TouchableOpacity 

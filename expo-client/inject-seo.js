@@ -19,6 +19,7 @@ if (fs.existsSync(htmlPath)) {
   <meta name="twitter:description" content="설치·로그인 없이 즉시 열람! 인디 게임 개발자들의 실시간 개발일지(DevLog)와 무료 에셋 커뮤니티" />
   <meta name="twitter:image" content="https://gamedev-platform-expo-client.vercel.app/og-banner.png" />
   <link rel="canonical" href="https://gamedev-platform-expo-client.vercel.app/" />
+  <link rel="alternate" type="application/rss+xml" title="DevGround RSS Feed" href="https://gamedev-platform-expo-client.vercel.app/rss.xml" />
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",

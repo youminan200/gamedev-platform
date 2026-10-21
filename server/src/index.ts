@@ -109,6 +109,12 @@ try {
 try {
   db.exec(`ALTER TABLE assets ADD COLUMN image_url TEXT;`);
 } catch {}
+try { db.exec(`ALTER TABLE assets ADD COLUMN downloads INTEGER DEFAULT 12;`); } catch {}
+try { db.exec(`ALTER TABLE users ADD COLUMN bio TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE users ADD COLUMN engine TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE users ADD COLUMN github_url TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE users ADD COLUMN steam_url TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE users ADD COLUMN itch_url TEXT;`); } catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS asset_likes (
@@ -339,6 +345,40 @@ const getSetting = (key: string, fallback = ''): string => {
 const setSetting = (key: string, value: string) => {
   db.prepare('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)').run(key, value);
 };
+
+app.get('/rss.xml', (_req, res) => {
+  const posts = db.prepare('SELECT id, title, content, created_at FROM devlogs ORDER BY id DESC LIMIT 30').all() as any[];
+  const esc = (s: string) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const itemsXml = posts.map(p => `
+    <item>
+      <title>${esc(p.title)}</title>
+      <link>https://gamedev-platform-expo-client.vercel.app/?devlog=${p.id}</link>
+      <guid>https://gamedev-platform-expo-client.vercel.app/?devlog=${p.id}</guid>
+      <description>${esc((p.content || '').slice(0, 200))}</description>
+    </item>`).join('');
+  res.setHeader('Content-Type', 'application/rss+xml; charset=utf-8');
+  res.send(`<?xml version="1.0" encoding="UTF-8" ?>
+<rss version="2.0">
+<channel>
+  <title>DevGround - 인디 게임 개발자 개발일지 &amp; 무료 에셋 허브</title>
+  <link>https://gamedev-platform-expo-client.vercel.app/</link>
+  <description>인디 게임 개발자들의 실시간 개발일지(DevLog) 및 에셋 공유 플랫폼</description>
+  <language>ko</language>${itemsXml}
+</channel>
+</rss>`);
+});
+
+app.get('/sitemap.xml', (_req, res) => {
+  const posts = db.prepare('SELECT id FROM devlogs ORDER BY id DESC LIMIT 50').all() as any[];
+  const assets = db.prepare('SELECT id FROM assets ORDER BY id DESC LIMIT 50').all() as any[];
+  const urls = [
+    '<url><loc>https://gamedev-platform-expo-client.vercel.app/</loc><priority>1.0</priority></url>',
+    ...posts.map(p => `<url><loc>https://gamedev-platform-expo-client.vercel.app/?devlog=${p.id}</loc><priority>0.8</priority></url>`),
+    ...assets.map(a => `<url><loc>https://gamedev-platform-expo-client.vercel.app/?asset=${a.id}</loc><priority>0.8</priority></url>`)
+  ].join('');
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
+});
 
 app.get('/api/system-status', (_req, res) => {
   const maintenance = getSetting('maintenance_mode', '0') === '1';
@@ -1067,6 +1107,13 @@ app.put('/api/assets/:id', authenticateToken, (req: any, res: any) => {
   res.json({ ...next, id: String(assetId), tags: next.tags ? JSON.parse(next.tags) : [] });
 });
 
+app.post('/api/assets/:id/download', (req: any, res: any) => {
+  const assetId = req.params.id;
+  db.prepare('UPDATE assets SET downloads = COALESCE(downloads, 0) + 1 WHERE id = ?').run(assetId);
+  const row = db.prepare('SELECT downloads FROM assets WHERE id = ?').get(assetId) as any;
+  res.json({ downloads: row?.downloads || 1 });
+});
+
 app.post('/api/assets/:id/like', authenticateToken, (req: any, res: any) => {
   const assetId = req.params.id;
   const userId = req.user.id;
@@ -1145,10 +1192,26 @@ app.post('/api/upload', authenticateToken, async (req: any, res: any) => {
   res.status(201).json({ url: `${protocol}://${host}/uploads/${safeName}`, storage: 'local' });
 });
 
+// Update User Portfolio Profile
+app.put('/api/users/profile', authenticateToken, (req: any, res: any) => {
+  const { bio, engine, github_url, steam_url, itch_url } = req.body || {};
+  db.prepare(
+    'UPDATE users SET bio = ?, engine = ?, github_url = ?, steam_url = ?, itch_url = ? WHERE id = ?'
+  ).run(
+    (bio || '').trim(),
+    (engine || 'Unity').trim(),
+    (github_url || '').trim(),
+    (steam_url || '').trim(),
+    (itch_url || '').trim(),
+    req.user.id
+  );
+  res.json({ success: true });
+});
+
 // User Profile Route
 app.get('/api/users/:username', (req, res) => {
   const username = req.params.username;
-  const userStmt = db.prepare('SELECT id, username, profile_image, created_at FROM users WHERE username = ?');
+  const userStmt = db.prepare('SELECT id, username, profile_image, bio, engine, github_url, steam_url, itch_url, created_at FROM users WHERE username = ?');
   const user: any = userStmt.get(username);
   if (!user) return res.status(404).json({ error: 'User not found' });
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Image, Modal } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, FlatList, TextInput, ActivityIndicator, Image, Modal, Platform, Linking } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -9,6 +9,37 @@ interface Props {
   onBack: () => void;
   onRequireLogin?: () => void;
 }
+
+
+const extractYouTubeId = (text?: string): string | null => {
+  if (!text) return null;
+  const m = text.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([A-Za-z0-9_-]{11})/);
+  return m ? m[1] : null;
+};
+
+const renderFormattedContent = (raw?: string, textStyle?: any) => {
+  if (!raw) return null;
+  const parts = raw.split(/(```[\s\S]*?```)/g);
+  return parts.map((part, idx) => {
+    if (part.startsWith('```') && part.endsWith('```')) {
+      const code = part.replace(/^```[a-zA-Z0-9_-]*\n?/, '').replace(/```$/, '').trim();
+      return (
+        <View key={idx} style={{ backgroundColor: '#0F172A', borderRadius: 12, padding: 14, marginVertical: 10 }}>
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 6 }}>
+            <Text style={{ color: '#38BDF8', fontSize: 11, fontWeight: '700' }}>💻 CODE SNIPPET</Text>
+            <TouchableOpacity onPress={() => { try { navigator?.clipboard?.writeText(code); } catch {} }}>
+              <Text style={{ color: '#94A3B8', fontSize: 11, fontWeight: '700' }}>📋 코드 복사</Text>
+            </TouchableOpacity>
+          </View>
+          <Text style={{ color: '#F8FAFC', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined, fontSize: 13, lineHeight: 20 }}>
+            {code}
+          </Text>
+        </View>
+      );
+    }
+    return <Text key={idx} style={textStyle}>{part}</Text>;
+  });
+};
 
 export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) => {
   const [devlog, setDevlog] = useState<any>(null);
@@ -28,7 +59,7 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
   const [shared, setShared] = useState(false);
 
   const handleShare = async () => {
-    const shareUrl = 'https://gamedev-platform-expo-client.vercel.app';
+    const shareUrl = `https://gamedev-platform-expo-client.vercel.app/?devlog=${id}`;
     const shareText = `[DevGround] ${devlog?.title || 'DevLog'} 🎮`;
     try {
       if (typeof navigator !== 'undefined' && (navigator as any).share) {
@@ -196,7 +227,23 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
         </View>
       ) : null}
 
-      <Text style={styles.body}>{devlog.content}</Text>
+      {extractYouTubeId(devlog.content) && Platform.OS === 'web' ? (
+        <View style={{ width: '100%', height: 260, borderRadius: 14, overflow: 'hidden', marginBottom: 16, backgroundColor: '#000' }}>
+          {React.createElement('iframe', {
+            src: `https://www.youtube.com/embed/${extractYouTubeId(devlog.content)}`,
+            style: { width: '100%', height: '100%', border: 'none' },
+            allowFullScreen: true,
+          })}
+        </View>
+      ) : extractYouTubeId(devlog.content) ? (
+        <TouchableOpacity
+          style={{ backgroundColor: '#EF4444', padding: 12, borderRadius: 12, marginBottom: 14, alignItems: 'center' }}
+          onPress={() => Linking.openURL(`https://www.youtube.com/watch?v=${extractYouTubeId(devlog.content)}`)}
+        >
+          <Text style={{ color: '#FFF', fontWeight: '800' }}>▶️ 유튜브 플레이 영상 보기</Text>
+        </TouchableOpacity>
+      ) : null}
+      {renderFormattedContent(devlog.content, styles.body)}
       <View style={styles.divider} />
       <Text style={styles.commentsTitle}>💬 Comments ({devlog.comments?.length || 0})</Text>
     </View>

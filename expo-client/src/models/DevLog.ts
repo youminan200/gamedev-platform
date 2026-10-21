@@ -28,6 +28,7 @@ export interface Asset {
   author: string;
   tags: string[];
   likes: number;
+  downloads?: number;
   avg_rating: number;
   feedback_count: number;
   is_liked?: boolean;
@@ -49,6 +50,11 @@ export interface UserProfile {
     id: string;
     username: string;
     profile_image?: string;
+    bio?: string;
+    engine?: string;
+    github_url?: string;
+    steam_url?: string;
+    itch_url?: string;
     created_at: string;
   };
   stats: {

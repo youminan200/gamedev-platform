@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ActivityIndicator, Modal, TextInput, Linking } from 'react-native';
 import { Theme } from '../theme';
 import { ApiClient } from '../api/ApiClient';
 import { NeumorphView } from '../components/NeumorphView';
@@ -15,6 +15,13 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSubTab, setActiveSubTab] = useState<'devlogs' | 'assets'>('devlogs');
+  const [editProfileVisible, setEditProfileVisible] = useState(false);
+  const [bioInput, setBioInput] = useState('');
+  const [engineInput, setEngineInput] = useState('Unity');
+  const [githubInput, setGithubInput] = useState('');
+  const [steamInput, setSteamInput] = useState('');
+  const [itchInput, setItchInput] = useState('');
+  const [savingProfile, setSavingProfile] = useState(false);
 
   useEffect(() => {
     fetchProfile();
@@ -25,6 +32,16 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
       setLoading(true);
       const data = await ApiClient.getUserProfile(username);
       setProfile(data);
+      setBioInput(data?.user?.bio || '');
+      setEngineInput(data?.user?.engine || 'Unity');
+      setGithubInput(data?.user?.github_url || '');
+      setSteamInput(data?.user?.steam_url || '');
+      setItchInput(data?.user?.itch_url || '');
+      setBioInput(data?.user?.bio || '');
+      setEngineInput(data?.user?.engine || 'Unity');
+      setGithubInput(data?.user?.github_url || '');
+      setSteamInput(data?.user?.steam_url || '');
+      setItchInput(data?.user?.itch_url || '');
     } catch (e) {
       console.error(e);
     } finally {
@@ -66,7 +83,37 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
           <Text style={styles.avatarText}>{username.charAt(0).toUpperCase()}</Text>
         </View>
         <Text style={styles.usernameText}>{username}</Text>
-        <Text style={styles.subText}>Indie Creator • Joined {profile?.user.created_at ? new Date(profile.user.created_at).toLocaleDateString() : 'Recently'}</Text>
+        <Text style={styles.subText}>
+          🎮 {profile?.user.engine || 'Unity'} Developer • Joined {profile?.user.created_at ? new Date(profile.user.created_at).toLocaleDateString() : 'Recently'}
+        </Text>
+        {profile?.user.bio ? (
+          <Text style={{ fontSize: 13, color: Theme.colors.text, marginTop: 6, textAlign: 'center', paddingHorizontal: 24 }}>
+            "{profile.user.bio}"
+          </Text>
+        ) : null}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10, justifyContent: 'center' }}>
+          {profile?.user.github_url ? (
+            <TouchableOpacity style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }} onPress={() => Linking.openURL(profile.user.github_url!)}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.text }}>🐙 GitHub ↗</Text>
+            </TouchableOpacity>
+          ) : null}
+          {profile?.user.steam_url ? (
+            <TouchableOpacity style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }} onPress={() => Linking.openURL(profile.user.steam_url!)}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.text }}>🎮 Steam ↗</Text>
+            </TouchableOpacity>
+          ) : null}
+          {profile?.user.itch_url ? (
+            <TouchableOpacity style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 12 }} onPress={() => Linking.openURL(profile.user.itch_url!)}>
+              <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.text }}>🕹️ Itch.io ↗</Text>
+            </TouchableOpacity>
+          ) : null}
+          <TouchableOpacity
+            style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 12, paddingVertical: 5, borderRadius: 12 }}
+            onPress={() => setEditProfileVisible(true)}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '700', color: '#FFF' }}>✏️ 프로필/링크 편집</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Stats Cards */}
@@ -180,6 +227,89 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
           <Text style={styles.logoutText}>Logout</Text>
         </TouchableOpacity>
       </View>
+
+      <Modal visible={editProfileVisible} animationType="fade" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text, marginBottom: 12 }}>
+              👤 개발자 프로필 & 포트폴리오 설정
+            </Text>
+            <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.textLight, marginBottom: 6 }}>주력 게임 엔진</Text>
+            <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+              {['Unity', 'Unreal', 'Godot', 'Custom'].map((eng) => (
+                <TouchableOpacity
+                  key={eng}
+                  onPress={() => setEngineInput(eng)}
+                  style={{
+                    paddingHorizontal: 12,
+                    paddingVertical: 6,
+                    borderRadius: 12,
+                    backgroundColor: engineInput === eng ? Theme.colors.primary : Theme.colors.pillBg,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: engineInput === eng ? '#FFF' : Theme.colors.text }}>{eng}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 14 }}
+              placeholder="한줄 자기소개 (예: 2D 로그라이크 1인 개발자입니다)"
+              value={bioInput}
+              onChangeText={setBioInput}
+            />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 14 }}
+              placeholder="GitHub 주소 (https://github.com/...)"
+              value={githubInput}
+              onChangeText={setGithubInput}
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 10, fontSize: 14 }}
+              placeholder="Steam 상점 페이지 주소 (https://store.steampowered.com/...)"
+              value={steamInput}
+              onChangeText={setSteamInput}
+              autoCapitalize="none"
+            />
+            <TextInput
+              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 14, fontSize: 14 }}
+              placeholder="Itch.io 주소 (https://...itch.io)"
+              value={itchInput}
+              onChangeText={setItchInput}
+              autoCapitalize="none"
+            />
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
+              <TouchableOpacity onPress={() => setEditProfileVisible(false)} style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '700' }}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={savingProfile}
+                onPress={async () => {
+                  try {
+                    setSavingProfile(true);
+                    await ApiClient.updateUserProfile({
+                      bio: bioInput,
+                      engine: engineInput,
+                      github_url: githubInput,
+                      steam_url: steamInput,
+                      itch_url: itchInput,
+                    });
+                    setEditProfileVisible(false);
+                    fetchProfile();
+                  } catch (e) {
+                    console.error(e);
+                  } finally {
+                    setSavingProfile(false);
+                  }
+                }}
+                style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 18, paddingVertical: 10, borderRadius: 12 }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '700' }}>{savingProfile ? '저장 중...' : '저장'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
