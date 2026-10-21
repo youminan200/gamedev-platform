@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Modal, ScrollView } from 'react-native';
+import { View, Text, FlatList, StyleSheet, ActivityIndicator, TouchableOpacity, TextInput, Modal, ScrollView, Linking } from 'react-native';
 import { DevLog } from '../models/DevLog';
 import { ApiClient } from '../api/ApiClient';
 import { Theme } from '../theme';
@@ -25,6 +25,21 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [authorModalVisible, setAuthorModalVisible] = useState(false);
+  const [authorModalProfile, setAuthorModalProfile] = useState<any>(null);
+  const [authorModalLoading, setAuthorModalLoading] = useState(false);
+
+  const handleOpenAuthorModal = async (targetUsername: string) => {
+    setAuthorModalVisible(true);
+    setAuthorModalProfile(null);
+    try {
+      setAuthorModalLoading(true);
+      const data = await ApiClient.getUserProfile(targetUsername);
+      setAuthorModalProfile(data);
+    } catch {} finally {
+      setAuthorModalLoading(false);
+    }
+  };
 
   const loadNotifications = async () => {
     if (!username || !ApiClient.getToken()) {
@@ -208,6 +223,37 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       </NeumorphView>
 
 
+
+      {/* Quick Category Filter Pills (All / Demo Play / Team Recruit / Engines) */}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 12 }}>
+        {[
+          { label: '📋 전체 글', tag: null },
+          { label: '🎮 데모 플레이', tag: '데모버전' },
+          { label: '🤝 팀원 모집', tag: '팀원모집' },
+          { label: 'Unity', tag: 'Unity' },
+          { label: 'Unreal', tag: 'Unreal' },
+          { label: 'Godot', tag: 'Godot' },
+        ].map((item) => {
+          const active = selectedTag === item.tag;
+          return (
+            <TouchableOpacity
+              key={item.label}
+              onPress={() => setSelectedTag(active ? null : item.tag)}
+              style={{
+                backgroundColor: active ? Theme.colors.primary : Theme.colors.pillBg,
+                paddingHorizontal: 13,
+                paddingVertical: 7,
+                borderRadius: 16,
+              }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '700', color: active ? '#FFF' : Theme.colors.text }}>
+                {item.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </ScrollView>
+
       {/* Top 3 Popular DevLogs Banner */}
       {logs.length > 0 && (
         <View style={{ marginBottom: 14 }}>
@@ -293,6 +339,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             onToggleBookmark={handleToggleBookmark}
             onTagClick={handleTagClick}
             selectedTag={selectedTag}
+            onAuthorClick={handleOpenAuthorModal}
           />
         )}
         ListEmptyComponent={
@@ -337,6 +384,86 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                 <Text style={{ color: Theme.colors.primary, fontWeight: '800' }}>닫기</Text>
               </TouchableOpacity>
             </View>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={authorModalVisible} animationType="fade" transparent onRequestClose={() => setAuthorModalVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ width: '100%', maxWidth: 440, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            {authorModalLoading || !authorModalProfile ? (
+              <ActivityIndicator size="large" color={Theme.colors.primary} style={{ marginVertical: 24 }} />
+            ) : (
+              <>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <View>
+                    <Text style={{ fontSize: 20, fontWeight: '800', color: Theme.colors.text }}>
+                      👤 {authorModalProfile.user.username}
+                    </Text>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.primary, marginTop: 2 }}>
+                      🎮 {authorModalProfile.user.engine || 'Unity'} 크리에이터
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => setAuthorModalVisible(false)}>
+                    <Text style={{ fontSize: 16, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {authorModalProfile.user.bio ? (
+                  <Text style={{ fontSize: 13, color: Theme.colors.text, marginBottom: 12 }}>
+                    "{authorModalProfile.user.bio}"
+                  </Text>
+                ) : null}
+
+                <View style={{ flexDirection: 'row', gap: 10, marginBottom: 14 }}>
+                  <View style={{ flex: 1, backgroundColor: Theme.colors.pillBg, padding: 10, borderRadius: 12, alignItems: 'center' }}>
+                    <Text style={{ fontWeight: '800', fontSize: 16, color: Theme.colors.primary }}>{authorModalProfile.stats.devlog_count}</Text>
+                    <Text style={{ fontSize: 11, color: Theme.colors.textLight }}>DevLogs</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: Theme.colors.pillBg, padding: 10, borderRadius: 12, alignItems: 'center' }}>
+                    <Text style={{ fontWeight: '800', fontSize: 16, color: Theme.colors.primary }}>{authorModalProfile.stats.asset_count}</Text>
+                    <Text style={{ fontSize: 11, color: Theme.colors.textLight }}>Assets</Text>
+                  </View>
+                  <View style={{ flex: 1, backgroundColor: Theme.colors.pillBg, padding: 10, borderRadius: 12, alignItems: 'center' }}>
+                    <Text style={{ fontWeight: '800', fontSize: 16, color: Theme.colors.primary }}>❤️ {authorModalProfile.stats.total_likes}</Text>
+                    <Text style={{ fontSize: 11, color: Theme.colors.textLight }}>Likes</Text>
+                  </View>
+                </View>
+
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+                  {authorModalProfile.user.github_url ? (
+                    <TouchableOpacity style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }} onPress={() => Linking.openURL(authorModalProfile.user.github_url)}>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.text }}>🐙 GitHub ↗</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  {authorModalProfile.user.steam_url ? (
+                    <TouchableOpacity style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }} onPress={() => Linking.openURL(authorModalProfile.user.steam_url)}>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.text }}>🎮 Steam ↗</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                  {authorModalProfile.user.itch_url ? (
+                    <TouchableOpacity style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 }} onPress={() => Linking.openURL(authorModalProfile.user.itch_url)}>
+                      <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.text }}>🕹️ Itch.io ↗</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+
+                <Text style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.text, marginBottom: 6 }}>📜 최근 작성한 개발일지</Text>
+                {(authorModalProfile.recent_devlogs || []).slice(0, 3).map((d: any) => (
+                  <TouchableOpacity
+                    key={d.id}
+                    onPress={() => {
+                      setAuthorModalVisible(false);
+                      onDevLogClick(d.id);
+                    }}
+                    style={{ paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: Theme.colors.pillBg }}
+                  >
+                    <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text }}>{d.title}</Text>
+                    <Text style={{ fontSize: 11, color: Theme.colors.textLight }}>❤️ {d.likes} • 💬 {d.comment_count ?? 0}</Text>
+                  </TouchableOpacity>
+                ))}
+              </>
+            )}
           </View>
         </View>
       </Modal>

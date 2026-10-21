@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { View, Text, Platform, StatusBar, Image, ActivityIndicator } from 'react-native';
+import { View, Text, Platform, StatusBar, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import * as Network from 'expo-network';
 import { Theme } from './src/theme';
@@ -32,6 +32,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('DevLogs');
   const [pendingAssetId, setPendingAssetId] = useState<string | null>(null);
   const [maintenanceMsg, setMaintenanceMsg] = useState<string | null>(null);
+  const [noticeMsg, setNoticeMsg] = useState<string | null>(null);
 
   useEffect(() => {
     const checkStatus = async () => {
@@ -40,6 +41,7 @@ export default function App() {
         if (res.ok) {
           const data = await res.json();
           setMaintenanceMsg(data.maintenance ? (data.message || '🚧 현재 서버 점검 중입니다.') : null);
+          setNoticeMsg(data.notice_active ? (data.notice_message || null) : null);
         }
       } catch {}
     };
@@ -248,6 +250,14 @@ export default function App() {
         {maintenanceMsg && (
           <View style={{ backgroundColor: '#EF4444', paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' }}>
             <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13, textAlign: 'center' }}>{maintenanceMsg}</Text>
+          </View>
+        )}
+        {noticeMsg && !maintenanceMsg && (
+          <View style={{ backgroundColor: '#4F46E5', paddingVertical: 8, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 12, textAlign: 'center', flex: 1 }}>{noticeMsg}</Text>
+            <TouchableOpacity onPress={() => setNoticeMsg(null)} style={{ marginLeft: 8 }}>
+              <Text style={{ color: '#E0E7FF', fontWeight: '800', fontSize: 12 }}>✕</Text>
+            </TouchableOpacity>
           </View>
         )}
         <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>

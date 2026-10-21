@@ -115,6 +115,14 @@ try { db.exec(`ALTER TABLE users ADD COLUMN engine TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN github_url TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN steam_url TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN itch_url TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN views INTEGER DEFAULT 45;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN demo_url TEXT;`); } catch {}
+try {
+  db.prepare("UPDATE devlogs SET demo_url = 'https://itch.io/games/tag-roguelike' WHERE id IN (1, 3) AND (demo_url IS NULL OR demo_url = '')").run();
+  db.prepare("UPDATE users SET bio = '2D 액션 로그라이크 & 픽셀아트 1인 개발자입니다.', engine = 'Unity', github_url = 'https://github.com', itch_url = 'https://itch.io' WHERE username = 'PixelKnight' AND (bio IS NULL OR bio = '')").run();
+  db.prepare("UPDATE users SET bio = '언리얼 엔진 카툰 셰이더 & 그래픽스 테크니컬 아티스트', engine = 'Unreal', github_url = 'https://github.com' WHERE username = 'ShaderWizard' AND (bio IS NULL OR bio = '')").run();
+  db.prepare("UPDATE users SET bio = 'Godot 엔진으로 힐링 시뮬레이션 게임을 만듭니다.', engine = 'Godot', itch_url = 'https://itch.io' WHERE username = 'GodotCrafter' AND (bio IS NULL OR bio = '')").run();
+} catch {}
 
 db.exec(`
   CREATE TABLE IF NOT EXISTS asset_likes (
@@ -383,7 +391,17 @@ app.get('/sitemap.xml', (_req, res) => {
 app.get('/api/system-status', (_req, res) => {
   const maintenance = getSetting('maintenance_mode', '0') === '1';
   const message = getSetting('maintenance_message', '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.');
-  res.json({ maintenance, message });
+  const notice_active = getSetting('notice_active', '1') === '1';
+  const notice_message = getSetting('notice_message', '📢 [공지] 인디게임 데모 플레이 링크 공유 및 팀원 모집 기능이 업데이트되었습니다!');
+  res.json({ maintenance, message, notice_active, notice_message });
+});
+
+app.post('/admin/notice', express.urlencoded({ extended: true }), (req, res) => {
+  const active = req.body?.active === '1' ? '1' : '0';
+  const message = (req.body?.message || '📢 [공지] 인디게임 데모 플레이 링크 공유 및 팀원 모집 기능이 업데이트되었습니다!').trim();
+  setSetting('notice_active', active);
+  setSetting('notice_message', message);
+  res.redirect('/admin');
 });
 
 app.post('/admin/maintenance', express.urlencoded({ extended: true }), (req, res) => {
@@ -419,6 +437,8 @@ app.get('/admin', (_req, res) => {
   const totalAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
   const totalComments = (db.prepare('SELECT COUNT(*) as count FROM comments').get() as any).count;
   const isMaintenance = getSetting('maintenance_mode', '0') === '1';
+  const isNoticeActive = getSetting('notice_active', '1') === '1';
+  const noticeMsg = getSetting('notice_message', '📢 [공지] 인디게임 데모 플레이 링크 공유 및 팀원 모집 기능이 업데이트되었습니다!');
   const maintenanceMsg = getSetting('maintenance_message', '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.');
 
   const users = db.prepare(`
@@ -527,6 +547,18 @@ app.get('/admin', (_req, res) => {
         <input class="input-text" type="text" name="message" value="${maintenanceMsg.replace(/"/g, '&quot;')}" />
         <button type="submit" class="btn ${isMaintenance ? 'btn-success' : 'btn-danger'}">
           ${isMaintenance ? '✅ 점검 해제하고 정상 운영으로 전환' : '🚧 서버 점검 모드 켜기 (홈페이지에 점검 배너 표시)'}
+        </button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>📢 홈페이지 상단 전체 공지사항 (Notice) 배너 제어 — 현재 상태: <span style="color:${isNoticeActive ? '#38bdf8' : '#94a3b8'}">${isNoticeActive ? '🔔 공지 노출 중 (ON)' : '🔕 숨김 (OFF)'}</span></h2>
+      <form method="POST" action="/admin/notice">
+        <input type="hidden" name="active" value="${isNoticeActive ? '0' : '1'}" />
+        <label style="font-size:13px;color:#94a3b8;">홈페이지 상단에 띄울 전체 공지 문구:</label>
+        <input class="input-text" type="text" name="message" value="${noticeMsg.replace(/"/g, '&quot;')}" />
+        <button type="submit" class="btn ${isNoticeActive ? 'btn-outline' : 'btn-success'}">
+          ${isNoticeActive ? '🔕 공지사항 배너 내리기 (OFF)' : '🔔 공지사항 배너 띄우기 (ON)'}
         </button>
       </form>
     </div>
@@ -824,7 +856,7 @@ app.get('/api/devlogs/:id', optionalAuthenticateToken, (req: any, res: any) => {
 });
 
 app.post('/api/devlogs', authenticateToken, (req: any, res: any) => {
-  const { title, content, tags, image_url } = req.body;
+  const { title, content, tags, image_url, demo_url } = req.body;
   const userId = req.user.id;
   const stmt = db.prepare('INSERT INTO devlogs (user_id, title, content, tags, image_url) VALUES (?, ?, ?, ?, ?)');
   const tagsString = JSON.stringify(tags || []);

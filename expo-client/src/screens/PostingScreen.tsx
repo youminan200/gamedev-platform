@@ -10,12 +10,13 @@ interface Props {
   onPostSuccess: () => void;
 }
 
-const PRESET_TAGS = ['Unity', 'Unreal', 'Godot', 'C#', 'Graphics', 'BugFix', 'Release'];
+const PRESET_TAGS = ['Unity', 'Unreal', 'Godot', '데모버전', '팀원모집', 'C#', 'Graphics', 'Release'];
 
 export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSuccess }) => {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
+  const [demoUrl, setDemoUrl] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>(['Unity']);
   const [isPosting, setIsPosting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -48,6 +49,7 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
         title,
         content,
         image_url: imageUrl.trim() || undefined,
+        demo_url: demoUrl.trim() || undefined,
         tags: selectedTags.length > 0 ? selectedTags : ['DevLog']
       });
       onPostSuccess();
@@ -106,6 +108,19 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
             <Image source={{ uri: imageUrl.trim() }} style={styles.previewImage} resizeMode="cover" />
           </View>
         )}
+
+        <Text style={styles.label}>🎮 데모 플레이 / Steam / Itch.io 링크 (선택)</Text>
+        <NeumorphView radius={12} style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={demoUrl}
+            onChangeText={setDemoUrl}
+            editable={!isPosting}
+            placeholder="https://... (웹 데모 또는 스토어 링크 입력 시 플레이 버튼 생성)"
+            placeholderTextColor={Theme.colors.textLight}
+            autoCapitalize="none"
+          />
+        </NeumorphView>
 
         <Text style={styles.label}>Content</Text>
         <NeumorphView radius={12} style={[styles.inputContainer, styles.textAreaContainer]}>

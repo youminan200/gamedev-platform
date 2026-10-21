@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Image, Linking } from 'react-native';
 import { DevLog } from '../models/DevLog';
 import { Theme } from '../theme';
 import { NeumorphView } from './NeumorphView';
@@ -13,6 +13,7 @@ interface DevLogCardProps {
   onToggleBookmark?: (id: string) => void;
   onTagClick?: (tag: string) => void;
   selectedTag?: string | null;
+  onAuthorClick?: (author: string) => void;
 }
 
 export const DevLogCard: React.FC<DevLogCardProps> = ({
@@ -22,6 +23,7 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
   onToggleBookmark,
   onTagClick,
   selectedTag,
+  onAuthorClick,
 }) => {
   return (
     <TouchableOpacity activeOpacity={0.85} onPress={onClick} style={styles.cardContainer}>
@@ -59,13 +61,35 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
           </View>
           
           <View style={styles.metaRow}>
-            <Text style={[styles.metaText, { color: Theme.colors.textLight }]}>By {devLog.author} • {formatRelativeTime(devLog.created_at)}</Text>
+            <TouchableOpacity
+              onPress={(e: any) => {
+                if (onAuthorClick) {
+                  e?.stopPropagation?.();
+                  onAuthorClick(devLog.author);
+                }
+              }}
+            >
+              <Text style={[styles.metaText, { color: Theme.colors.primary, fontWeight: '700' }]}>
+                👤 {devLog.author} • {formatRelativeTime(devLog.created_at)}
+              </Text>
+            </TouchableOpacity>
             <View style={styles.statsBadgesRow}>
               <Text style={[styles.metaText, { color: Theme.colors.textLight }]}>💬 {devLog.comment_count ?? 0}</Text>
               <Text style={[styles.metaText, { color: Theme.colors.textLight }]}>❤️ {devLog.likes}</Text>
             </View>
           </View>
 
+          {devLog.demo_url ? (
+            <TouchableOpacity
+              onPress={(e: any) => {
+                e?.stopPropagation?.();
+                Linking.openURL(devLog.demo_url!);
+              }}
+              style={{ backgroundColor: '#10B981', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10, alignSelf: 'flex-start', marginBottom: 10 }}
+            >
+              <Text style={{ color: '#FFFFFF', fontSize: 12, fontWeight: '800' }}>🎮 데모 게임 플레이하기 ↗</Text>
+            </TouchableOpacity>
+          ) : null}
           <View style={styles.tagsContainer}>
             {devLog.tags.map((tag, index) => {
               const isTagSelected = selectedTag === tag;

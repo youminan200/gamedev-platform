@@ -5,6 +5,8 @@ export interface DevLog {
   image_url?: string;
   author: string;
   likes: number;
+  views?: number;
+  demo_url?: string;
   comment_count?: number;
   tags: string[];
   is_liked?: boolean;
@@ -15,6 +17,7 @@ export interface DevLogCreateRequest {
   title: string;
   content?: string;
   image_url?: string;
+  demo_url?: string;
   tags: string[];
 }
 
