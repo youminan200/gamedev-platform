@@ -298,6 +298,37 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [bossEnragePct, setBossEnragePct] = useState('50');
   const [bossCopied, setBossCopied] = useState(false);
 
+  const [itemDbOpen, setItemDbOpen] = useState(false);
+  const [itemId, setItemId] = useState('WPN_ABYSS_BLADE');
+  const [itemName, setItemName] = useState('심연을 가르는 흑요석 대검');
+  const [itemRarity, setItemRarity] = useState<'Common' | 'Rare' | 'Epic' | 'Legendary'>('Legendary');
+  const [itemType, setItemType] = useState<'Weapon' | 'Armor' | 'Consumable' | 'Relic'>('Weapon');
+  const [itemAtk, setItemAtk] = useState('145');
+  const [itemCrit, setItemCrit] = useState('22');
+  const [itemPrice, setItemPrice] = useState('3200');
+  const [itemDesc, setItemDesc] = useState('치명타 적중 시 적의 방어력을 3초간 30% 무시하고 암흑 검기를 방출합니다.');
+  const [itemCopied, setItemCopied] = useState(false);
+
+  const [camFeelOpen, setCamFeelOpen] = useState(false);
+  const [camHitstopMs, setCamHitstopMs] = useState('75');
+  const [camZoomOrtho, setCamZoomOrtho] = useState('4.3');
+  const [camDamping, setCamDamping] = useState('0.14');
+  const [camShakeAmp, setCamShakeAmp] = useState('0.35');
+  const [camCopied, setCamCopied] = useState(false);
+
+  const [licenseDexOpen, setLicenseDexOpen] = useState(false);
+  const [selectedLicenseIdx, setSelectedLicenseIdx] = useState(0);
+  const [licenseCopied, setLicenseCopied] = useState(false);
+
+  const [presskitOpen, setPresskitOpen] = useState(false);
+  const [pkStudio, setPkStudio] = useState('PixelForge Indie Studio');
+  const [pkGameTitle, setPkGameTitle] = useState('SHADOW DUNGEON: 심연의 검');
+  const [pkRelease, setPkRelease] = useState('2026년 하반기 스팀 얼리액세스');
+  const [pkPrice, setPkPrice] = useState('₩14,500 ($12.99)');
+  const [pkPitch, setPkPitch] = useState('무기를 던져 순간이동하고 100여 종의 유물을 조합하는 고속 도트 액션 로그라이크');
+  const [pkLang, setPkLang] = useState<'ko' | 'en'>('ko');
+  const [pkCopied, setPkCopied] = useState(false);
+
   const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
   const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
   const [scriptSpeed, setScriptSpeed] = useState<string>('8');
@@ -1052,28 +1083,56 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               onPress: () => setBossFsmOpen(true)
             },
             {
-              code: 'MOD_22 // ARCADE_CABINET',
+              code: 'MOD_22 // ITEM_DB_BUILDER',
+              title: 'RPG 아이템 · 인벤토리 & 장비 DB 생성기 (ScriptableObject & JSON)',
+              desc: '등급별(일반~전설) 아이템 툴팁 카드를 실시간 미리보고 Unity ScriptableObject C# 클래스와 JSON 테이블로 변환합니다.',
+              accent: '#F59E0B',
+              onPress: () => setItemDbOpen(true)
+            },
+            {
+              code: 'MOD_23 // CAMERA_FEEL_LAB',
+              title: '2D 카메라 연출 & 타격 역경직(Hitstop) 손맛 레시피 계산기',
+              desc: '크리티컬 역경직(TimeScale Freeze), 카메라 줌 펀치(OrthoSize), 시선 유도 SmoothDamp 통합 C# 매니저를 생성합니다.',
+              accent: '#38BDF8',
+              onPress: () => setCamFeelOpen(true)
+            },
+            {
+              code: 'MOD_24 // LICENSE_CHECKER_DEX',
+              title: '인디게임 상업적 무료 폰트 · 에셋 라이선스 검증 사전 & 크레딧 생성기',
+              desc: '갈무리·둥근모꼴·프리텐다드 등 인기 도트/UI 폰트와 CC0/CC-BY/OFL 상업적 이용 규정을 확인하고 크레딧 문구를 복사합니다.',
+              accent: '#10B981',
+              onPress: () => setLicenseDexOpen(true)
+            },
+            {
+              code: 'MOD_25 // PRESSKIT_MAIL_GEN',
+              title: '스팀 출시용 프레스킷(Press Kit) & 유튜버/스트리머 리뷰키 메일 생성기',
+              desc: '보도자료용 게임 팩트시트(Fact Sheet)와 인플루언서에게 스팀 리뷰키를 전달하는 한국어/영어 콜드메일 양식을 자동 작성합니다.',
+              accent: '#8B5CF6',
+              onPress: () => setPresskitOpen(true)
+            },
+            {
+              code: 'MOD_26 // ARCADE_CABINET',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
               accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_23 // PARTY_RECRUIT',
+              code: 'MOD_27 // PARTY_RECRUIT',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
               accent: '#F97316',
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_24 // IDEA_SLOT_MACHINE',
+              code: 'MOD_28 // IDEA_SLOT_MACHINE',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
               accent: '#A855F7',
               onPress: () => setIdeaMachineOpen(true)
             },
             {
-              code: 'MOD_25 // HALL_OF_FAME & APP',
+              code: 'MOD_29 // HALL_OF_FAME & APP',
               title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
               accent: '#06B6D4',
@@ -4191,6 +4250,468 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                     >
                       <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
                         {bossCopied ? '[✅ 보스 AI 상태머신(FSM) C# 스크립트가 복사되었습니다!]' : '[📋 Unity 보스 AI 상태머신(FSM) C# 코드 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_22: RPG 아이템 · 인벤토리 & 장비 DB 생성기 모달 */}
+      <Modal visible={itemDbOpen} transparent animationType="fade" onRequestClose={() => setItemDbOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F59E0B', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#FBBF24', fontFamily: 'monospace' }}>
+                🎒 MOD_22 // RPG 아이템 · 인벤토리 & 장비 DB 생성기 (ScriptableObject)
+              </Text>
+              <TouchableOpacity onPress={() => setItemDbOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {(() => {
+                const rarityColors: Record<string, string> = {
+                  Common: '#94A3B8',
+                  Rare: '#38BDF8',
+                  Epic: '#A855F7',
+                  Legendary: '#FACC15'
+                };
+                const rColor = rarityColors[itemRarity] || '#FACC15';
+
+                const soCode = [
+                  '// 1. Unity ScriptableObject 아이템 데이터 클래스 (ItemDataSO.cs)',
+                  'using UnityEngine;',
+                  '',
+                  '[CreateAssetMenu(fileName = "NewItemData", menuName = "IndieRPG/Item Data")]',
+                  'public class ItemDataSO : ScriptableObject {',
+                  `    public string itemId = "${itemId}";`,
+                  `    public string itemName = "${itemName}";`,
+                  `    public string rarity = "${itemRarity}";`,
+                  `    public string itemType = "${itemType}";`,
+                  `    public int attackPower = ${parseInt(itemAtk, 10) || 0};`,
+                  `    public float critChancePct = ${parseFloat(itemCrit) || 0}f;`,
+                  `    public int goldPrice = ${parseInt(itemPrice, 10) || 0};`,
+                  '    [TextArea(2, 4)]',
+                  `    public string description = "${itemDesc}";`,
+                  '}',
+                  '',
+                  '// 2. JSON 아이템 DB 행 (ItemDatabase.json)',
+                  JSON.stringify({
+                    id: itemId,
+                    name: itemName,
+                    rarity: itemRarity,
+                    type: itemType,
+                    atk: parseInt(itemAtk, 10) || 0,
+                    critPct: parseFloat(itemCrit) || 0,
+                    price: parseInt(itemPrice, 10) || 0,
+                    desc: itemDesc
+                  }, null, 2)
+                ].join('\n');
+
+                return (
+                  <View>
+                    {/* 실시간 인게임 RPG 아이템 툴팁 프리뷰 카드 */}
+                    <View style={{ backgroundColor: '#090B12', borderWidth: 2, borderColor: rColor, borderRadius: 6, padding: 14, marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                        <Text style={{ fontSize: 15, fontWeight: '900', color: rColor }}>{itemName}</Text>
+                        <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#090B12', backgroundColor: rColor, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 3, fontFamily: 'monospace' }}>
+                          {itemRarity.toUpperCase()} // {itemType.toUpperCase()}
+                        </Text>
+                      </View>
+                      <View style={{ flexDirection: 'row', gap: 14, marginBottom: 8 }}>
+                        <Text style={{ fontSize: 12, color: '#F87171', fontWeight: '800', fontFamily: 'monospace' }}>⚔️ 공격력 +{itemAtk}</Text>
+                        <Text style={{ fontSize: 12, color: '#38BDF8', fontWeight: '800', fontFamily: 'monospace' }}>🎯 치명타 +{itemCrit}%</Text>
+                        <Text style={{ fontSize: 12, color: '#FACC15', fontWeight: '800', fontFamily: 'monospace' }}>🪙 상점가 {itemPrice}G</Text>
+                      </View>
+                      <Text style={{ fontSize: 12, color: '#E2E8F0', lineHeight: 18 }}>• 고유 효과: {itemDesc}</Text>
+                    </View>
+
+                    {/* 희귀도 & 타입 선택 */}
+                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                      {(['Common', 'Rare', 'Epic', 'Legendary'] as const).map((r) => (
+                        <TouchableOpacity
+                          key={r}
+                          onPress={() => { setItemRarity(r); setItemCopied(false); }}
+                          style={{
+                            flex: 1,
+                            paddingVertical: 6,
+                            borderRadius: 4,
+                            backgroundColor: itemRarity === r ? rarityColors[r] : Theme.colors.pillBg,
+                            alignItems: 'center'
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: '900', color: itemRarity === r ? '#090B12' : '#FFF', fontFamily: 'monospace' }}>{r}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 3 }}>아이템 코드(ID)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace', fontSize: 11.5 }} value={itemId} onChangeText={setItemId} />
+                      </View>
+                      <View style={{ flex: 1.4 }}>
+                        <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 3 }}>아이템 이름</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 11.5 }} value={itemName} onChangeText={setItemName} />
+                      </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: '#F87171', fontFamily: 'monospace', marginBottom: 3 }}>공격력(ATK)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={itemAtk} onChangeText={setItemAtk} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: '#38BDF8', fontFamily: 'monospace', marginBottom: 3 }}>치명타(%)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={itemCrit} onChangeText={setItemCrit} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: '#FACC15', fontFamily: 'monospace', marginBottom: 3 }}>골드 가격(G)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={itemPrice} onChangeText={setItemPrice} keyboardType="numeric" />
+                      </View>
+                    </View>
+
+                    <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 3 }}>장비 패시브 / 아이템 설명</Text>
+                    <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 11.5, marginBottom: 10 }} value={itemDesc} onChangeText={setItemDesc} />
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#FDE68A', fontFamily: 'monospace', lineHeight: 16 }}>{soCode}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(soCode); } catch {} setItemCopied(true); }}
+                      style={{ backgroundColor: itemCopied ? '#10B981' : '#F59E0B', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {itemCopied ? '[✅ Unity ScriptableObject & JSON 아이템 데이터가 복사되었습니다!]' : '[📋 Unity ScriptableObject C# & JSON 데이터 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_23: 2D 카메라 연출 & 타격 역경직(Hitstop) 손맛 레시피 계산기 모달 */}
+      <Modal visible={camFeelOpen} transparent animationType="fade" onRequestClose={() => setCamFeelOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#38BDF8', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#7DD3FC', fontFamily: 'monospace' }}>
+                🎥 MOD_23 // 2D 카메라 연출 & 타격 역경직(Hitstop) 손맛 레시피 계산기
+              </Text>
+              <TouchableOpacity onPress={() => setCamFeelOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginBottom: 10 }}>
+                산나비·할로우 나이트·셀레스트처럼 묵직한 타격감("손맛")을 만드는 3대 요소: 역경직(TimeScale Freeze) + 카메라 줌 펀치 + SmoothDamp 추적 코드입니다.
+              </Text>
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#FACC15', fontFamily: 'monospace', marginBottom: 3 }}>역경직 정지 시간(ms)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={camHitstopMs} onChangeText={setCamHitstopMs} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#38BDF8', fontFamily: 'monospace', marginBottom: 3 }}>타격 줌인 OrthoSize</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={camZoomOrtho} onChangeText={setCamZoomOrtho} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#34D399', fontFamily: 'monospace', marginBottom: 3 }}>카메라 추적 감쇠(s)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={camDamping} onChangeText={setCamDamping} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#F87171', fontFamily: 'monospace', marginBottom: 3 }}>흔들림 진폭(Shake)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={camShakeAmp} onChangeText={setCamShakeAmp} keyboardType="numeric" />
+                </View>
+              </View>
+
+              {(() => {
+                const sec = ((parseFloat(camHitstopMs) || 75) / 1000).toFixed(3);
+                const camCode = [
+                  '// [Unity 2D 타격 역경직(Hitstop) + 줌 펀치(Zoom Punch) + SmoothDamp 카메라 매니저]',
+                  'using System.Collections;',
+                  'using UnityEngine;',
+                  '',
+                  'public class CameraFeelManager : MonoBehaviour {',
+                  '    public static CameraFeelManager Instance;',
+                  '    public Camera mainCam;',
+                  '    public Transform target;',
+                  `    public float smoothTime = ${camDamping}f;`,
+                  '    private float defaultOrthoSize = 5.0f;',
+                  '    private Vector3 velocity = Vector3.zero;',
+                  '',
+                  '    private void Awake() { Instance = this; if (mainCam) defaultOrthoSize = mainCam.orthographicSize; }',
+                  '',
+                  '    private void LateUpdate() {',
+                  '        if (target == null) return;',
+                  '        Vector3 goal = new Vector3(target.position.x, target.position.y, -10f);',
+                  '        transform.position = Vector3.SmoothDamp(transform.position, goal, ref velocity, smoothTime);',
+                  '        if (mainCam) mainCam.orthographicSize = Mathf.Lerp(mainCam.orthographicSize, defaultOrthoSize, Time.unscaledDeltaTime * 10f);',
+                  '    }',
+                  '',
+                  '    // 크리티컬 적중 시 호출: CameraFeelManager.Instance.TriggerImpactJuice();',
+                  '    public void TriggerImpactJuice() {',
+                  '        StopAllCoroutines();',
+                  '        StartCoroutine(HitstopAndZoomRoutine());',
+                  '    }',
+                  '',
+                  '    private IEnumerator HitstopAndZoomRoutine() {',
+                  `        if (mainCam) mainCam.orthographicSize = ${camZoomOrtho}f; // 순간 줌 펀치`,
+                  '        Time.timeScale = 0.02f; // 프레임 정지 역경직 (TimeScale Freeze)',
+                  `        yield return new WaitForSecondsRealtime(${sec}f);`,
+                  '        Time.timeScale = 1.0f;',
+                  `        transform.position += (Vector3)Random.insideUnitCircle * ${camShakeAmp}f;`,
+                  '    }',
+                  '}'
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#BAE6FD', fontFamily: 'monospace', lineHeight: 16 }}>{camCode}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(camCode); } catch {} setCamCopied(true); }}
+                      style={{ backgroundColor: camCopied ? '#10B981' : '#38BDF8', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {camCopied ? '[✅ 카메라 역경직 & 줌 펀치 C# 매니저가 복사되었습니다!]' : '[📋 Unity 카메라 역경직(Hitstop) & 줌 연출 코드 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_24: 인디게임 상업적 무료 폰트 · 에셋 라이선스 검증 사전 모달 */}
+      <Modal visible={licenseDexOpen} transparent animationType="fade" onRequestClose={() => setLicenseDexOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#34D399', fontFamily: 'monospace' }}>
+                📜 MOD_24 // 상업적 무료 폰트 · 에셋 라이선스 검증 사전 & 크레딧 생성기
+              </Text>
+              <TouchableOpacity onPress={() => setLicenseDexOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {(() => {
+                const items = [
+                  {
+                    name: '갈무리 (Galmuri) 픽셀 폰트 시리즈',
+                    license: 'SIL Open Font License (OFL 1.1)',
+                    commercial: '✅ 스팀/모바일 유료 게임 상업적 임베딩 100% 가능',
+                    caution: '폰트 파일(.ttf) 자체만 유료로 재판매하는 행위만 금지되며, 게임 빌드 내 포함은 완전 무료입니다.',
+                    credit: 'Font: Galmuri (https://galmuri.quiple.dev) — Licensed under SIL OFL 1.1'
+                  },
+                  {
+                    name: '둥근모꼴 (DungGeunMo) & 네오둥근모',
+                    license: 'SIL Open Font License (OFL 1.1)',
+                    commercial: '✅ 유료 인디게임·유튜브 트레일러·굿즈 상업적 사용 100% 가능',
+                    caution: '레트로 도트 RPG 대화창 표준 폰트입니다. 인게임 Credits 화면에 한 줄 표기해 주시면 안전합니다.',
+                    credit: 'Font: DungGeunMo by Dalgona — Licensed under SIL OFL 1.1'
+                  },
+                  {
+                    name: '프리텐다드 (Pretendard) UI 본문 폰트',
+                    license: 'SIL Open Font License (OFL 1.1)',
+                    commercial: '✅ 고해상도 UI·스팀 배너·게임 내 텍스트 상업적 이용 100% 가능',
+                    caution: '한글·영문·일본어 가독성이 모두 뛰어나 다국어 로컬라이징 기본 폰트로 가장 추천됩니다.',
+                    credit: 'Font: Pretendard by Kil Hyung-jin — Licensed under SIL OFL 1.1'
+                  },
+                  {
+                    name: 'CC0 1.0 (Kenney.nl / OpenGameArt 퍼블릭 도메인)',
+                    license: 'Creative Commons Zero (CC0 1.0)',
+                    commercial: '✅ 출처 표기 의무조차 없는 완전 무료 상업적 이용 가능',
+                    caution: '수정·재배포·유료 게임 포함 모두 제한 없이 자유롭습니다.',
+                    credit: 'Game Assets: Kenney.nl (CC0 1.0 Public Domain)'
+                  },
+                  {
+                    name: 'CC-BY 4.0 (잇치아이오·프리사운드 저작자 표기 에셋)',
+                    license: 'Creative Commons Attribution 4.0',
+                    commercial: '⚠️ 상업적 게임 사용 가능하나 반드시 [제작자 출처 표기] 필수!',
+                    caution: '엔딩 크레딧이나 환경설정의 [라이선스 안내] 탭에 원작자 이름과 라이선스 링크를 꼭 넣어야 분쟁을 예방합니다.',
+                    credit: 'Audio/Graphic Assets used under CC-BY 4.0 (See Credits for individual authors)'
+                  }
+                ];
+                const cur = items[selectedLicenseIdx] || items[0];
+                const fullCredits = [
+                  '============================================',
+                  '       GAME CREDITS & OPEN LICENSES         ',
+                  '============================================',
+                  ...items.map(it => `• ${it.credit}`),
+                  '',
+                  'Special Thanks to all Indie Game Players!'
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                      {items.map((it, idx) => (
+                        <TouchableOpacity
+                          key={it.name}
+                          onPress={() => { setSelectedLicenseIdx(idx); setLicenseCopied(false); }}
+                          style={{
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 4,
+                            backgroundColor: selectedLicenseIdx === idx ? '#10B981' : Theme.colors.pillBg,
+                            borderWidth: 1,
+                            borderColor: selectedLicenseIdx === idx ? '#FFF' : Theme.colors.border
+                          }}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: '900', color: selectedLicenseIdx === idx ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                            {it.name.split(' (')[0]}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <View style={{ backgroundColor: '#11131C', padding: 14, borderRadius: 6, borderWidth: 1, borderColor: '#10B981', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFF', marginBottom: 4 }}>{cur.name}</Text>
+                      <Text style={{ fontSize: 11.5, color: '#34D399', fontWeight: '800', fontFamily: 'monospace', marginBottom: 6 }}>
+                        규격: {cur.license} | {cur.commercial}
+                      </Text>
+                      <Text style={{ fontSize: 12, color: Theme.colors.textLight, lineHeight: 18 }}>{cur.caution}</Text>
+                    </View>
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#6EE7B7', fontFamily: 'monospace', lineHeight: 16 }}>{fullCredits}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(fullCredits); } catch {} setLicenseCopied(true); }}
+                      style={{ backgroundColor: licenseCopied ? '#059669' : '#10B981', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {licenseCopied ? '[✅ 인게임 엔딩 크레딧(Credits) 표기 문구가 복사되었습니다!]' : '[📋 인게임 Credits.txt 표준 라이선스 표기 문구 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_25: 스팀 프레스킷(Press Kit) & 스트리머 리뷰키 메일 생성기 모달 */}
+      <Modal visible={presskitOpen} transparent animationType="fade" onRequestClose={() => setPresskitOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#8B5CF6', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#C4B5FD', fontFamily: 'monospace' }}>
+                📰 MOD_25 // 스팀 프레스킷(Press Kit) & 스트리머 리뷰키 메일 생성기
+              </Text>
+              <TouchableOpacity onPress={() => setPresskitOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 3 }}>개발팀/스튜디오명</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 12 }} value={pkStudio} onChangeText={setPkStudio} />
+                </View>
+                <View style={{ flex: 1.3 }}>
+                  <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 3 }}>게임 타이틀</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 12 }} value={pkGameTitle} onChangeText={setPkGameTitle} />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#C4B5FD', fontFamily: 'monospace', marginBottom: 3 }}>출시 일정</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 12 }} value={pkRelease} onChangeText={setPkRelease} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#FACC15', fontFamily: 'monospace', marginBottom: 3 }}>예상 판매가</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 12 }} value={pkPrice} onChangeText={setPkPrice} />
+                </View>
+              </View>
+
+              <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 3 }}>한 줄 핵심 매력 포인트 (Elevator Pitch)</Text>
+              <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 12, marginBottom: 10 }} value={pkPitch} onChangeText={setPkPitch} />
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                <TouchableOpacity
+                  onPress={() => { setPkLang('ko'); setPkCopied(false); }}
+                  style={{ flex: 1, backgroundColor: pkLang === 'ko' ? '#8B5CF6' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
+                    [🇰🇷 국내 유튜버/웹진 프레스킷 & 메일]
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setPkLang('en'); setPkCopied(false); }}
+                  style={{ flex: 1, backgroundColor: pkLang === 'en' ? '#8B5CF6' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
+                    [🌎 글로벌 스트리머 영문 Steam Key 메일]
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {(() => {
+                const doc = pkLang === 'ko'
+                  ? [
+                      `[제목] [스팀 리뷰키 동봉] 신작 인디게임 <${pkGameTitle}> 방송/리뷰 제안 드립니다!`,
+                      '',
+                      `안녕하세요 크리에이터님! 인디게임 개발팀 [${pkStudio}]입니다.`,
+                      `평소 크리에이터님의 게임 방송을 즐겨 시청하며, 저희가 개발한 <${pkGameTitle}>의 타격감과 템포가 채널 분위기와 잘 어울릴 것 같아 조심스레 연락드렸습니다.`,
+                      '',
+                      '■ 게임 팩트시트 (Fact Sheet)',
+                      `- 타이틀: ${pkGameTitle}`,
+                      `- 한 줄 소개: ${pkPitch}`,
+                      `- 출시 일정: ${pkRelease} (플랫폼: Steam PC)`,
+                      `- 판매 가격: ${pkPrice} (2차 창작 및 방송 수익 창출 100% 허용)`,
+                      '',
+                      '■ 동봉 스팀 정식 리뷰키 (Steam Key)',
+                      '- XXXX-YYYY-ZZZZ (엠바고 없음 · 자유롭게 방송 및 영상 업로드 가능)',
+                      '',
+                      '바쁘신 와중에 읽어주셔서 진심으로 감사드리며, 언제나 즐거운 방송 되시길 응원하겠습니다!'
+                    ].join('\n')
+                  : [
+                      `Subject: [Steam Key Inside] ${pkGameTitle} - Fast-paced Indie Action for your channel!`,
+                      '',
+                      `Hi there! We are ${pkStudio}, an indie game studio.`,
+                      `We love your indie game coverage and would be thrilled to share a complimentary Steam Key for our upcoming title, <${pkGameTitle}>.`,
+                      '',
+                      '■ Quick Fact Sheet',
+                      `- Title: ${pkGameTitle}`,
+                      `- Pitch: ${pkPitch}`,
+                      `- Release Window: ${pkRelease} (Steam PC)`,
+                      `- Price: ${pkPrice} (No Embargo / 100% Monetization & Streaming Allowed)`,
+                      '',
+                      '■ Your Steam Review Key',
+                      '- STEAM-KEY: XXXX-YYYY-ZZZZ',
+                      '',
+                      'Thank you so much for your time and support for indie developers!'
+                    ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11.5, color: '#DDD6FE', fontFamily: 'monospace', lineHeight: 17 }}>{doc}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(doc); } catch {} setPkCopied(true); }}
+                      style={{ backgroundColor: pkCopied ? '#10B981' : '#8B5CF6', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {pkCopied ? '[✅ 프레스킷 팩트시트 & 리뷰키 메일 양식이 복사되었습니다!]' : '[📋 프레스킷 팩트시트 & 스트리머 리뷰키 메일 복사하기]'}
                       </Text>
                     </TouchableOpacity>
                   </View>
