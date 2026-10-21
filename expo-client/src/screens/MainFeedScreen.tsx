@@ -235,6 +235,20 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [patchFormat, setPatchFormat] = useState<'markdown' | 'steam'>('markdown');
   const [patchCopied, setPatchCopied] = useState(false);
 
+  const [dungeonGenOpen, setDungeonGenOpen] = useState(false);
+  const [shaderBookOpen, setShaderBookOpen] = useState(false);
+  const [selectedShaderKey, setSelectedShaderKey] = useState<string>('hitflash');
+  const [shaderCopied, setShaderCopied] = useState(false);
+
+  const [locToolOpen, setLocToolOpen] = useState(false);
+  const [locInput, setLocInput] = useState('UI_START=게임 시작\nUI_CONTINUE=이어하기\nUI_SETTINGS=환경설정\nUI_EXIT=게임 종료\nMSG_CRITICAL=치명타 피해!\nMSG_LEVELUP=레벨 업! 새로운 스킬을 선택하세요.\nMSG_GAMEOVER=전투 불능! 다시 도전하시겠습니까?\nITEM_POTION=체력 회복 물약');
+  const [locFormat, setLocFormat] = useState<'csv' | 'json'>('csv');
+  const [locCopied, setLocCopied] = useState(false);
+
+  const [paletteDexOpen, setPaletteDexOpen] = useState(false);
+  const [selectedPaletteIdx, setSelectedPaletteIdx] = useState(0);
+  const [copiedColorMsg, setCopiedColorMsg] = useState('');
+
   const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
   const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
   const [scriptSpeed, setScriptSpeed] = useState<string>('8');
@@ -905,14 +919,42 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               onPress: () => setPatchBuilderOpen(true)
             },
             {
-              code: 'MOD_10 // ARCADE_CABINET',
+              code: 'MOD_10 // DUNGEON_MAP_GEN',
+              title: '2D 타일맵 · 절차적 던전 맵 생성기 & Unity C# 배열 추출기',
+              desc: '로그라이크 방+복도(BSP), 자연동굴(Cellular), 보스 아레나를 랜덤 생성하고 미니맵 .PNG와 C# int[,] 배열로 추출합니다.',
+              accent: '#A855F7',
+              onPress: () => setDungeonGenOpen(true)
+            },
+            {
+              code: 'MOD_11 // SHADER_RECIPE_BOOK',
+              title: 'Unity / Godot 셰이더(Shader) 시각 효과 레시피 사전',
+              desc: '피격 하얀 점멸(Hit Flash), 2D 도트 외곽선(Outline), 타들어가는 디졸브, 홀로그램, 물결 셰이더 코드를 복사합니다.',
+              accent: '#06B6D4',
+              onPress: () => setShaderBookOpen(true)
+            },
+            {
+              code: 'MOD_12 // LOCALIZATION_SHEET',
+              title: '인디게임 다국어 번역 시트 생성기 (한·영·일·중 CSV/JSON)',
+              desc: '자주 쓰는 게임 UI/전투/상점 문구를 한국어로 입력하면 영어·일본어·중국어(간체) 로컬라이징 테이블로 즉시 변환합니다.',
+              accent: '#10B981',
+              onPress: () => setLocToolOpen(true)
+            },
+            {
+              code: 'MOD_13 // PALETTE_DEX',
+              title: '레트로 명작 & 인디 도트 컬러 팔레트 도감 (Hex & C# Color)',
+              desc: 'PICO-8, Sweetie-16, GameBoy DMG, 사이버펑크, 다크 판타지 팔레트를 클릭해 Hex 코드와 Unity Color 구조체를 복사합니다.',
+              accent: '#F43F5E',
+              onPress: () => setPaletteDexOpen(true)
+            },
+            {
+              code: 'MOD_14 // ARCADE_CABINET',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
               accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_11 // PARTY_RECRUIT',
+              code: 'MOD_15 // PARTY_RECRUIT',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
               accent: '#F97316',
@@ -2623,6 +2665,501 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                     >
                       <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
                         {patchCopied ? '[✅ 패치노트 양식이 클립보드에 복사되었습니다!]' : '[📋 완성된 패치노트 전체 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 2D 타일맵 & 절차적 던전 맵 생성기 모달 */}
+      <Modal visible={dungeonGenOpen} transparent animationType="fade" onRequestClose={() => setDungeonGenOpen(false)}>
+        <View style={[styles.modalOverlay, { padding: 12 }]}>
+          <View style={[styles.modalCard, { maxWidth: 960, width: '100%', height: '90%', maxHeight: 740, padding: 0, overflow: 'hidden', borderColor: '#A855F7', borderWidth: 2 }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#11131C', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2D3446' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 16 }}>🗺️</Text>
+                <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#E9D5FF', fontFamily: 'monospace' }}>
+                  MOD_10 // 2D 타일맵 · 절차적 던전 생성기 (BSP & Cellular & Unity C# 추출)
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setDungeonGenOpen(false)}
+                style={{ backgroundColor: '#FF2A85', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 4 }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            {Platform.OS === 'web' ? (
+              <iframe
+                src="/dungeon-gen.html"
+                style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#0E1017' } as any}
+                title="2D Dungeon Map Generator"
+              />
+            ) : (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+                <Text style={{ color: '#FFF', fontSize: 14 }}>웹 브라우저 환경에서 2D 던전 생성기를 사용할 수 있습니다.</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* Unity / Godot 셰이더 시각 효과 레시피 사전 모달 */}
+      <Modal visible={shaderBookOpen} transparent animationType="fade" onRequestClose={() => setShaderBookOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 680, borderColor: '#06B6D4', borderWidth: 2, maxHeight: '90%' }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={[styles.modalTitle, { marginBottom: 0, color: '#22D3EE', fontFamily: 'monospace' }]}>
+                ✨ MOD_11 // Unity & Godot 필수 셰이더(Shader) 레시피 사전
+              </Text>
+              <TouchableOpacity onPress={() => setShaderBookOpen(false)}>
+                <Text style={{ color: Theme.colors.textSecondary, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {(() => {
+                const recipes: Record<string, { title: string; badge: string; desc: string; previewColor: string; code: string }> = {
+                  hitflash: {
+                    title: '⚡ 피격 하얀색 점멸 (Sprite Hit Flash)',
+                    badge: '2D 액션 필수',
+                    desc: '몬스터가 공격받았을 때 0.1초 동안 스프라이트 전체를 하얗게 발광시켜 타격감을 극대화합니다.',
+                    previewColor: '#F8FAFC',
+                    code: [
+                      '// [Godot 4 .gdshader & Unity URP 호환 핵심 수식]',
+                      'shader_type canvas_item;',
+                      'uniform float flash_amount : hint_range(0.0, 1.0) = 0.0;',
+                      'uniform vec4 flash_color : source_color = vec4(1.0, 1.0, 1.0, 1.0);',
+                      '',
+                      'void fragment() {',
+                      '    vec4 tex = texture(TEXTURE, UV);',
+                      '    COLOR = mix(tex, vec4(flash_color.rgb, tex.a), flash_amount);',
+                      '}',
+                      '',
+                      '// [Unity C# MaterialPropertyBlock 제어 코드 (배칭 유지)]',
+                      'public IEnumerator FlashWhite(SpriteRenderer sr) {',
+                      '    MaterialPropertyBlock mpb = new MaterialPropertyBlock();',
+                      '    sr.GetPropertyBlock(mpb);',
+                      '    mpb.SetFloat("_FlashAmount", 1f);',
+                      '    sr.SetPropertyBlock(mpb);',
+                      '    yield return new WaitForSeconds(0.08f);',
+                      '    mpb.SetFloat("_FlashAmount", 0f);',
+                      '    sr.SetPropertyBlock(mpb);',
+                      '}'
+                    ].join('\n')
+                  },
+                  outline: {
+                    title: '🟨 2D 도트 1픽셀 외곽선 (Pixel Perfect Outline)',
+                    badge: '도트/상호작용',
+                    desc: 'NPC나 아이템에 가까이 다가갔을 때 상하좌우 1텍셀 알파값을 검사해 깔끔한 도트 테두리를 그립니다.',
+                    previewColor: '#FFCA28',
+                    code: [
+                      '// [2D Pixel Outline Shader (4-방향 알파 검출)]',
+                      'shader_type canvas_item;',
+                      'uniform vec4 line_color : source_color = vec4(1.0, 0.85, 0.1, 1.0);',
+                      'uniform float line_thickness : hint_range(0.0, 4.0) = 1.0;',
+                      '',
+                      'void fragment() {',
+                      '    vec2 size = TEXTURE_PIXEL_SIZE * line_thickness;',
+                      '    float outline = texture(TEXTURE, UV + vec2(-size.x, 0)).a;',
+                      '    outline += texture(TEXTURE, UV + vec2(size.x, 0)).a;',
+                      '    outline += texture(TEXTURE, UV + vec2(0, -size.y)).a;',
+                      '    outline += texture(TEXTURE, UV + vec2(0, size.y)).a;',
+                      '    outline = min(outline, 1.0);',
+                      '    vec4 color = texture(TEXTURE, UV);',
+                      '    COLOR = mix(color, line_color, outline - color.a);',
+                      '}'
+                    ].join('\n')
+                  },
+                  dissolve: {
+                    title: '🔥 몬스터 사망 불타는 디졸브 (Noise Dissolve)',
+                    badge: '보스 연출',
+                    desc: '노이즈 텍스처 임계값(Threshold)과 불꽃 경계선 색상(Edge Emission)을 이용해 적이 타들어가며 소멸합니다.',
+                    previewColor: '#F97316',
+                    code: [
+                      '// [Dissolve Effect with Glowing Edge]',
+                      'shader_type canvas_item;',
+                      'uniform sampler2D noise_tex;',
+                      'uniform float dissolve_value : hint_range(0.0, 1.0) = 0.45;',
+                      'uniform float edge_width = 0.06;',
+                      'uniform vec4 burn_color : source_color = vec4(1.0, 0.35, 0.0, 1.0);',
+                      '',
+                      'void fragment() {',
+                      '    vec4 main_tex = texture(TEXTURE, UV);',
+                      '    float noise = texture(noise_tex, UV).r;',
+                      '    if (noise < dissolve_value) discard;',
+                      '    float is_edge = step(noise, dissolve_value + edge_width);',
+                      '    COLOR = mix(main_tex, burn_color * 2.5, is_edge);',
+                      '    COLOR.a = main_tex.a;',
+                      '}'
+                    ].join('\n')
+                  },
+                  hologram: {
+                    title: '🌐 사이버펑크 홀로그램 & 주사선 글리치 (Hologram)',
+                    badge: 'SF/UI 연출',
+                    desc: '시간(TIME)에 따라 흐르는 가로 스캔라인과 청록색 발광 효과를 결합해 SF 홀로그램 NPC나 통신창을 만듭니다.',
+                    previewColor: '#00E5FF',
+                    code: [
+                      '// [Sci-Fi Hologram Scanline Shader]',
+                      'shader_type canvas_item;',
+                      'uniform vec4 holo_color : source_color = vec4(0.0, 0.9, 1.0, 0.75);',
+                      'uniform float scanline_count = 80.0;',
+                      'uniform float speed = 3.0;',
+                      '',
+                      'void fragment() {',
+                      '    vec4 tex = texture(TEXTURE, UV);',
+                      '    float scan = sin((UV.y + TIME * 0.1 * speed) * scanline_count * 3.14159);',
+                      '    scan = (scan * 0.25) + 0.75;',
+                      '    COLOR = vec4(mix(tex.rgb, holo_color.rgb, 0.65) * scan, tex.a * holo_color.a);',
+                      '}'
+                    ].join('\n')
+                  },
+                  water: {
+                    title: '🌊 2D 물결 흔들림 & 잔잔한 파동 (2D Wave Distortion)',
+                    badge: '배경/환경',
+                    desc: '삼각함수(sin/cos)로 UV 좌표를 미세하게 왜곡시켜 강물, 해저 던전, 아지랑이 열기 효과를 구현합니다.',
+                    previewColor: '#3B82F6',
+                    code: [
+                      '// [2D Water / Heat Haze UV Wave Distortion]',
+                      'shader_type canvas_item;',
+                      'uniform float wave_speed = 3.5;',
+                      'uniform float wave_freq = 18.0;',
+                      'uniform float wave_amp = 0.012;',
+                      '',
+                      'void fragment() {',
+                      '    vec2 wave_uv = UV;',
+                      '    wave_uv.x += sin(UV.y * wave_freq + TIME * wave_speed) * wave_amp;',
+                      '    wave_uv.y += cos(UV.x * wave_freq + TIME * wave_speed) * (wave_amp * 0.5);',
+                      '    COLOR = texture(TEXTURE, wave_uv);',
+                      '}'
+                    ].join('\n')
+                  }
+                };
+                const current = recipes[selectedShaderKey] || recipes.hitflash;
+                return (
+                  <View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                      {Object.keys(recipes).map((k) => {
+                        const r = recipes[k];
+                        const active = selectedShaderKey === k;
+                        return (
+                          <TouchableOpacity
+                            key={k}
+                            onPress={() => { setSelectedShaderKey(k); setShaderCopied(false); }}
+                            style={{
+                              paddingHorizontal: 10,
+                              paddingVertical: 7,
+                              borderRadius: 4,
+                              backgroundColor: active ? '#06B6D4' : Theme.colors.pillBg,
+                              borderWidth: 1,
+                              borderColor: active ? '#FFF' : Theme.colors.border
+                            }}
+                          >
+                            <Text style={{ fontSize: 11.5, fontWeight: '900', color: active ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                              {r.title.split(' (')[0]}
+                            </Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    <View style={{ backgroundColor: '#11131C', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: current.previewColor, marginBottom: 10 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                        <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#FFF' }}>{current.title}</Text>
+                        <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#11131C', backgroundColor: current.previewColor, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 3, fontFamily: 'monospace' }}>
+                          {current.badge}
+                        </Text>
+                      </View>
+                      <Text style={{ fontSize: 12, color: Theme.colors.textSecondary, lineHeight: 18 }}>{current.desc}</Text>
+                    </View>
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11.5, color: '#67E8F9', fontFamily: 'monospace', lineHeight: 17 }}>{current.code}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(current.code); } catch {} setShaderCopied(true); }}
+                      style={{ backgroundColor: shaderCopied ? '#10B981' : '#06B6D4', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {shaderCopied ? '[✅ 셰이더 레시피 코드가 클립보드에 복사되었습니다!]' : '[📋 이 셰이더(Shader) 코드 전체 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 인디게임 다국어 번역 시트 생성기 모달 */}
+      <Modal visible={locToolOpen} transparent animationType="fade" onRequestClose={() => setLocToolOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 680, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={[styles.modalTitle, { marginBottom: 0, color: '#34D399', fontFamily: 'monospace' }]}>
+                🌍 MOD_12 // 인디게임 한·영·일·중 다국어 로컬라이징 시트 생성기
+              </Text>
+              <TouchableOpacity onPress={() => setLocToolOpen(false)}>
+                <Text style={{ color: Theme.colors.textSecondary, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={{ fontSize: 11.5, color: Theme.colors.textSecondary, marginBottom: 8 }}>
+                KEY=한국어 문구 형식으로 입력하면 스팀 글로벌 출시 필수 언어(한국어·영어·일본어·중국어 간체) CSV 및 JSON 테이블로 자동 변환합니다.
+              </Text>
+
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8, flexWrap: 'wrap' }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    setLocInput('UI_START=게임 시작\nUI_CONTINUE=이어하기\nUI_SETTINGS=환경설정\nUI_EXIT=게임 종료\nUI_LANGUAGE=언어 선택\nUI_SAVE=저장 완료');
+                    setLocCopied(false);
+                  }}
+                  style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4, borderWidth: 1, borderColor: Theme.colors.border }}
+                >
+                  <Text style={{ fontSize: 11, color: '#FFF', fontWeight: '800', fontFamily: 'monospace' }}>[프리셋: 타이틀/UI]</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setLocInput('MSG_CRITICAL=치명타 피해!\nMSG_DODGE=회피 성공\nMSG_LEVELUP=레벨 업! 새로운 스킬을 선택하세요.\nMSG_BOSS_WARN=경고! 던전 보스가 출현했습니다.\nMSG_GAMEOVER=전투 불능! 다시 도전하시겠습니까?');
+                    setLocCopied(false);
+                  }}
+                  style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4, borderWidth: 1, borderColor: Theme.colors.border }}
+                >
+                  <Text style={{ fontSize: 11, color: '#FFF', fontWeight: '800', fontFamily: 'monospace' }}>[프리셋: 전투/로그라이크]</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    setLocInput('SHOP_BUY=구매하기\nSHOP_SELL=판매하기\nSHOP_NO_GOLD=골드가 부족합니다.\nITEM_POTION=체력 회복 물약\nITEM_SWORD=전설의 용사 검');
+                    setLocCopied(false);
+                  }}
+                  style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4, borderWidth: 1, borderColor: Theme.colors.border }}
+                >
+                  <Text style={{ fontSize: 11, color: '#FFF', fontWeight: '800', fontFamily: 'monospace' }}>[프리셋: 상점/인벤토리]</Text>
+                </TouchableOpacity>
+              </View>
+
+              <TextInput
+                style={[styles.input, { minHeight: 110, textAlignVertical: 'top', marginBottom: 10, fontFamily: 'monospace', fontSize: 12 }]}
+                value={locInput}
+                onChangeText={(t) => { setLocInput(t); setLocCopied(false); }}
+                multiline
+                placeholder="KEY=한국어 텍스트"
+                placeholderTextColor={Theme.colors.textMuted}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                <TouchableOpacity
+                  onPress={() => { setLocFormat('csv'); setLocCopied(false); }}
+                  style={{ flex: 1, backgroundColor: locFormat === 'csv' ? '#10B981' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: locFormat === 'csv' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                    [Unity / 구글시트 CSV 포맷]
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setLocFormat('json'); setLocCopied(false); }}
+                  style={{ flex: 1, backgroundColor: locFormat === 'json' ? '#10B981' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: locFormat === 'json' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                    [Godot / 웹 다국어 JSON 포맷]
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {(() => {
+                const dict: Record<string, { en: string; ja: string; zh: string }> = {
+                  '게임 시작': { en: 'Start Game', ja: 'ゲーム開始', zh: '开始游戏' },
+                  '이어하기': { en: 'Continue', ja: 'つづきから', zh: '继续游戏' },
+                  '환경설정': { en: 'Settings', ja: '設定', zh: '游戏设置' },
+                  '게임 종료': { en: 'Quit Game', ja: 'ゲーム終了', zh: '退出游戏' },
+                  '언어 선택': { en: 'Language', ja: '言語選択', zh: '语言选择' },
+                  '저장 완료': { en: 'Game Saved', ja: 'セーブ完了', zh: '保存成功' },
+                  '치명타 피해!': { en: 'CRITICAL HIT!', ja: 'クリティカルヒット！', zh: '暴击伤害！' },
+                  '회피 성공': { en: 'DODGED!', ja: '回避成功！', zh: '闪避成功' },
+                  '레벨 업! 새로운 스킬을 선택하세요.': { en: 'LEVEL UP! Choose a new skill.', ja: 'レベルアップ！新しいスキルを選択してください。', zh: '升级！请选择一个新技能。' },
+                  '경고! 던전 보스가 출현했습니다.': { en: 'WARNING! The Dungeon Boss has appeared!', ja: '警告！ダンジョンボスが出現しました！', zh: '警告！地牢首领已出现！' },
+                  '전투 불능! 다시 도전하시겠습니까?': { en: 'DEFEATED! Try again?', ja: '戦闘不能！再挑戦しますか？', zh: '战斗不能！是否重新挑战？' },
+                  '구매하기': { en: 'Buy', ja: '購入する', zh: '购买' },
+                  '판매하기': { en: 'Sell', ja: '売却する', zh: '出售' },
+                  '골드가 부족합니다.': { en: 'Not enough Gold.', ja: 'ゴールドが足りません。', zh: '金币不足。' },
+                  '체력 회복 물약': { en: 'HP Potion', ja: 'HP回復ポーション', zh: '生命恢复药水' },
+                  '전설의 용사 검': { en: 'Legendary Hero Sword', ja: '伝説の勇者の剣', zh: '传说勇者之剑' },
+                };
+
+                const rows = locInput.split('\n').map(l => l.trim()).filter(Boolean).map((line, i) => {
+                  const eqIdx = line.indexOf('=');
+                  const key = eqIdx > 0 ? line.slice(0, eqIdx).trim() : `KEY_${i + 1}`;
+                  const ko = eqIdx > 0 ? line.slice(eqIdx + 1).trim() : line;
+                  const matched = dict[ko];
+                  return {
+                    key,
+                    ko,
+                    en: matched ? matched.en : `[EN] ${ko}`,
+                    ja: matched ? matched.ja : `[JA] ${ko}`,
+                    zh: matched ? matched.zh : `[ZH] ${ko}`,
+                  };
+                });
+
+                const output = locFormat === 'csv'
+                  ? ['KEY,ko,en,ja,zh-CN', ...rows.map(r => `"${r.key}","${r.ko}","${r.en}","${r.ja}","${r.zh}"`)].join('\n')
+                  : JSON.stringify(rows.reduce((acc: any, r) => {
+                      acc[r.key] = { ko: r.ko, en: r.en, ja: r.ja, zh_CN: r.zh };
+                      return acc;
+                    }, {}), null, 2);
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11.5, color: '#6EE7B7', fontFamily: 'monospace', lineHeight: 17 }}>{output}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(output); } catch {} setLocCopied(true); }}
+                      style={{ backgroundColor: locCopied ? '#059669' : '#10B981', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {locCopied ? '[✅ 다국어 로컬라이징 시트가 복사되었습니다!]' : `[📋 ${locFormat.toUpperCase()} 다국어 번역 데이터 전체 복사하기]`}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 레트로 명작 & 인디 도트 컬러 팔레트 도감 모달 */}
+      <Modal visible={paletteDexOpen} transparent animationType="fade" onRequestClose={() => setPaletteDexOpen(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalCard, { maxWidth: 660, borderColor: '#F43F5E', borderWidth: 2, maxHeight: '90%' }]}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={[styles.modalTitle, { marginBottom: 0, color: '#FB7185', fontFamily: 'monospace' }]}>
+                🎨 MOD_13 // 레트로 명작 & 인디 도트 컬러 팔레트 도감
+              </Text>
+              <TouchableOpacity onPress={() => setPaletteDexOpen(false)}>
+                <Text style={{ color: Theme.colors.textSecondary, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {(() => {
+                const palettes = [
+                  {
+                    name: 'PICO-8 Fantasy Console (16색)',
+                    desc: 'Celeste 클래식 등 전 세계 인디 도트 게임에서 가장 사랑받는 고채도 16색 표준 팔레트',
+                    colors: ['#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8', '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA']
+                  },
+                  {
+                    name: 'SWEETIE-16 (파스텔 아케이드)',
+                    desc: '부드러운 명암 대비로 캐주얼 플랫포머와 아케이드 도트에 최적화된 16색 팔레트',
+                    colors: ['#1A1C2C', '#5D275D', '#B13E53', '#EF7D57', '#FFCD75', '#A7F070', '#38B764', '#257179', '#29366F', '#3B5DC9', '#41A6F6', '#73EFF7', '#F4F4F4', '#94B0C2', '#566C86', '#333C57']
+                  },
+                  {
+                    name: 'GAMEBOY DMG-01 & POCKET (8색)',
+                    desc: '1989 오리지널 게임보이 올리브 그린 4색 + 포켓 모노크롬 4색 레트로 감성 조합',
+                    colors: ['#0F380F', '#306230', '#8BAC0F', '#9BBC0F', '#1B2A0A', '#496B22', '#82A83E', '#C4E070']
+                  },
+                  {
+                    name: 'CYBERPUNK NEON SEOUL (12색)',
+                    desc: '산나비·카타나 제로 감성의 네온 마젠타, 시안, 딥 바이올렛 그림자 배색',
+                    colors: ['#090A14', '#16132B', '#2B1B4D', '#52196B', '#FF0055', '#FF2A85', '#FF77A8', '#00E5FF', '#0099FF', '#38BDF8', '#FFEA00', '#F8FAFC']
+                  },
+                  {
+                    name: 'DARK SOULS & DUNGEON CRYPT (12색)',
+                    desc: '다크 판타지 로그라이크·메트로배니아 지하 묘지 및 횃불 조명 컬러셋',
+                    colors: ['#0D0E12', '#181A22', '#262B38', '#3B4254', '#5A6378', '#8B95A8', '#4A1C1C', '#8C2D19', '#D95B26', '#F29F3D', '#FCE29C', '#3B7A57']
+                  }
+                ];
+                const cur = palettes[selectedPaletteIdx] || palettes[0];
+                const hexToUnityColor = (hex: string) => {
+                  const clean = hex.replace('#', '');
+                  const r = (parseInt(clean.substring(0, 2), 16) / 255).toFixed(2);
+                  const g = (parseInt(clean.substring(2, 4), 16) / 255).toFixed(2);
+                  const b = (parseInt(clean.substring(4, 6), 16) / 255).toFixed(2);
+                  return `new Color(${r}f, ${g}f, ${b}f, 1f)`;
+                };
+
+                return (
+                  <View>
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+                      {palettes.map((p, idx) => (
+                        <TouchableOpacity
+                          key={p.name}
+                          onPress={() => { setSelectedPaletteIdx(idx); setCopiedColorMsg(''); }}
+                          style={{
+                            paddingHorizontal: 10,
+                            paddingVertical: 6,
+                            borderRadius: 4,
+                            backgroundColor: selectedPaletteIdx === idx ? '#F43F5E' : Theme.colors.pillBg,
+                            borderWidth: 1,
+                            borderColor: selectedPaletteIdx === idx ? '#FFF' : Theme.colors.border
+                          }}
+                        >
+                          <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
+                            {p.name.split(' (')[0]}
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+
+                    <View style={{ backgroundColor: '#11131C', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 12 }}>
+                      <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#FFF', marginBottom: 4 }}>{cur.name}</Text>
+                      <Text style={{ fontSize: 12, color: Theme.colors.textSecondary }}>{cur.desc}</Text>
+                    </View>
+
+                    <Text style={{ fontSize: 11.5, color: '#94A3B8', marginBottom: 8, fontFamily: 'monospace' }}>
+                      👇 아래 컬러칩을 클릭하면 #HEX 코드와 Unity C# Color 구조체가 동시에 복사됩니다:
+                    </Text>
+
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                      {cur.colors.map((hex) => {
+                        const csharp = hexToUnityColor(hex);
+                        return (
+                          <TouchableOpacity
+                            key={hex}
+                            onPress={() => {
+                              const text = `${hex} /* ${csharp} */`;
+                              try { navigator?.clipboard?.writeText(text); } catch {}
+                              setCopiedColorMsg(`✅ 복사 완료: ${hex}  |  Unity C#: ${csharp}`);
+                            }}
+                            style={{
+                              width: '23%',
+                              minWidth: 120,
+                              backgroundColor: '#090B10',
+                              borderRadius: 6,
+                              padding: 8,
+                              borderWidth: 1,
+                              borderColor: '#2D3446'
+                            }}
+                          >
+                            <View style={{ height: 36, backgroundColor: hex, borderRadius: 4, marginBottom: 6, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' }} />
+                            <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>{hex}</Text>
+                            <Text style={{ fontSize: 9.5, color: '#94A3B8', fontFamily: 'monospace', marginTop: 2 }} numberOfLines={1}>{csharp}</Text>
+                          </TouchableOpacity>
+                        );
+                      })}
+                    </View>
+
+                    {copiedColorMsg ? (
+                      <View style={{ backgroundColor: '#10B981', padding: 10, borderRadius: 4, marginBottom: 10, alignItems: 'center' }}>
+                        <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12, fontFamily: 'monospace' }}>{copiedColorMsg}</Text>
+                      </View>
+                    ) : null}
+
+                    <TouchableOpacity
+                      onPress={() => {
+                        const allHex = cur.colors.join(', ');
+                        try { navigator?.clipboard?.writeText(allHex); } catch {}
+                        setCopiedColorMsg(`✅ 팔레트 전체(${cur.colors.length}색) HEX 리스트가 복사되었습니다!`);
+                      }}
+                      style={{ backgroundColor: '#F43F5E', paddingVertical: 11, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        [📋 현재 팔레트 전체 색상 리스트 한 번에 복사하기]
                       </Text>
                     </TouchableOpacity>
                   </View>

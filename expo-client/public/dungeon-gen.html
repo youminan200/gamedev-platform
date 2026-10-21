@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEVGROUND // PROCEDURAL 2D DUNGEON & TILEMAP GENERATOR</title>
+  <style>
+    @font-face {
+      font-family: 'DungGeunMo';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    }
+    * { box-sizing: border-box; user-select: none; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: #11131C;
+      color: #F3F4F6;
+      font-family: 'DungGeunMo', 'Courier New', monospace;
+    }
+    .wrap {
+      max-width: 740px;
+      margin: 0 auto;
+      background: #1A1D2B;
+      border: 2px solid #3A415E;
+      border-radius: 6px;
+      padding: 14px;
+      box-shadow: 4px 4px 0px #07080D;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #3A415E;
+      margin-bottom: 10px;
+    }
+    .title { font-size: 16px; font-weight: 900; color: #FFD166; }
+    .badge { font-size: 11px; background: #10B981; color: #11131C; font-weight: 900; padding: 3px 8px; border-radius: 4px; }
+    .toolbar { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; align-items: center; }
+    button {
+      font-family: 'DungGeunMo', monospace;
+      font-size: 12px;
+      background: #252A3E;
+      color: #F3F4F6;
+      border: 1.5px solid #3A415E;
+      border-radius: 4px;
+      padding: 7px 11px;
+      cursor: pointer;
+    }
+    button:hover { border-color: #FFD166; }
+    button.active { background: #FF4D6D; color: #FFF; border-color: #FF4D6D; font-weight: 900; }
+    button.gold { background: #FFD166; color: #11131C; border-color: #FFD166; font-weight: 900; }
+    button.cyan { background: #00E5FF; color: #11131C; border-color: #00E5FF; font-weight: 900; }
+    canvas {
+      width: 100%;
+      max-width: 680px;
+      height: 360px;
+      background: #0B0D14;
+      border: 2px solid #FFD166;
+      border-radius: 4px;
+      display: block;
+      margin: 0 auto 10px auto;
+      image-rendering: pixelated;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      font-size: 11.5px;
+      color: #CBD5E1;
+      background: #11131C;
+      padding: 8px 12px;
+      border-radius: 4px;
+      border: 1px solid #3A415E;
+      margin-bottom: 10px;
+    }
+    .status { font-size: 12px; color: #10B981; min-height: 18px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top-bar">
+      <span class="title">🗺️ PROCEDURAL 2D DUNGEON & TILEMAP GENERATOR</span>
+      <span class="badge">UNITY C# ARRAY EXPORT</span>
+    </div>
+
+    <div class="toolbar">
+      <button id="modeRooms" class="active" onclick="setAlgo('rooms')">🏰 로그라이크 방+복도 (BSP)</button>
+      <button id="modeCave" onclick="setAlgo('cave')">🕳️ 셀룰러 오토마타 자연동굴</button>
+      <button id="modeArena" onclick="setAlgo('arena')">🏝️ 뱀서라이크 보스 아레나</button>
+      <button class="gold" onclick="generateMap()">🎲 새로운 시드(Seed) 생성</button>
+    </div>
+
+    <canvas id="mapCanvas" width="640" height="360"></canvas>
+
+    <div class="legend">
+      <span>🟩 <strong>S (START)</strong>: 플레이어 시작방</span>
+      <span>🟥 <strong>B (BOSS)</strong>: 보스방 / 출구</span>
+      <span>🟨 <strong>T (CHEST)</strong>: 보물상자 / 상점</span>
+      <span>🟦 <strong>FLOOR (1)</strong>: 이동 가능 바닥 타일</span>
+      <span>⬛ <strong>WALL (0)</strong>: 벽 콜라이더 타일</span>
+    </div>
+
+    <div class="toolbar" style="justify-content: space-between;">
+      <button class="cyan" onclick="copyUnityCSharp()">📋 Unity C# Tilemap 생성 스크립트 & 2차원 배열 복사</button>
+      <button onclick="downloadMapPng()">💾 던전 미니맵(.PNG) 저장</button>
+    </div>
+    <div class="status" id="statusMsg">✨ 알고리즘 버튼을 누를 때마다 새로운 던전 구조와 스폰 포인트가 절차적으로 생성됩니다!</div>
+  </div>
+
+  <script>
+    const W = 32;
+    const H = 18;
+    let grid = []; // 0 = wall, 1 = floor, 2 = start, 3 = boss, 4 = chest
+    let algo = 'rooms';
+    const canvas = document.getElementById('mapCanvas');
+    const ctx = canvas.getContext('2d');
+
+    function setAlgo(a) {
+      algo = a;
+      document.getElementById('modeRooms').classList.toggle('active', a === 'rooms');
+      document.getElementById('modeCave').classList.toggle('active', a === 'cave');
+      document.getElementById('modeArena').classList.toggle('active', a === 'arena');
+      generateMap();
+    }
+
+    function generateMap() {
+      grid = Array.from({ length: H }, () => Array(W).fill(0));
+
+      if (algo === 'rooms') {
+        const rooms = [];
+        const roomCount = 7;
+        for (let i = 0; i < roomCount * 3 && rooms.length < roomCount; i++) {
+          const rw = Math.floor(Math.random() * 4) + 4;
+          const rh = Math.floor(Math.random() * 3) + 3;
+          const rx = Math.floor(Math.random() * (W - rw - 2)) + 1;
+          const ry = Math.floor(Math.random() * (H - rh - 2)) + 1;
+
+          let overlap = false;
+          for (const r of rooms) {
+            if (rx < r.x + r.w + 1 && rx + rw + 1 > r.x && ry < r.y + r.h + 1 && ry + rh + 1 > r.y) {
+              overlap = true;
+              break;
+            }
+          }
+          if (!overlap) {
+            rooms.push({ x: rx, y: ry, w: rw, h: rh, cx: Math.floor(rx + rw / 2), cy: Math.floor(ry + rh / 2) });
+            for (let y = ry; y < ry + rh; y++) {
+              for (let x = rx; x < rx + rw; x++) grid[y][x] = 1;
+            }
+          }
+        }
+        // Connect rooms with corridors
+        for (let i = 1; i < rooms.length; i++) {
+          let x1 = rooms[i - 1].cx, y1 = rooms[i - 1].cy;
+          let x2 = rooms[i].cx, y2 = rooms[i].cy;
+          while (x1 !== x2) { grid[y1][x1] = 1; x1 += x1 < x2 ? 1 : -1; }
+          while (y1 !== y2) { grid[y1][x1] = 1; y1 += y1 < y2 ? 1 : -1; }
+        }
+        if (rooms.length >= 2) {
+          grid[rooms[0].cy][rooms[0].cx] = 2; // Start
+          grid[rooms[rooms.length - 1].cy][rooms[rooms.length - 1].cx] = 3; // Boss
+          for (let i = 1; i < rooms.length - 1; i++) {
+            if (Math.random() > 0.35) grid[rooms[i].cy][rooms[i].cx] = 4; // Chest
+          }
+        }
+      } else if (algo === 'cave') {
+        for (let y = 1; y < H - 1; y++) {
+          for (let x = 1; x < W - 1; x++) {
+            grid[y][x] = Math.random() < 0.56 ? 1 : 0;
+          }
+        }
+        for (let step = 0; step < 4; step++) {
+          const next = grid.map(r => [...r]);
+          for (let y = 1; y < H - 1; y++) {
+            for (let x = 1; x < W - 1; x++) {
+              let floors = 0;
+              for (let dy = -1; dy <= 1; dy++) {
+                for (let dx = -1; dx <= 1; dx++) {
+                  if (grid[y + dy][x + dx] > 0) floors++;
+                }
+              }
+              next[y][x] = floors >= 5 ? 1 : 0;
+            }
+          }
+          grid = next;
+        }
+        placeSpecialMarkers();
+      } else {
+        for (let y = 2; y < H - 2; y++) {
+          for (let x = 2; x < W - 2; x++) {
+            grid[y][x] = 1;
+          }
+        }
+        for (let i = 0; i < 14; i++) {
+          const ox = Math.floor(Math.random() * (W - 8)) + 4;
+          const oy = Math.floor(Math.random() * (H - 6)) + 3;
+          grid[oy][ox] = 0;
+          grid[oy][ox + 1] = 0;
+        }
+        placeSpecialMarkers();
+      }
+      renderMap();
+    }
+
+    function placeSpecialMarkers() {
+      const floors = [];
+      for (let y = 1; y < H - 1; y++) {
+        for (let x = 1; x < W - 1; x++) {
+          if (grid[y][x] === 1) floors.push([x, y]);
+        }
+      }
+      if (floors.length > 4) {
+        const [sx, sy] = floors[0];
+        const [bx, by] = floors[floors.length - 1];
+        const [tx, ty] = floors[Math.floor(floors.length / 2)];
+        grid[sy][sx] = 2;
+        grid[by][bx] = 3;
+        grid[ty][tx] = 4;
+      }
+    }
+
+    function renderMap() {
+      ctx.fillStyle = '#0B0D14';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      const cw = canvas.width / W;
+      const ch = canvas.height / H;
+
+      for (let y = 0; y < H; y++) {
+        for (let x = 0; x < W; x++) {
+          const v = grid[y][x];
+          if (v === 0) {
+            ctx.fillStyle = '#181C2B';
+            ctx.fillRect(x * cw, y * ch, cw - 1, ch - 1);
+          } else {
+            ctx.fillStyle = '#2A344B';
+            ctx.fillRect(x * cw, y * ch, cw - 1, ch - 1);
+            if (v === 2) {
+              ctx.fillStyle = '#10B981';
+              ctx.fillRect(x * cw + 2, y * ch + 2, cw - 5, ch - 5);
+            } else if (v === 3) {
+              ctx.fillStyle = '#FF4D6D';
+              ctx.fillRect(x * cw + 2, y * ch + 2, cw - 5, ch - 5);
+            } else if (v === 4) {
+              ctx.fillStyle = '#FFD166';
+              ctx.fillRect(x * cw + 3, y * ch + 3, cw - 7, ch - 7);
+            }
+          }
+        }
+      }
+    }
+
+    function copyUnityCSharp() {
+      const rowsStr = grid.map(r => '        { ' + r.join(', ') + ' }').join(',\n');
+      const code = `using UnityEngine;\nusing UnityEngine.Tilemaps;\n\npublic class DungeonMapLoader : MonoBehaviour\n{\n    public Tilemap floorTilemap;\n    public Tilemap wallTilemap;\n    public TileBase floorTile;\n    public TileBase wallTile;\n\n    // 0=Wall, 1=Floor, 2=StartSpawn, 3=BossRoom, 4=TreasureChest\n    public readonly int[,] mapData = new int[${H}, ${W}]\n    {\n${rowsStr}\n    };\n\n    void Start() => BuildDungeon();\n\n    public void BuildDungeon()\n    {\n        for (int y = 0; y < ${H}; y++)\n        {\n            for (int x = 0; x < ${W}; x++)\n            {\n                Vector3Int pos = new Vector3Int(x, -y, 0);\n                if (mapData[y, x] == 0) wallTilemap.SetTile(pos, wallTile);\n                else floorTilemap.SetTile(pos, floorTile);\n            }\n        }\n    }\n}`;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(code);
+        document.getElementById('statusMsg').textContent = '✅ Unity C# DungeonMapLoader.cs 코드(2차원 배열 포함)가 클립보드에 복사되었습니다!';
+      }
+    }
+
+    function downloadMapPng() {
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `devground-dungeon-${algo}.png`;
+      a.click();
+      document.getElementById('statusMsg').textContent = '💾 던전 미니맵 이미지(.PNG)가 다운로드되었습니다!';
+    }
+
+    generateMap();
+  </script>
+</body>
+</html>
