@@ -22,6 +22,9 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
   const [steamInput, setSteamInput] = useState('');
   const [itchInput, setItchInput] = useState('');
   const [savingProfile, setSavingProfile] = useState(false);
+  const [deleteConfirmVisible, setDeleteConfirmVisible] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
+  const [blockedUsers, setBlockedUsers] = useState<string[]>(() => ApiClient.getBlockedUsers());
 
   useEffect(() => {
     fetchProfile();
@@ -226,12 +229,74 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
         )
       )}
 
-      {/* Logout Button */}
+            {/* Logout & Store Mandatory Account Deletion / Privacy Links */}
       <View style={styles.footer}>
+        {blockedUsers.length > 0 && (
+          <View style={{ marginBottom: 12, backgroundColor: Theme.colors.pillBg, padding: 12, borderRadius: 12 }}>
+            <Text style={{ fontSize: 12, fontWeight: '800', color: Theme.colors.text, marginBottom: 6 }}>🚫 차단한 사용자 ({blockedUsers.length}명)</Text>
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {blockedUsers.map((bu) => (
+                <TouchableOpacity
+                  key={bu}
+                  onPress={() => setBlockedUsers(ApiClient.unblockUser(bu))}
+                  style={{ backgroundColor: '#FEE2E2', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: '#DC2626' }}>{bu} ✕ 차단해제</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
         <TouchableOpacity style={styles.logoutButton} onPress={onLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
+          <Text style={styles.logoutText}>Logout (로그아웃)</Text>
         </TouchableOpacity>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10, gap: 10 }}>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: Theme.colors.pillBg, padding: 11, borderRadius: 12, alignItems: 'center' }}
+            onPress={() => Linking.openURL('https://gamedev-platform-expo-client.vercel.app/privacy.html')}
+          >
+            <Text style={{ color: Theme.colors.textLight, fontWeight: '700', fontSize: 12 }}>📜 개인정보처리방침 · 약관</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={{ flex: 1, backgroundColor: '#FEE2E2', padding: 11, borderRadius: 12, alignItems: 'center' }}
+            onPress={() => setDeleteConfirmVisible(true)}
+          >
+            <Text style={{ color: '#DC2626', fontWeight: '800', fontSize: 12 }}>🗑️ 회원 탈퇴 (계정 삭제)</Text>
+          </TouchableOpacity>
+        </View>
       </View>
+
+      <Modal visible={deleteConfirmVisible} animationType="fade" transparent>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.55)', justifyContent: 'center', padding: 24 }}>
+          <View style={{ backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: '#DC2626', marginBottom: 8 }}>⚠️ 회원 탈퇴 (계정 영구 삭제)</Text>
+            <Text style={{ fontSize: 13, color: Theme.colors.text, lineHeight: 20, marginBottom: 16 }}>
+              정말로 계정을 삭제하시겠습니까? 탈퇴 시 계정 정보와 작성한 개발일지·에셋 데이터가 즉시 영구 삭제되며 복구할 수 없습니다.
+            </Text>
+            <View style={{ flexDirection: 'row', justifyContent: 'flex-end', gap: 10 }}>
+              <TouchableOpacity onPress={() => setDeleteConfirmVisible(false)} style={{ paddingHorizontal: 14, paddingVertical: 10 }}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '700' }}>취소</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                disabled={deletingAccount}
+                onPress={async () => {
+                  try {
+                    setDeletingAccount(true);
+                    await ApiClient.deleteMyAccount();
+                    setDeleteConfirmVisible(false);
+                    onLogout();
+                  } catch {
+                    setDeletingAccount(false);
+                  }
+                }}
+                style={{ backgroundColor: '#DC2626', paddingHorizontal: 18, paddingVertical: 10, borderRadius: 12 }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '800' }}>{deletingAccount ? '삭제 중...' : '영구 탈퇴 확인'}</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       <Modal visible={editProfileVisible} animationType="fade" transparent>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', padding: 24 }}>

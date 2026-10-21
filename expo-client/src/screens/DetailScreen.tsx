@@ -57,6 +57,7 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
 
   const currentUsername = ApiClient.getUsername();
   const [shared, setShared] = useState(false);
+  const [reportedDone, setReportedDone] = useState(false);
   const [translatedTitle, setTranslatedTitle] = useState<string | null>(null);
   const [translatedBody, setTranslatedBody] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
@@ -252,6 +253,34 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
         <TouchableOpacity style={styles.editBtn} onPress={handleShare}>
           <Text style={styles.editBtnText}>{shared ? '✅ 링크 복사됨' : '🔗 이 글 공유하기'}</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.editBtn, { backgroundColor: reportedDone ? '#DCFCE7' : '#FEF2F2' }]}
+          onPress={async () => {
+            await ApiClient.reportContent({
+              target_type: 'devlog',
+              target_id: String(id),
+              target_author: devlog.author,
+              reason: '부적절한 게시물/스팸 신고',
+              reporter: currentUsername || 'Anonymous',
+            });
+            setReportedDone(true);
+          }}
+        >
+          <Text style={[styles.editBtnText, { color: reportedDone ? '#15803D' : '#DC2626' }]}>
+            {reportedDone ? '✅ 신고 접수됨' : '🚨 신고하기'}
+          </Text>
+        </TouchableOpacity>
+        {!isAuthor && (
+          <TouchableOpacity
+            style={[styles.editBtn, { backgroundColor: '#F1F5F9' }]}
+            onPress={() => {
+              ApiClient.blockUser(devlog.author);
+              onBack();
+            }}
+          >
+            <Text style={[styles.editBtnText, { color: '#475569' }]}>🚫 작성자 차단</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {isAuthor && (

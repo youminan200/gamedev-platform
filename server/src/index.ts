@@ -386,6 +386,17 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+
+  CREATE TABLE IF NOT EXISTS reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    target_type TEXT NOT NULL,
+    target_id TEXT NOT NULL,
+    target_author TEXT,
+    reason TEXT NOT NULL,
+    reporter TEXT DEFAULT 'Anonymous',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS site_settings (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -567,6 +578,27 @@ app.get('/admin/export.csv', (_req, res) => {
   res.setHeader('Content-Type', 'text/csv; charset=utf-8');
   res.setHeader('Content-Disposition', 'attachment; filename="devground_users_stats.csv"');
   res.send(csv);
+});
+
+
+app.post('/api/reports', (req, res) => {
+  const { target_type, target_id, target_author, reason, reporter } = req.body || {};
+  if (!target_type || !target_id) return res.status(400).json({ error: 'target required' });
+  db.prepare(
+    'INSERT INTO reports (target_type, target_id, target_author, reason, reporter) VALUES (?, ?, ?, ?, ?)'
+  ).run(
+    String(target_type),
+    String(target_id),
+    String(target_author || ''),
+    String(reason || '부적절한 게시물/스팸 신고'),
+    String(reporter || 'Anonymous')
+  );
+  res.status(201).json({ success: true });
+});
+
+app.post('/admin/delete-report/:id', (req, res) => {
+  db.prepare('DELETE FROM reports WHERE id = ?').run(req.params.id);
+  res.redirect('/admin');
 });
 
 app.get('/api/showcases', (_req, res) => {
@@ -821,6 +853,21 @@ app.get('/admin', (_req, res) => {
   const adminComments = db.prepare('SELECT c.id, c.content, c.devlog_id, c.created_at, u.username as author FROM comments c LEFT JOIN users u ON c.user_id = u.id ORDER BY c.id DESC LIMIT 20').all() as any[];
   const adminShouts = db.prepare('SELECT id, nickname, message, created_at FROM shoutbox ORDER BY id DESC LIMIT 15').all() as any[];
   const adminShowcases = db.prepare('SELECT id, title, developer, engine, homepage_url, plays FROM game_showcases ORDER BY id DESC LIMIT 30').all() as any[];
+  const adminReports = db.prepare('SELECT * FROM reports ORDER BY id DESC LIMIT 20').all() as any[];
+  const reportsRowsHtml = adminReports.map(r => `
+    <tr>
+      <td>#${r.id}</td>
+      <td><span class="badge local">${r.target_type} #${r.target_id}</span></td>
+      <td>${r.target_author || '-'}</td>
+      <td>${r.reason}</td>
+      <td>${r.reporter}</td>
+      <td>
+        <form method="POST" action="/admin/delete-report/${r.id}" style="margin:0;">
+          <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:11px;">✅ 처리완료(삭제)</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
 
   const showcasesRowsHtml = adminShowcases.map(g => `
     <tr>
@@ -1067,6 +1114,14 @@ Share your Unity / Unreal / Godot DevLogs, playable web demos, and free 2D/3D/Au
         <tr><th>ID</th><th>작성자</th><th>댓글 내용 (클릭 시 원문 이동)</th><th>관리</th></tr>
       </thead>
       <tbody>${commentsRowsHtml}</tbody>
+    </table>
+
+    <h2 style="margin-top:32px;">🚨 스토어 규정 준수: 신고 접수 내역 관리 (${adminReports.length}건)</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>대상</th><th>작성자</th><th>신고 사유</th><th>신고자</th><th>관리</th></tr>
+      </thead>
+      <tbody>${reportsRowsHtml || '<tr><td colspan="6">접수된 신고가 없습니다.</td></tr>'}</tbody>
     </table>
 
     <h2 style="margin-top:32px;">⚡ 실시간 한줄 응원톡 관리 (${adminShouts.length}개)</h2>
@@ -1696,6 +1751,26 @@ app.post('/api/upload', authenticateToken, async (req: any, res: any) => {
   const rawProto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
   const protocol = rawProto.split(',')[0].trim();
   res.status(201).json({ url: `${protocol}://${host}/uploads/${safeName}`, storage: 'local' });
+});
+
+
+// Account Deletion Route (App Store / Google Play mandatory compliance)
+app.delete('/api/users/me', authenticateToken, (req: any, res: any) => {
+  const userId = req.user.id;
+  try {
+    db.prepare('DELETE FROM oauth_accounts WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM notifications WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM comments WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM devlog_likes WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM asset_likes WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM asset_feedbacks WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM devlogs WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM assets WHERE user_id = ?').run(userId);
+    db.prepare('DELETE FROM users WHERE id = ?').run(userId);
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || 'Failed to delete account' });
+  }
 });
 
 // Update User Portfolio Profile

@@ -446,6 +446,46 @@ export const ApiClient = {
     return await response.json();
   },
 
+
+  deleteMyAccount: async (): Promise<void> => {
+    const response = await fetch(`${BASE_URL}/users/me`, {
+      method: 'DELETE',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('회원 탈퇴 처리에 실패했습니다.');
+    ApiClient.logout();
+  },
+
+  reportContent: async (data: { target_type: string; target_id: string; target_author?: string; reason: string; reporter?: string }): Promise<void> => {
+    await fetch(`${BASE_URL}/reports`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+  },
+
+  getBlockedUsers: (): string[] => {
+    const raw = getStorageItem('devground_blocked_users');
+    if (!raw) return [];
+    try { return JSON.parse(raw); } catch { return []; }
+  },
+
+  blockUser: (targetUsername: string): string[] => {
+    const cur = ApiClient.getBlockedUsers();
+    if (!cur.includes(targetUsername)) {
+      const next = [...cur, targetUsername];
+      setStorageItem('devground_blocked_users', JSON.stringify(next));
+      return next;
+    }
+    return cur;
+  },
+
+  unblockUser: (targetUsername: string): string[] => {
+    const next = ApiClient.getBlockedUsers().filter((u) => u !== targetUsername);
+    setStorageItem('devground_blocked_users', JSON.stringify(next));
+    return next;
+  },
+
   getUserProfile: async (username: string): Promise<any> => {
     const response = await fetch(`${BASE_URL}/users/${username}`, { headers: ApiClient.getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch user profile');

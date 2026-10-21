@@ -42,6 +42,20 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [previewGame, setPreviewGame] = useState<any>(null);
   const [badgeCopied, setBadgeCopied] = useState(false);
   const [arcadeOpen, setArcadeOpen] = useState(false);
+  const [installModalOpen, setInstallModalOpen] = useState(false);
+
+  const handleInstallAppClick = async () => {
+    try {
+      if (typeof window !== 'undefined' && (window as any).__deferredInstallPrompt) {
+        const promptEvent = (window as any).__deferredInstallPrompt;
+        promptEvent.prompt();
+        await promptEvent.userChoice;
+        (window as any).__deferredInstallPrompt = null;
+        return;
+      }
+    } catch {}
+    setInstallModalOpen(true);
+  };
   const [arcadeScores, setArcadeScores] = useState<any[]>([]);
   const [teamBoardOpen, setTeamBoardOpen] = useState(false);
   const [teams, setTeams] = useState<any[]>([]);
@@ -191,9 +205,11 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
     setBookmarkedIds(ApiClient.getBookmarks('devlog'));
   };
 
+  const blockedList = ApiClient.getBlockedUsers();
+  const visibleLogs = logs.filter((item) => !blockedList.includes(item.author));
   const filteredLogs = sortBy === 'bookmarked'
-    ? logs.filter((item) => bookmarkedIds.includes(String(item.id)))
-    : logs;
+    ? visibleLogs.filter((item) => bookmarkedIds.includes(String(item.id)))
+    : visibleLogs;
 
   const sortedLogs = [...filteredLogs].sort((a, b) => {
     const pinDiff = (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
@@ -258,6 +274,12 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               style={{ backgroundColor: '#FCE7F3', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
             >
               <Text style={{ fontSize: 11, fontWeight: '800', color: '#BE185D' }}>{lang === 'en' ? '🤝 Team Board' : '🤝 팀원모집 보드'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleInstallAppClick}
+              style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{lang === 'en' ? '📲 Install App' : '📲 무료 앱 설치'}</Text>
             </TouchableOpacity>
           </View>
         </View>
