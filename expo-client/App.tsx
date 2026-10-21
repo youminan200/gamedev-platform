@@ -40,7 +40,18 @@ export default function App() {
   useEffect(() => {
     const checkStatus = async () => {
       try {
-        const res = await fetch('https://gamedev-platform.onrender.com/api/system-status');
+        let trackParam = '1';
+        try {
+          const visitKey = 'devground_visited_' + new Date().toISOString().slice(0, 10);
+          if (typeof window !== 'undefined' && window.localStorage) {
+            if (window.localStorage.getItem(visitKey) === '1') {
+              trackParam = '0';
+            } else {
+              window.localStorage.setItem(visitKey, '1');
+            }
+          }
+        } catch {}
+        const res = await fetch(`https://gamedev-platform.onrender.com/api/system-status?track=${trackParam}`);
         if (res.ok) {
           const data = await res.json();
           setMaintenanceMsg(data.maintenance ? (data.message || '🚧 현재 서버 점검 중입니다.') : null);

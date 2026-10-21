@@ -31,8 +31,12 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
+  const [shouts, setShouts] = useState<any[]>([]);
+  const [shoutText, setShoutText] = useState('');
+  const [sendingShout, setSendingShout] = useState(false);
 
   useEffect(() => {
+    ApiClient.getShoutbox().then(setShouts).catch(() => {});
     fetch('https://gamedev-platform.onrender.com/api/system-status?track=0')
       .then((r) => r.json())
       .then((d) => {
@@ -261,6 +265,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8, marginBottom: 12 }}>
         {[
           { label: '📋 전체 글', tag: null },
+          { label: '🏆 이달의 쇼케이스', tag: '쇼케이스' },
           { label: '🎮 데모 플레이', tag: '데모버전' },
           { label: '🤝 팀원 모집', tag: '팀원모집' },
           { label: 'Unity', tag: 'Unity' },
@@ -286,6 +291,46 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
           );
         })}
       </ScrollView>
+
+
+      {/* Live Developer Shoutbox Widget */}
+      <View style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 12, marginBottom: 14 }}>
+        <Text style={{ fontSize: 12, fontWeight: '800', color: Theme.colors.primary, marginBottom: 6 }}>
+          ⚡ 실시간 개발자 한줄 응원톡 (로그인 없이 작성 가능)
+        </Text>
+        {shouts.slice(0, 3).map((s: any) => (
+          <Text key={s.id} numberOfLines={1} style={{ fontSize: 12, color: Theme.colors.text, marginBottom: 3 }}>
+            <Text style={{ fontWeight: '800', color: Theme.colors.primary }}>{s.nickname}: </Text>
+            {s.message}
+          </Text>
+        ))}
+        <View style={{ flexDirection: 'row', gap: 6, marginTop: 6 }}>
+          <TextInput
+            style={{ flex: 1, backgroundColor: Theme.colors.background, borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6, fontSize: 12, color: Theme.colors.text }}
+            placeholder="오늘의 개발 진척도나 응원 한마디를 남겨보세요..."
+            placeholderTextColor={Theme.colors.textLight}
+            value={shoutText}
+            onChangeText={setShoutText}
+          />
+          <TouchableOpacity
+            disabled={sendingShout}
+            onPress={async () => {
+              if (!shoutText.trim()) return;
+              try {
+                setSendingShout(true);
+                const list = await ApiClient.postShoutbox(username || '인디개발자', shoutText.trim());
+                if (list.length > 0) setShouts(list);
+                setShoutText('');
+              } catch {} finally {
+                setSendingShout(false);
+              }
+            }}
+            style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 12, justifyContent: 'center', borderRadius: 10 }}
+          >
+            <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '800' }}>등록</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
 
       {/* Top 3 Popular DevLogs Banner */}
       {logs.length > 0 && (

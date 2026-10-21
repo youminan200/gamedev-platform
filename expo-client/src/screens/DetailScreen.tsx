@@ -186,7 +186,7 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
     <View style={styles.postContent}>
       <Text style={styles.title}>{devlog.title}</Text>
       <View style={styles.authorRow}>
-        <Text style={styles.author}>👤 {devlog.author} • 👁️ {devlog.views ?? 45}회 조회 • {devlog.created_at ? new Date(devlog.created_at).toLocaleDateString() : ''}</Text>
+        <Text style={styles.author}>👤 {devlog.author} • 👁️ {devlog.views ?? 0}회 조회 • {devlog.created_at ? new Date(devlog.created_at).toLocaleDateString() : ''}</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <TouchableOpacity
             style={[styles.likeButton, isBookmarked && { backgroundColor: '#FEF3C7' }]}

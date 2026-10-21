@@ -109,13 +109,13 @@ try {
 try {
   db.exec(`ALTER TABLE assets ADD COLUMN image_url TEXT;`);
 } catch {}
-try { db.exec(`ALTER TABLE assets ADD COLUMN downloads INTEGER DEFAULT 12;`); } catch {}
+try { db.exec(`ALTER TABLE assets ADD COLUMN downloads INTEGER DEFAULT 0;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN bio TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN engine TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN github_url TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN steam_url TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN itch_url TEXT;`); } catch {}
-try { db.exec(`ALTER TABLE devlogs ADD COLUMN views INTEGER DEFAULT 45;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN views INTEGER DEFAULT 0;`); } catch {}
 try { db.exec(`ALTER TABLE devlogs ADD COLUMN demo_url TEXT;`); } catch {}
 try {
   db.prepare("UPDATE devlogs SET demo_url = 'https://itch.io/games/tag-roguelike' WHERE id IN (1, 3) AND (demo_url IS NULL OR demo_url = '')").run();
@@ -339,6 +339,13 @@ app.get('/api/stats', (_req, res) => {
 });
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS shoutbox (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nickname TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS site_settings (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -349,6 +356,28 @@ const getSetting = (key: string, fallback = ''): string => {
   const row = db.prepare('SELECT value FROM site_settings WHERE key = ?').get(key) as any;
   return row ? String(row.value) : fallback;
 };
+
+try {
+  const shoutCount = (db.prepare('SELECT COUNT(*) as c FROM shoutbox').get() as any).c;
+  if (shoutCount === 0) {
+    db.prepare('INSERT INTO shoutbox (nickname, message) VALUES (?, ?)').run('PixelKnight', '오늘 보스 페이즈2 패턴 구현 완료! 다들 개발 화이팅하세요 🔥');
+    db.prepare('INSERT INTO shoutbox (nickname, message) VALUES (?, ?)').run('GodotCrafter', 'DevGround 오픈 축하합니다! 인디 개발자분들 자주 소통해요 🙌');
+  }
+} catch {}
+
+app.get('/api/shoutbox', (_req, res) => {
+  const items = db.prepare('SELECT id, nickname, message, created_at FROM shoutbox ORDER BY id DESC LIMIT 15').all();
+  res.json(items);
+});
+
+app.post('/api/shoutbox', (req, res) => {
+  const nickname = String(req.body?.nickname || '익명 개발자').trim().slice(0, 24) || '익명 개발자';
+  const message = String(req.body?.message || '').trim().slice(0, 140);
+  if (!message) return res.status(400).json({ error: 'message required' });
+  db.prepare('INSERT INTO shoutbox (nickname, message) VALUES (?, ?)').run(nickname, message);
+  const items = db.prepare('SELECT id, nickname, message, created_at FROM shoutbox ORDER BY id DESC LIMIT 15').all();
+  res.status(201).json(items);
+});
 
 const setSetting = (key: string, value: string) => {
   db.prepare('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)').run(key, value);
@@ -465,7 +494,24 @@ app.post('/admin/delete-asset/:id', (req, res) => {
   res.redirect('/admin');
 });
 
+app.post('/admin/delete-comment/:id', (req, res) => {
+  db.prepare('DELETE FROM comments WHERE id = ?').run(req.params.id);
+  res.redirect('/admin');
+});
+
+app.post('/admin/delete-feedback/:id', (req, res) => {
+  db.prepare('DELETE FROM asset_feedbacks WHERE id = ?').run(req.params.id);
+  res.redirect('/admin');
+});
+
+app.post('/admin/delete-shout/:id', (req, res) => {
+  db.prepare('DELETE FROM shoutbox WHERE id = ?').run(req.params.id);
+  res.redirect('/admin');
+});
+
 app.post('/admin/reset-visits', (_req, res) => {
+  db.prepare('UPDATE devlogs SET views = 0 WHERE views >= 40').run();
+  db.prepare('UPDATE assets SET downloads = 0 WHERE downloads >= 12').run();
   const todayKey = 'visits_' + new Date().toISOString().slice(0, 10);
   setSetting('total_visits', '0');
   setSetting(todayKey, '0');
@@ -504,6 +550,34 @@ app.get('/admin', (_req, res) => {
   const realUsersCount = users.filter(u => u.login_type !== 'sample').length;
   const adminDevlogs = db.prepare('SELECT d.id, d.title, d.likes, d.created_at, u.username as author FROM devlogs d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id DESC LIMIT 30').all() as any[];
   const adminAssets = db.prepare('SELECT a.id, a.title, a.category, a.likes, a.created_at, u.username as author FROM assets a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.id DESC LIMIT 30').all() as any[];
+  const adminComments = db.prepare('SELECT c.id, c.content, c.devlog_id, c.created_at, u.username as author FROM comments c LEFT JOIN users u ON c.user_id = u.id ORDER BY c.id DESC LIMIT 20').all() as any[];
+  const adminShouts = db.prepare('SELECT id, nickname, message, created_at FROM shoutbox ORDER BY id DESC LIMIT 15').all() as any[];
+
+  const commentsRowsHtml = adminComments.map(c => `
+    <tr>
+      <td>#${c.id}</td>
+      <td>${c.author || 'Anonymous'}</td>
+      <td><a href="https://gamedev-platform-expo-client.vercel.app/?devlog=${c.devlog_id}" target="_blank">${c.content} ↗</a></td>
+      <td>
+        <form method="POST" action="/admin/delete-comment/${c.id}" style="margin:0;">
+          <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:11px;">🗑️ 삭제</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
+
+  const shoutsRowsHtml = adminShouts.map(s => `
+    <tr>
+      <td>#${s.id}</td>
+      <td><strong>${s.nickname}</strong></td>
+      <td>${s.message}</td>
+      <td>
+        <form method="POST" action="/admin/delete-shout/${s.id}" style="margin:0;">
+          <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:11px;">🗑️ 삭제</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
 
   const devlogsRowsHtml = adminDevlogs.map(d => `
     <tr>
@@ -679,6 +753,22 @@ app.get('/admin', (_req, res) => {
         <tr><th>ID</th><th>분류</th><th>제목 (클릭 시 열람)</th><th>작성자</th><th>좋아요</th><th>관리</th></tr>
       </thead>
       <tbody>${assetsRowsHtml}</tbody>
+    </table>
+
+    <h2 style="margin-top:32px;">💬 최근 댓글 관리 (${adminComments.length}개)</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>작성자</th><th>댓글 내용 (클릭 시 원문 이동)</th><th>관리</th></tr>
+      </thead>
+      <tbody>${commentsRowsHtml}</tbody>
+    </table>
+
+    <h2 style="margin-top:32px;">⚡ 실시간 한줄 응원톡 관리 (${adminShouts.length}개)</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>닉네임</th><th>메시지</th><th>관리</th></tr>
+      </thead>
+      <tbody>${shoutsRowsHtml}</tbody>
     </table>
   </div>
 </body>

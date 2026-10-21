@@ -370,6 +370,22 @@ export const ApiClient = {
     if (!response.ok) throw new Error('Failed to update profile');
   },
 
+  getShoutbox: async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/shoutbox`);
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  postShoutbox: async (nickname: string, message: string): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/shoutbox`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nickname, message }),
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
   getLeaderboard: async (): Promise<any[]> => {
     const response = await fetch(`${BASE_URL}/leaderboard`);
     if (!response.ok) return [];

@@ -300,7 +300,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
           <Text style={styles.assetDesc}>{item.description || 'No description provided.'}</Text>
 
           <View style={styles.cardFooter}>
-            <Text style={styles.authorText}>by {item.author} • 📥 {item.downloads ?? 12}회 다운로드</Text>
+            <Text style={styles.authorText}>by {item.author} • 📥 {item.downloads ?? 0}회 다운로드</Text>
             <TouchableOpacity onPress={() => handleQuickLike(item.id)}>
               <Text style={[styles.likesText, item.is_liked && { color: '#E11D48' }]}>
                 {item.is_liked ? '❤️' : '🤍'} {item.likes || 0}
@@ -398,7 +398,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
 
                   {detailAsset.file_url ? (
                     <TouchableOpacity style={styles.openLinkBtn} onPress={() => handleOpenLink(detailAsset.file_url, detailAsset.id)}>
-                      <Text style={styles.openLinkText}>📥 다운로드 / 링크 열기 ({detailAsset.downloads ?? 12}회)</Text>
+                      <Text style={styles.openLinkText}>📥 다운로드 / 링크 열기 ({detailAsset.downloads ?? 0}회)</Text>
                     </TouchableOpacity>
                   ) : null}
 
