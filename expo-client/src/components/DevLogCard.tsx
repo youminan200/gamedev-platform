@@ -98,11 +98,13 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
 
         {/* Thumbnail */}
         {devLog.image_url ? (
-          <Image
-            source={{ uri: devLog.image_url }}
-            style={[styles.thumbnailImage, { backgroundColor: Theme.colors.pillBg, borderBottomColor: Theme.colors.border }]}
-            resizeMode="cover"
-          />
+          <View style={{ backgroundColor: Theme.colors.pillBg, borderBottomWidth: 1.5, borderBottomColor: Theme.colors.border }}>
+            <Image
+              source={{ uri: devLog.image_url }}
+              style={styles.thumbnailImage}
+              resizeMode={devLog.image_url.startsWith('data:image/') ? 'contain' : 'cover'}
+            />
+          </View>
         ) : (
           <View style={[styles.thumbnail, { backgroundColor: Theme.colors.pillBg, borderBottomColor: Theme.colors.border }]}>
             <Text style={[styles.thumbnailText, { color: Theme.colors.textLight }]}>// NO_SIGNAL // DEVLOG_ARCHIVE</Text>
