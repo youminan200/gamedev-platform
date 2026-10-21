@@ -701,9 +701,7 @@ try {
       'NullReferenceException: Object reference not set to an instance of an object',
       'Inspector에서 컴포넌트 참조가 비어 있거나, Awake() 이전에 다른 스크립트의 변수를 참조할 때 발생합니다.',
       'GetComponent<T>()를 Awake()에서 먼저 캐싱하거나, null 조건 연산자(?.) 및 TryGetComponent를 사용해 안전하게 방어하세요.',
-      'if (TryGetComponent<Rigidbody2D>(out var rb)) {
-    rb.velocity = Vector2.up * 10f;
-}',
+      'if (TryGetComponent<Rigidbody2D>(out var rb)) { rb.velocity = Vector2.up * 10f; }',
       'PixelKnight',
       42
     );
@@ -739,8 +737,7 @@ try {
       '한글 텍스트가 네모 박스(□□□)로 깨지거나 HTML5 웹 빌드 시 멈추는 현상',
       '기본 시스템 폰트에 한글 글리프가 없거나, Godot 4.0~4.2 웹 내보내기 시 SharedArrayBuffer(멀티스레드) 헤더가 서버에 없을 때 발생합니다.',
       '1) Pretendard 또는 갈무리(Galmuri) .ttf 폰트를 Project Settings → GUI → Theme → Custom Font에 등록 2) Godot 4.3 이상에서 Web Export 시 [Thread Support] 옵션을 끄고(Single-thread) 내보내면 모든 웹 호스팅에서 즉시 작동합니다.',
-      '# Godot 4.3 Web Export 설정:
-# Export -> Web -> Variant -> Thread Support: OFF (체크 해제)',
+      '# Godot 4.3 Web Export: Export -> Web -> Variant -> Thread Support: OFF (체크 해제)',
       'GodotCrafter',
       35
     );
