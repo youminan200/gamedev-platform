@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "buildCommand": "npx expo export -p web",
+  "buildCommand": "npx expo export -p web && node inject-seo.js",
   "outputDirectory": "dist",
   "framework": null,
   "rewrites": [
