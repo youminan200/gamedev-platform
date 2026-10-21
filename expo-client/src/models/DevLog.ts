@@ -30,6 +30,7 @@ export interface Asset {
   likes: number;
   avg_rating: number;
   feedback_count: number;
+  is_liked?: boolean;
   created_at?: string;
 }
 

@@ -8,11 +8,14 @@ import { Asset } from '../models/DevLog';
 interface Props {
   onAssetClick?: (id: string) => void;
   onRequireLogin?: () => void;
+  openAssetId?: string | null;
+  onOpenAssetHandled?: () => void;
 }
 
-const CATEGORIES = ['All', '⭐ 찜한 에셋', '2D', '3D', 'Audio', 'UI', 'Code'];
+const LIKED_CATEGORY = '❤️ 좋아요한 에셋';
+const CATEGORIES = ['All', '⭐ 찜한 에셋', LIKED_CATEGORY, '2D', '3D', 'Audio', 'UI', 'Code'];
 
-export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
+export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, onOpenAssetHandled }) => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -37,7 +40,8 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
   const fetchAssets = async () => {
     try {
       setLoading(true);
-      const categoryParam = (selectedCategory === 'All' || selectedCategory === '⭐ 찜한 에셋') ? undefined : selectedCategory;
+      const isSpecialTab = selectedCategory === 'All' || selectedCategory === '⭐ 찜한 에셋' || selectedCategory === LIKED_CATEGORY;
+      const categoryParam = isSpecialTab ? undefined : selectedCategory;
       const data = await ApiClient.getAssets(categoryParam, searchQuery || undefined);
       setAssets(data);
       setBookmarkedIds(ApiClient.getBookmarks('asset'));
@@ -204,7 +208,38 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
 
   const displayedAssets = selectedCategory === '⭐ 찜한 에셋'
     ? assets.filter((a) => bookmarkedIds.includes(String(a.id)))
-    : assets;
+    : selectedCategory === LIKED_CATEGORY
+      ? assets.filter((a) => a.is_liked)
+      : assets;
+
+  const handleQuickLike = async (id: string) => {
+    if (!ApiClient.getToken()) {
+      onRequireLogin?.();
+      return;
+    }
+    try {
+      const res = await ApiClient.toggleLikeAsset(id);
+      setAssets((prev) => prev.map((a) => (a.id === id ? { ...a, likes: res.likes, is_liked: res.liked } : a)));
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // Open an asset's detail when navigated from a notification
+  useEffect(() => {
+    if (!openAssetId) return;
+    (async () => {
+      try {
+        const data = await ApiClient.getAssetDetails(openAssetId);
+        setDetailAsset(data);
+        setEditing(false);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        onOpenAssetHandled?.();
+      }
+    })();
+  }, [openAssetId]);
 
   const renderCategoryPill = (category: string) => {
     const isSelected = selectedCategory === category;
@@ -264,7 +299,11 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
 
           <View style={styles.cardFooter}>
             <Text style={styles.authorText}>by {item.author}</Text>
-            <Text style={styles.likesText}>❤️ {item.likes || 0}</Text>
+            <TouchableOpacity onPress={() => handleQuickLike(item.id)}>
+              <Text style={[styles.likesText, item.is_liked && { color: '#E11D48' }]}>
+                {item.is_liked ? '❤️' : '🤍'} {item.likes || 0}
+              </Text>
+            </TouchableOpacity>
           </View>
         </NeumorphView>
       </TouchableOpacity>
@@ -326,7 +365,11 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin }) => {
           ) : (
             <View style={styles.centerContainer}>
               <Text style={styles.emptyText}>
-                {selectedCategory === '⭐ 찜한 에셋' ? '아직 ⭐ 찜한 에셋이 없습니다.' : 'No assets found.'}
+                {selectedCategory === '⭐ 찜한 에셋'
+                  ? '아직 ⭐ 찜한 에셋이 없습니다.'
+                  : selectedCategory === LIKED_CATEGORY
+                    ? '아직 ❤️ 좋아요한 에셋이 없습니다.'
+                    : 'No assets found.'}
               </Text>
             </View>
           )

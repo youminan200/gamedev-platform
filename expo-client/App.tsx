@@ -30,6 +30,21 @@ export default function App() {
   });
   const [username, setUsername] = useState<string | null>(() => ApiClient.getUsername());
   const [activeTab, setActiveTab] = useState<TabType>('DevLogs');
+  const [pendingAssetId, setPendingAssetId] = useState<string | null>(null);
+  const [maintenanceMsg, setMaintenanceMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch('https://gamedev-platform.onrender.com/api/system-status');
+        if (res.ok) {
+          const data = await res.json();
+          setMaintenanceMsg(data.maintenance ? (data.message || '🚧 현재 서버 점검 중입니다.') : null);
+        }
+      } catch {}
+    };
+    checkStatus();
+  }, []);
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
@@ -136,6 +151,11 @@ export default function App() {
           onDevLogClick={(id) => setCurrentScreen({ type: 'Detail', id })}
           onPostClick={handlePostClick}
           username={username}
+          onAssetNotificationClick={(id) => {
+            setPendingAssetId(id);
+            setActiveTab('AssetHub');
+            setCurrentScreen({ type: 'AssetHub' });
+          }}
           onAuthClick={() => {
             if (username && ApiClient.getToken()) {
               setActiveTab('Profile');
@@ -151,6 +171,8 @@ export default function App() {
       content = (
         <AssetFeedScreen
           onRequireLogin={() => setCurrentScreen({ type: 'Login' })}
+          openAssetId={pendingAssetId}
+          onOpenAssetHandled={() => setPendingAssetId(null)}
         />
       );
       break;
@@ -198,6 +220,11 @@ export default function App() {
   return (
     <SafeAreaProvider style={Platform.OS === 'web' ? { height: '100vh' as any, width: '100vw' as any, overflow: 'hidden' as any } : undefined}>
       <SafeAreaView style={{ flex: 1, backgroundColor: Theme.colors.background, height: Platform.OS === 'web' ? ('100vh' as any) : undefined, maxHeight: Platform.OS === 'web' ? ('100vh' as any) : undefined }}>
+        {maintenanceMsg && (
+          <View style={{ backgroundColor: '#EF4444', paddingVertical: 10, paddingHorizontal: 16, alignItems: 'center' }}>
+            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 13, textAlign: 'center' }}>{maintenanceMsg}</Text>
+          </View>
+        )}
         <View style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}>
           {content}
         </View>

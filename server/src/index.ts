@@ -324,6 +324,36 @@ app.get('/api/stats', (_req, res) => {
   });
 });
 
+db.exec(`
+  CREATE TABLE IF NOT EXISTS site_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT
+  );
+`);
+
+const getSetting = (key: string, fallback = ''): string => {
+  const row = db.prepare('SELECT value FROM site_settings WHERE key = ?').get(key) as any;
+  return row ? String(row.value) : fallback;
+};
+
+const setSetting = (key: string, value: string) => {
+  db.prepare('INSERT OR REPLACE INTO site_settings (key, value) VALUES (?, ?)').run(key, value);
+};
+
+app.get('/api/system-status', (_req, res) => {
+  const maintenance = getSetting('maintenance_mode', '0') === '1';
+  const message = getSetting('maintenance_message', '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.');
+  res.json({ maintenance, message });
+});
+
+app.post('/admin/maintenance', express.urlencoded({ extended: true }), (req, res) => {
+  const mode = req.body?.mode === '1' ? '1' : '0';
+  const message = (req.body?.message || '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.').trim();
+  setSetting('maintenance_mode', mode);
+  setSetting('maintenance_message', message);
+  res.redirect('/admin');
+});
+
 app.get('/admin/backup.sqlite', (_req, res) => {
   res.download('database.sqlite', 'database.sqlite');
 });
@@ -332,6 +362,8 @@ app.get('/admin', (_req, res) => {
   const totalDevlogs = (db.prepare('SELECT COUNT(*) as count FROM devlogs').get() as any).count;
   const totalAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
   const totalComments = (db.prepare('SELECT COUNT(*) as count FROM comments').get() as any).count;
+  const isMaintenance = getSetting('maintenance_mode', '0') === '1';
+  const maintenanceMsg = getSetting('maintenance_message', '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.');
 
   const users = db.prepare(`
     SELECT u.id, u.username, u.email, u.created_at, u.password,
@@ -362,18 +394,25 @@ app.get('/admin', (_req, res) => {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DevGround 관리자 대시보드 (이용자 현황)</title>
+  <title>DevGround 관리자 대시보드 (이용자 현황 & 서버 관리)</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 32px; }
     .container { max-width: 960px; margin: 0 auto; }
     .top-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
     h1 { font-size: 26px; margin: 0; }
     .sub { color: #94a3b8; margin-bottom: 24px; font-size: 14px; }
-    .btn { background: #38bdf8; color: #0f172a; padding: 10px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; text-decoration: none; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+    .btn { background: #38bdf8; color: #0f172a; padding: 10px 16px; border-radius: 10px; font-weight: 800; font-size: 13px; text-decoration: none; border: none; cursor: pointer; display: inline-block; }
+    .btn-danger { background: #ef4444; color: #fff; }
+    .btn-success { background: #10b981; color: #0f172a; }
+    .btn-outline { background: #1e293b; color: #f8fafc; border: 1px solid #334155; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
     .card { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px; }
     .card-label { color: #94a3b8; font-size: 13px; font-weight: 600; }
     .card-val { font-size: 32px; font-weight: 800; color: #38bdf8; margin-top: 6px; }
+    .panel { background: #1e293b; border: 1px solid #334155; border-radius: 14px; padding: 20px; margin-bottom: 24px; }
+    .panel h2 { margin-top: 0; font-size: 18px; margin-bottom: 12px; }
+    .links-grid { display: flex; flex-wrap: wrap; gap: 10px; }
+    .input-text { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #f8fafc; font-size: 14px; margin: 10px 0; }
     table { width: 100%; border-collapse: collapse; background: #1e293b; border-radius: 14px; overflow: hidden; border: 1px solid #334155; }
     th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid #334155; font-size: 14px; }
     th { background: #0f172a; color: #94a3b8; font-weight: 700; }
@@ -388,10 +427,33 @@ app.get('/admin', (_req, res) => {
 <body>
   <div class="container">
     <div class="top-row">
-      <h1>📊 DevGround 실시간 이용자 현황</h1>
+      <h1>📊 DevGround 실시간 이용자 현황 & 서버 관리</h1>
       <a class="btn" href="/admin/backup.sqlite">📥 실서버 DB 백업 다운로드 (.sqlite)</a>
     </div>
     <div class="sub">새로고침(F5)하면 실시간 가입자 및 게시글 통계를 확인할 수 있습니다. | <a href="https://gamedev-platform-expo-client.vercel.app" target="_blank">서비스 바로가기 ↗</a></div>
+
+    <div class="panel">
+      <h2>🛠️ 홈페이지 점검 모드 (Maintenance Mode) 제어 — 현재 상태: <span style="color:${isMaintenance ? '#ef4444' : '#10b981'}">${isMaintenance ? '🚧 점검 중 (ON)' : '✅ 정상 운영 중 (OFF)'}</span></h2>
+      <form method="POST" action="/admin/maintenance">
+        <input type="hidden" name="mode" value="${isMaintenance ? '0' : '1'}" />
+        <label style="font-size:13px;color:#94a3b8;">점검 시 홈페이지 상단에 표시할 안내 문구:</label>
+        <input class="input-text" type="text" name="message" value="${maintenanceMsg.replace(/"/g, '&quot;')}" />
+        <button type="submit" class="btn ${isMaintenance ? 'btn-success' : 'btn-danger'}">
+          ${isMaintenance ? '✅ 점검 해제하고 정상 운영으로 전환' : '🚧 서버 점검 모드 켜기 (홈페이지에 점검 배너 표시)'}
+        </button>
+      </form>
+    </div>
+
+    <div class="panel">
+      <h2>🌐 배포 · 검색엔진(SEO) · 클라우드 통합 관리 바로가기</h2>
+      <div class="links-grid">
+        <a class="btn btn-outline" href="https://gamedev-platform-expo-client.vercel.app" target="_blank">🌐 공식 웹앱 열기 ↗</a>
+        <a class="btn btn-outline" href="https://search.google.com/search-console/inspect?resource_id=https%3A%2F%2Fgamedev-platform-expo-client.vercel.app%2F&id=PfCul0SZcMUaqlf7hVYiIQ&alt_id=Ds96KPGXgnE7o9nFk7hFyw" target="_blank">🔍 Google Search Console (색인/URL 검사) ↗</a>
+        <a class="btn btn-outline" href="https://dashboard.render.com/web/srv-db8argvavr4c73arnk0g" target="_blank">⚡ Render 백엔드 서버 관리 ↗</a>
+        <a class="btn btn-outline" href="https://github.com/youminan200/gamedev-platform/actions" target="_blank">🛡️ GitHub 24/7 자동 점검 리포트 ↗</a>
+      </div>
+    </div>
+
     <div class="cards">
       <div class="card"><div class="card-label">👥 실제 가입 회원</div><div class="card-val">${realUsersCount}명</div></div>
       <div class="card"><div class="card-label">📜 등록된 개발일지</div><div class="card-val">${totalDevlogs}개</div></div>
@@ -770,7 +832,7 @@ app.delete('/api/devlogs/:id/comments/:commentId', authenticateToken, (req: any,
 });
 
 // Asset Hub Routes
-app.get('/api/assets', (req, res) => {
+app.get('/api/assets', optionalAuthenticateToken, (req: any, res: any) => {
   const { category, search } = req.query;
   let query = `
     SELECT a.*, u.username as author,
@@ -799,6 +861,9 @@ app.get('/api/assets', (req, res) => {
     ...asset,
     id: asset.id.toString(),
     tags: asset.tags ? JSON.parse(asset.tags) : [],
+    is_liked: req.user
+      ? !!db.prepare('SELECT 1 FROM asset_likes WHERE asset_id = ? AND user_id = ?').get(asset.id, req.user.id)
+      : false,
     avg_rating: asset.avg_rating ? Math.round(asset.avg_rating * 10) / 10 : 0
   }));
 
@@ -962,9 +1027,17 @@ app.post('/api/notifications/read', authenticateToken, (req: any, res: any) => {
   res.json({ success: true });
 });
 
-// Image upload (base64 JSON, max ~5MB)
-app.post('/api/upload', authenticateToken, (req: any, res: any) => {
-  const { filename, data } = req.body || {};
+app.post('/api/notifications/:id/read', authenticateToken, (req: any, res: any) => {
+  db.prepare('UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?').run(req.params.id, req.user.id);
+  res.json({ success: true });
+});
+
+// Image upload (base64 JSON, max ~5MB). Uses Cloudinary (unsigned preset) when configured, else local disk.
+const CLOUDINARY_CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET = process.env.CLOUDINARY_UPLOAD_PRESET;
+
+app.post('/api/upload', authenticateToken, async (req: any, res: any) => {
+  const { data } = req.body || {};
   if (!data || typeof data !== 'string') return res.status(400).json({ error: 'data is required' });
 
   const match = data.match(/^data:(image\/(png|jpeg|jpg|gif|webp));base64,(.+)$/);
@@ -973,6 +1046,20 @@ app.post('/api/upload', authenticateToken, (req: any, res: any) => {
   const buffer = Buffer.from(match[3], 'base64');
   if (buffer.length > 5 * 1024 * 1024) return res.status(413).json({ error: 'File too large (max 5MB)' });
 
+  if (CLOUDINARY_CLOUD_NAME && CLOUDINARY_UPLOAD_PRESET) {
+    try {
+      const form = new URLSearchParams({ file: data, upload_preset: CLOUDINARY_UPLOAD_PRESET });
+      const cloudRes = await axios.post(
+        `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`,
+        form.toString(),
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, maxBodyLength: Infinity }
+      );
+      return res.status(201).json({ url: cloudRes.data.secure_url, storage: 'cloudinary' });
+    } catch (e: any) {
+      console.error('Cloudinary upload failed, falling back to local disk:', e.response?.data || e.message);
+    }
+  }
+
   const ext = match[2] === 'jpeg' ? 'jpg' : match[2];
   const safeName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}.${ext}`;
   fs.writeFileSync(path.join(UPLOAD_DIR, safeName), buffer);
@@ -980,7 +1067,7 @@ app.post('/api/upload', authenticateToken, (req: any, res: any) => {
   const host = req.get('host');
   const rawProto = (req.headers['x-forwarded-proto'] as string) || req.protocol || 'https';
   const protocol = rawProto.split(',')[0].trim();
-  res.status(201).json({ url: `${protocol}://${host}/uploads/${safeName}` });
+  res.status(201).json({ url: `${protocol}://${host}/uploads/${safeName}`, storage: 'local' });
 });
 
 // User Profile Route

@@ -279,6 +279,15 @@ export const ApiClient = {
     return response.json();
   },
 
+  markNotificationRead: async (id: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/notifications/${id}/read`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+    });
+    if (!response.ok) throw new Error('Failed to mark notification read');
+    return response.json();
+  },
+
   uploadImageData: async (dataUrl: string): Promise<string> => {
     const response = await fetch(`${BASE_URL}/upload`, {
       method: 'POST',

@@ -11,9 +11,10 @@ interface Props {
   onPostClick: () => void;
   username?: string | null;
   onAuthClick?: () => void;
+  onAssetNotificationClick?: (id: string) => void;
 }
 
-export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, username, onAuthClick }) => {
+export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, username, onAuthClick, onAssetNotificationClick }) => {
   const [logs, setLogs] = useState<DevLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,12 +46,27 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const handleOpenNotifications = async () => {
     setNotifOpen(true);
     await loadNotifications();
-    if (unreadCount > 0) {
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await ApiClient.markNotificationsRead();
+      setNotifications((prev) => prev.map((n) => ({ ...n, is_read: true })));
+      setUnreadCount(0);
+    } catch {}
+  };
+
+  const handleNotificationClick = async (n: any) => {
+    setNotifOpen(false);
+    if (!n.is_read) {
       try {
-        await ApiClient.markNotificationsRead();
-        setUnreadCount(0);
+        await ApiClient.markNotificationRead(n.id);
+        setNotifications((prev) => prev.map((x) => (x.id === n.id ? { ...x, is_read: true } : x)));
+        setUnreadCount((c) => Math.max(0, c - 1));
       } catch {}
     }
+    if (n.ref_type === 'devlog' && n.ref_id) onDevLogClick(n.ref_id);
+    else if (n.ref_type === 'asset' && n.ref_id) onAssetNotificationClick?.(n.ref_id);
   };
 
   useEffect(() => {
@@ -267,10 +283,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                   <TouchableOpacity
                     key={n.id}
                     style={[styles.notifItem, { borderBottomColor: Theme.colors.border }]}
-                    onPress={() => {
-                      setNotifOpen(false);
-                      if (n.ref_type === 'devlog' && n.ref_id) onDevLogClick(n.ref_id);
-                    }}
+                    onPress={() => handleNotificationClick(n)}
                   >
                     <Text style={{ color: Theme.colors.text, fontWeight: n.is_read ? '500' : '800' }}>{n.message}</Text>
                     <Text style={{ color: Theme.colors.textLight, fontSize: 11, marginTop: 2 }}>
@@ -280,9 +293,14 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                 ))
               )}
             </ScrollView>
-            <TouchableOpacity style={{ alignSelf: 'flex-end', paddingVertical: 10 }} onPress={() => setNotifOpen(false)}>
-              <Text style={{ color: Theme.colors.primary, fontWeight: '800' }}>닫기</Text>
-            </TouchableOpacity>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', paddingTop: 6 }}>
+              <TouchableOpacity style={{ paddingVertical: 10 }} onPress={handleMarkAllRead}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '700' }}>모두 읽음</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={{ paddingVertical: 10 }} onPress={() => setNotifOpen(false)}>
+                <Text style={{ color: Theme.colors.primary, fontWeight: '800' }}>닫기</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
