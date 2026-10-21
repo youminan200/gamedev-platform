@@ -252,6 +252,47 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
         </TouchableOpacity>
       ) : null}
       {renderFormattedContent(devlog.content, styles.body)}
+      {devlog.poll_question ? (
+        <NeumorphView radius={16} style={{ padding: 16, marginBottom: 20 }}>
+          <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.primary, marginBottom: 6 }}>
+            📊 실시간 개발 피드백 투표
+          </Text>
+          <Text style={{ fontSize: 15, fontWeight: '700', color: Theme.colors.text, marginBottom: 12 }}>
+            {devlog.poll_question}
+          </Text>
+          {(() => {
+            const votesA = Number(devlog.poll_votes_a || 0);
+            const votesB = Number(devlog.poll_votes_b || 0);
+            const total = votesA + votesB;
+            const pctA = total > 0 ? Math.round((votesA / total) * 100) : 50;
+            const pctB = total > 0 ? 100 - pctA : 50;
+            return (
+              <View style={{ gap: 8 }}>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const res = await ApiClient.voteDevLogPoll(id, 'A');
+                    setDevlog((prev: any) => prev ? { ...prev, poll_votes_a: res.poll_votes_a, poll_votes_b: res.poll_votes_b } : prev);
+                  }}
+                  style={{ backgroundColor: Theme.colors.pillBg, padding: 12, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text }}>{devlog.poll_option_a || 'A안'}</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.primary }}>{pctA}% ({votesA}표)</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={async () => {
+                    const res = await ApiClient.voteDevLogPoll(id, 'B');
+                    setDevlog((prev: any) => prev ? { ...prev, poll_votes_a: res.poll_votes_a, poll_votes_b: res.poll_votes_b } : prev);
+                  }}
+                  style={{ backgroundColor: Theme.colors.pillBg, padding: 12, borderRadius: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text }}>{devlog.poll_option_b || 'B안'}</Text>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: '#10B981' }}>{pctB}% ({votesB}표)</Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })()}
+        </NeumorphView>
+      ) : null}
       <View style={styles.divider} />
             <Text style={styles.commentsTitle}>💬 Comments ({devlog.comments?.length || 0})</Text>
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>

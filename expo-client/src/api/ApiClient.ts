@@ -370,6 +370,16 @@ export const ApiClient = {
     if (!response.ok) throw new Error('Failed to update profile');
   },
 
+  voteDevLogPoll: async (id: string, option: 'A' | 'B'): Promise<{ poll_votes_a: number; poll_votes_b: number }> => {
+    const response = await fetch(`${BASE_URL}/devlogs/${id}/vote`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ option }),
+    });
+    if (!response.ok) return { poll_votes_a: 0, poll_votes_b: 0 };
+    return await response.json();
+  },
+
   getShoutbox: async (): Promise<any[]> => {
     const response = await fetch(`${BASE_URL}/shoutbox`);
     if (!response.ok) return [];

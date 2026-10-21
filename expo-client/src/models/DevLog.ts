@@ -7,6 +7,12 @@ export interface DevLog {
   likes: number;
   views?: number;
   demo_url?: string;
+  is_pinned?: number | boolean;
+  poll_question?: string;
+  poll_option_a?: string;
+  poll_option_b?: string;
+  poll_votes_a?: number;
+  poll_votes_b?: number;
   comment_count?: number;
   tags: string[];
   is_liked?: boolean;
@@ -18,6 +24,9 @@ export interface DevLogCreateRequest {
   content?: string;
   image_url?: string;
   demo_url?: string;
+  poll_question?: string;
+  poll_option_a?: string;
+  poll_option_b?: string;
   tags: string[];
 }
 

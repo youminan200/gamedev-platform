@@ -51,6 +51,11 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
         
         {/* Content */}
         <View style={styles.content}>
+          {Boolean(devLog.is_pinned) && (
+            <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start', marginBottom: 6 }}>
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>📌 편집자 추천 고정글</Text>
+            </View>
+          )}
           {devLog.tags?.includes('쇼케이스') && (
             <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start', marginBottom: 8 }}>
               <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>🏆 이달의 인디게임 쇼케이스 출품작</Text>

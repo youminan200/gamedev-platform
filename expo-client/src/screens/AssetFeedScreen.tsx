@@ -35,6 +35,40 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
 
   const currentUsername = ApiClient.getUsername();
 
+  const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
+  const playAudioPreview = (item: Asset) => {
+    setPlayingAudioId(item.id);
+    try {
+      if (typeof window !== 'undefined') {
+        if (item.file_url && /\.(mp3|wav|ogg)(\?|$)/i.test(item.file_url)) {
+          const audio = new (window as any).Audio(item.file_url);
+          audio.onended = () => setPlayingAudioId(null);
+          audio.play();
+          return;
+        }
+        const AudioCtx = (window as any).AudioContext || (window as any).webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const notes = [523.25, 659.25, 783.99, 1046.5];
+          notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'square';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.09);
+            gain.gain.setValueAtTime(0.12, ctx.currentTime + i * 0.09);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.09 + 0.08);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(ctx.currentTime + i * 0.09);
+            osc.stop(ctx.currentTime + i * 0.09 + 0.08);
+          });
+        }
+      }
+    } catch {}
+    setTimeout(() => setPlayingAudioId(null), 600);
+  };
+
+
   useEffect(() => {
     fetchAssets();
   }, [selectedCategory, searchQuery]);
@@ -299,6 +333,19 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
           <Text style={styles.assetTitle}>{item.title}</Text>
           <Text style={styles.assetDesc}>{item.description || 'No description provided.'}</Text>
 
+          {item.category === 'Audio' && (
+            <TouchableOpacity
+              onPress={(e: any) => {
+                e?.stopPropagation?.();
+                playAudioPreview(item);
+              }}
+              style={{ backgroundColor: '#EEF2FF', paddingVertical: 8, paddingHorizontal: 12, borderRadius: 10, marginBottom: 12, alignItems: 'center' }}
+            >
+              <Text style={{ fontSize: 12, fontWeight: '800', color: '#4F46E5' }}>
+                {playingAudioId === item.id ? '🔊 효과음 재생 중...' : '🎵 효과음/오디오 즉시 미리듣기 (▶️ Play)'}
+              </Text>
+            </TouchableOpacity>
+          )}
           <View style={styles.cardFooter}>
             <Text style={styles.authorText}>by {item.author} • 📥 {item.downloads ?? 0}회 다운로드</Text>
             <TouchableOpacity onPress={() => handleQuickLike(item.id)}>

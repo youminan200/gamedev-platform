@@ -29,6 +29,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [authorModalProfile, setAuthorModalProfile] = useState<any>(null);
   const [authorModalLoading, setAuthorModalLoading] = useState(false);
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
+  const [toolboxVisible, setToolboxVisible] = useState(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
   const [shouts, setShouts] = useState<any[]>([]);
@@ -148,6 +149,8 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
     : logs;
 
   const sortedLogs = [...filteredLogs].sort((a, b) => {
+    const pinDiff = (b.is_pinned ? 1 : 0) - (a.is_pinned ? 1 : 0);
+    if (pinDiff !== 0) return pinDiff;
     if (sortBy === 'popular') {
       return (b.likes || 0) - (a.likes || 0);
     }
@@ -190,6 +193,12 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
             >
               <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>🏆 개발자 랭킹</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setToolboxVisible(true)}
+              style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>🧰 무료 개발도구함</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -590,6 +599,45 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                 </TouchableOpacity>
               ))}
             </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={toolboxVisible} animationType="fade" transparent onRequestClose={() => setToolboxVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ width: '100%', maxWidth: 440, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text }}>🧰 인디 개발자 필수 무료 도구함</Text>
+              <TouchableOpacity onPress={() => setToolboxVisible(false)}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            {[
+              { name: '🎨 Kenney.nl (CC0 무료 2D/3D/오디오 에셋 5만종)', url: 'https://kenney.nl/assets' },
+              { name: '🔊 Jsfxr (웹에서 바로 만드는 8비트 효과음 생성기)', url: 'https://sfxr.me/' },
+              { name: '🖌️ Piskel (설치 없이 웹에서 그리는 픽셀아트 툴)', url: 'https://www.piskelapp.com/' },
+              { name: '🕺 Mixamo (무료 3D 캐릭터 리깅 & 애니메이션)', url: 'https://www.mixamo.com/' },
+              { name: '✨ Shadertoy (실시간 셰이더 코드 레퍼런스)', url: 'https://www.shadertoy.com/' },
+              { name: '🕹️ Itch.io (인디게임 웹 데모 무료 호스팅 & 게임잼)', url: 'https://itch.io/' },
+            ].map((tool) => (
+              <TouchableOpacity
+                key={tool.name}
+                onPress={() => Linking.openURL(tool.url)}
+                style={{
+                  backgroundColor: Theme.colors.pillBg,
+                  paddingVertical: 11,
+                  paddingHorizontal: 14,
+                  borderRadius: 12,
+                  marginBottom: 8,
+                  flexDirection: 'row',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text, flex: 1 }}>{tool.name}</Text>
+                <Text style={{ fontSize: 12, fontWeight: '800', color: Theme.colors.primary }}>열기 ↗</Text>
+              </TouchableOpacity>
+            ))}
           </View>
         </View>
       </Modal>

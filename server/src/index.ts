@@ -117,6 +117,15 @@ try { db.exec(`ALTER TABLE users ADD COLUMN steam_url TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE users ADD COLUMN itch_url TEXT;`); } catch {}
 try { db.exec(`ALTER TABLE devlogs ADD COLUMN views INTEGER DEFAULT 0;`); } catch {}
 try { db.exec(`ALTER TABLE devlogs ADD COLUMN demo_url TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN is_pinned INTEGER DEFAULT 0;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN poll_question TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN poll_option_a TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN poll_option_b TEXT;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN poll_votes_a INTEGER DEFAULT 0;`); } catch {}
+try { db.exec(`ALTER TABLE devlogs ADD COLUMN poll_votes_b INTEGER DEFAULT 0;`); } catch {}
+try {
+  db.prepare("UPDATE devlogs SET poll_question = '보스전 히트스톱(타격 경직) 길이 어느 쪽이 더 손맛이 좋을까요?', poll_option_a = 'A안: 0.06초 (빠르고 경쾌한 템포)', poll_option_b = 'B안: 0.10초 (묵직하고 강한 타격감)' WHERE id = 1 AND (poll_question IS NULL OR poll_question = '')").run();
+} catch {}
 try {
   db.prepare("UPDATE devlogs SET demo_url = 'https://itch.io/games/tag-roguelike' WHERE id IN (1, 3) AND (demo_url IS NULL OR demo_url = '')").run();
   db.prepare("UPDATE users SET bio = '2D 액션 로그라이크 & 픽셀아트 1인 개발자입니다.', engine = 'Unity', github_url = 'https://github.com', itch_url = 'https://itch.io' WHERE username = 'PixelKnight' AND (bio IS NULL OR bio = '')").run();
@@ -478,6 +487,14 @@ app.post('/admin/maintenance', express.urlencoded({ extended: true }), (req, res
   res.redirect('/admin');
 });
 
+app.post('/admin/pin-devlog/:id', (req, res) => {
+  const id = req.params.id;
+  const row = db.prepare('SELECT is_pinned FROM devlogs WHERE id = ?').get(id) as any;
+  const next = row && row.is_pinned ? 0 : 1;
+  db.prepare('UPDATE devlogs SET is_pinned = ? WHERE id = ?').run(next, id);
+  res.redirect('/admin');
+});
+
 app.post('/admin/delete-devlog/:id', (req, res) => {
   const id = req.params.id;
   db.prepare('DELETE FROM comments WHERE devlog_id = ?').run(id);
@@ -548,7 +565,7 @@ app.get('/admin', (_req, res) => {
   `).all() as any[];
 
   const realUsersCount = users.filter(u => u.login_type !== 'sample').length;
-  const adminDevlogs = db.prepare('SELECT d.id, d.title, d.likes, d.created_at, u.username as author FROM devlogs d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id DESC LIMIT 30').all() as any[];
+  const adminDevlogs = db.prepare('SELECT d.id, d.title, d.likes, d.is_pinned, d.created_at, u.username as author FROM devlogs d LEFT JOIN users u ON d.user_id = u.id ORDER BY COALESCE(d.is_pinned, 0) DESC, d.id DESC LIMIT 30').all() as any[];
   const adminAssets = db.prepare('SELECT a.id, a.title, a.category, a.likes, a.created_at, u.username as author FROM assets a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.id DESC LIMIT 30').all() as any[];
   const adminComments = db.prepare('SELECT c.id, c.content, c.devlog_id, c.created_at, u.username as author FROM comments c LEFT JOIN users u ON c.user_id = u.id ORDER BY c.id DESC LIMIT 20').all() as any[];
   const adminShouts = db.prepare('SELECT id, nickname, message, created_at FROM shoutbox ORDER BY id DESC LIMIT 15').all() as any[];
@@ -585,7 +602,10 @@ app.get('/admin', (_req, res) => {
       <td><a href="https://gamedev-platform-expo-client.vercel.app/?devlog=${d.id}" target="_blank"><strong>${d.title}</strong> ↗</a></td>
       <td>${d.author || 'Anonymous'}</td>
       <td>❤️ ${d.likes || 0}</td>
-      <td>
+      <td style="display:flex;gap:6px;">
+        <form method="POST" action="/admin/pin-devlog/${d.id}" style="margin:0;">
+          <button type="submit" class="btn ${d.is_pinned ? 'btn-success' : 'btn-outline'}" style="padding:5px 10px;font-size:11px;">${d.is_pinned ? '📌 고정중(해제)' : '📌 상단고정'}</button>
+        </form>
         <form method="POST" action="/admin/delete-devlog/${d.id}" style="margin:0;">
           <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:11px;">🗑️ 삭제</button>
         </form>
@@ -952,7 +972,7 @@ app.get('/api/devlogs', optionalAuthenticateToken, (req: any, res: any) => {
     params.push(`%"${tag}"%`);
   }
 
-  query += ` ORDER BY d.id DESC`;
+  query += ` ORDER BY COALESCE(d.is_pinned, 0) DESC, d.id DESC`;
 
   const stmt = db.prepare(query);
   const logs = stmt.all(...params).map((log: any) => {
@@ -1068,6 +1088,18 @@ app.delete('/api/devlogs/:id', authenticateToken, (req: any, res: any) => {
   db.prepare('DELETE FROM devlog_likes WHERE devlog_id = ?').run(devlogId);
   db.prepare('DELETE FROM devlogs WHERE id = ?').run(devlogId);
   res.json({ success: true });
+});
+
+app.post('/api/devlogs/:id/vote', (req: any, res: any) => {
+  const devlogId = req.params.id;
+  const option = req.body?.option === 'B' ? 'B' : 'A';
+  if (option === 'A') {
+    db.prepare('UPDATE devlogs SET poll_votes_a = COALESCE(poll_votes_a, 0) + 1 WHERE id = ?').run(devlogId);
+  } else {
+    db.prepare('UPDATE devlogs SET poll_votes_b = COALESCE(poll_votes_b, 0) + 1 WHERE id = ?').run(devlogId);
+  }
+  const row = db.prepare('SELECT poll_votes_a, poll_votes_b FROM devlogs WHERE id = ?').get(devlogId) as any;
+  res.json({ poll_votes_a: row?.poll_votes_a || 0, poll_votes_b: row?.poll_votes_b || 0 });
 });
 
 app.post('/api/devlogs/:id/like', authenticateToken, (req: any, res: any) => {

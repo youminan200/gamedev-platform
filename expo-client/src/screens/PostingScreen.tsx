@@ -17,6 +17,9 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
   const [content, setContent] = useState('');
   const [imageUrl, setImageUrl] = useState('');
   const [demoUrl, setDemoUrl] = useState('');
+  const [pollQuestion, setPollQuestion] = useState('');
+  const [pollOptionA, setPollOptionA] = useState('');
+  const [pollOptionB, setPollOptionB] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>(['Unity']);
   const [isPosting, setIsPosting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -50,6 +53,9 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
         content,
         image_url: imageUrl.trim() || undefined,
         demo_url: demoUrl.trim() || undefined,
+        poll_question: pollQuestion.trim() || undefined,
+        poll_option_a: pollOptionA.trim() || undefined,
+        poll_option_b: pollOptionB.trim() || undefined,
         tags: selectedTags.length > 0 ? selectedTags : ['DevLog']
       });
       onPostSuccess();
@@ -134,6 +140,40 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
             placeholderTextColor={Theme.colors.textLight}
           />
         </NeumorphView>
+
+        <Text style={styles.label}>📊 A안 vs B안 피드백 투표 추가 (선택)</Text>
+        <NeumorphView radius={12} style={styles.inputContainer}>
+          <TextInput
+            style={styles.input}
+            value={pollQuestion}
+            onChangeText={setPollQuestion}
+            editable={!isPosting}
+            placeholder="투표 질문 (예: 보스 연출 A안 vs B안 중 어떤 게 더 좋나요?)"
+            placeholderTextColor={Theme.colors.textLight}
+          />
+        </NeumorphView>
+        {pollQuestion.trim().length > 0 && (
+          <View style={{ flexDirection: 'row', gap: 10 }}>
+            <NeumorphView radius={12} style={[styles.inputContainer, { flex: 1 }]}>
+              <TextInput
+                style={styles.input}
+                value={pollOptionA}
+                onChangeText={setPollOptionA}
+                placeholder="A안 (예: 빠르고 경쾌한 연출)"
+                placeholderTextColor={Theme.colors.textLight}
+              />
+            </NeumorphView>
+            <NeumorphView radius={12} style={[styles.inputContainer, { flex: 1 }]}>
+              <TextInput
+                style={styles.input}
+                value={pollOptionB}
+                onChangeText={setPollOptionB}
+                placeholder="B안 (예: 묵직한 타격감 연출)"
+                placeholderTextColor={Theme.colors.textLight}
+              />
+            </NeumorphView>
+          </View>
+        )}
 
         <Text style={styles.label}>Select Tags</Text>
         <View style={styles.tagsRow}>
