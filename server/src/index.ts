@@ -354,6 +354,22 @@ app.post('/admin/maintenance', express.urlencoded({ extended: true }), (req, res
   res.redirect('/admin');
 });
 
+app.post('/admin/delete-devlog/:id', (req, res) => {
+  const id = req.params.id;
+  db.prepare('DELETE FROM comments WHERE devlog_id = ?').run(id);
+  db.prepare('DELETE FROM devlog_likes WHERE devlog_id = ?').run(id);
+  db.prepare('DELETE FROM devlogs WHERE id = ?').run(id);
+  res.redirect('/admin');
+});
+
+app.post('/admin/delete-asset/:id', (req, res) => {
+  const id = req.params.id;
+  db.prepare('DELETE FROM asset_feedbacks WHERE asset_id = ?').run(id);
+  db.prepare('DELETE FROM asset_likes WHERE asset_id = ?').run(id);
+  db.prepare('DELETE FROM assets WHERE id = ?').run(id);
+  res.redirect('/admin');
+});
+
 app.get('/admin/backup.sqlite', (_req, res) => {
   res.download('database.sqlite', 'database.sqlite');
 });
@@ -376,6 +392,37 @@ app.get('/admin', (_req, res) => {
   `).all() as any[];
 
   const realUsersCount = users.filter(u => u.login_type !== 'sample').length;
+  const adminDevlogs = db.prepare('SELECT d.id, d.title, d.likes, d.created_at, u.username as author FROM devlogs d LEFT JOIN users u ON d.user_id = u.id ORDER BY d.id DESC LIMIT 30').all() as any[];
+  const adminAssets = db.prepare('SELECT a.id, a.title, a.category, a.likes, a.created_at, u.username as author FROM assets a LEFT JOIN users u ON a.user_id = u.id ORDER BY a.id DESC LIMIT 30').all() as any[];
+
+  const devlogsRowsHtml = adminDevlogs.map(d => `
+    <tr>
+      <td>#${d.id}</td>
+      <td><a href="https://gamedev-platform-expo-client.vercel.app/?devlog=${d.id}" target="_blank"><strong>${d.title}</strong> ↗</a></td>
+      <td>${d.author || 'Anonymous'}</td>
+      <td>❤️ ${d.likes || 0}</td>
+      <td>
+        <form method="POST" action="/admin/delete-devlog/${d.id}" style="margin:0;">
+          <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:11px;">🗑️ 삭제</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
+
+  const assetsRowsHtml = adminAssets.map(a => `
+    <tr>
+      <td>#${a.id}</td>
+      <td><span class="badge local">${a.category}</span></td>
+      <td><a href="https://gamedev-platform-expo-client.vercel.app/?asset=${a.id}" target="_blank"><strong>${a.title}</strong> ↗</a></td>
+      <td>${a.author || 'Anonymous'}</td>
+      <td>❤️ ${a.likes || 0}</td>
+      <td>
+        <form method="POST" action="/admin/delete-asset/${a.id}" style="margin:0;">
+          <button type="submit" class="btn btn-danger" style="padding:5px 10px;font-size:11px;">🗑️ 삭제</button>
+        </form>
+      </td>
+    </tr>
+  `).join('');
 
   const rowsHtml = users.map(u => `
     <tr>
@@ -466,6 +513,22 @@ app.get('/admin', (_req, res) => {
         <tr><th>ID</th><th>닉네임(아이디)</th><th>구분</th><th>작성 개발일지</th><th>등록 에셋</th><th>가입 일시(UTC)</th></tr>
       </thead>
       <tbody>${rowsHtml}</tbody>
+    </table>
+
+    <h2 style="margin-top:32px;">📜 등록된 개발일지 관리 (최근 ${adminDevlogs.length}개)</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>제목 (클릭 시 열람)</th><th>작성자</th><th>좋아요</th><th>관리</th></tr>
+      </thead>
+      <tbody>${devlogsRowsHtml}</tbody>
+    </table>
+
+    <h2 style="margin-top:32px;">🎨 공유된 에셋 관리 (최근 ${adminAssets.length}개)</h2>
+    <table>
+      <thead>
+        <tr><th>ID</th><th>분류</th><th>제목 (클릭 시 열람)</th><th>작성자</th><th>좋아요</th><th>관리</th></tr>
+      </thead>
+      <tbody>${assetsRowsHtml}</tbody>
     </table>
   </div>
 </body>

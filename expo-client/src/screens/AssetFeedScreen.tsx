@@ -20,6 +20,8 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'latest' | 'popular'>('latest');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [bookmarkedIds, setBookmarkedIds] = useState<string[]>(() => ApiClient.getBookmarks('asset'));
 
   // New Asset Modal State
