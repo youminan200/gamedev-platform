@@ -216,6 +216,25 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [optChecks, setOptChecks] = useState<string[]>(['o1', 'o3']);
   const [hotkeyEngine, setHotkeyEngine] = useState<'Unity' | 'Unreal' | 'Godot'>('Unity');
 
+  const [balanceCalcOpen, setBalanceCalcOpen] = useState(false);
+  const [balTab, setBalTab] = useState<'damage' | 'exp' | 'drop'>('damage');
+  const [balAtk, setBalAtk] = useState('120');
+  const [balDef, setBalDef] = useState('45');
+  const [balCritPct, setBalCritPct] = useState('25');
+  const [balExpBase, setBalExpBase] = useState('100');
+  const [balExpFactor, setBalExpFactor] = useState('1.45');
+  const [balDropRate, setBalDropRate] = useState('1.5');
+  const [balDropTries, setBalDropTries] = useState('50');
+  const [balCopied, setBalCopied] = useState(false);
+
+  const [patchBuilderOpen, setPatchBuilderOpen] = useState(false);
+  const [patchVer, setPatchVer] = useState('v0.3.0 Early Access');
+  const [patchNew, setPatchNew] = useState('신규 보스 스테이지 및 전설 등급 무기 3종 추가\n8비트 칩튠 보스전 브금(BGM) 적용');
+  const [patchBal, setPatchBal] = useState('플레이어 기본 대시 쿨타임 1.5초 -> 1.1초로 단축\n초반 슬라임 몬스터 체력 15% 하향');
+  const [patchFix, setPatchFix] = useState('타일맵 모서리에 캐릭터가 간헐적으로 끼이던 현상 수정\n일시정지 해제 시 효과음이 두 번 재생되던 버그 수정');
+  const [patchFormat, setPatchFormat] = useState<'markdown' | 'steam'>('markdown');
+  const [patchCopied, setPatchCopied] = useState(false);
+
   const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
   const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
   const [scriptSpeed, setScriptSpeed] = useState<string>('8');
@@ -872,31 +891,45 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               onPress: () => setOptDoctorOpen(true)
             },
             {
-              code: 'MOD_08 // ARCADE_CABINET',
+              code: 'MOD_08 // GAME_BALANCE_CALC',
+              title: '인디게임 밸런스 계산기 (데미지·경험치 곡선·가챠/드랍 확률)',
+              desc: '공격/방어 공식 비교, 레벨별 요구 경험치 테이블, 아이템 드랍 천장 확률을 시뮬레이션하고 C# 수식 코드로 변환합니다.',
+              accent: '#EC4899',
+              onPress: () => setBalanceCalcOpen(true)
+            },
+            {
+              code: 'MOD_09 // PATCHNOTE_BUILDER',
+              title: '스팀(BBCode) · 디스코드 · 개발일지 패치노트 자동 생성기',
+              desc: '신규 기능·밸런스 조정·버그 수정 내역만 적으면 스팀 공지사항 태그([h1], [list])와 마크다운 양식으로 1초 변환합니다.',
+              accent: '#22C55E',
+              onPress: () => setPatchBuilderOpen(true)
+            },
+            {
+              code: 'MOD_10 // ARCADE_CABINET',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
               accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_09 // PARTY_RECRUIT',
+              code: 'MOD_11 // PARTY_RECRUIT',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
               accent: '#F97316',
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_10 // IDEA_SLOT_MACHINE',
+              code: 'MOD_12 // IDEA_SLOT_MACHINE',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
               accent: '#A855F7',
               onPress: () => setIdeaMachineOpen(true)
             },
             {
-              code: 'MOD_11 // HALL_OF_FAME & APP',
+              code: 'MOD_13 // HALL_OF_FAME & APP',
               title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
-              accent: '#EC4899',
+              accent: '#06B6D4',
               onPress: handleInstallAppClick
             }
           ].map((mod) => (
@@ -2338,6 +2371,263 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                   ))}
                 </View>
               )}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* GAME BALANCE CALCULATOR MODAL */}
+      <Modal visible={balanceCalcOpen} animationType="fade" transparent onRequestClose={() => setBalanceCalcOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, maxHeight: '90%', backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: '#EC4899', borderRadius: 6, padding: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#F472B6', fontFamily: 'monospace' }}>
+                  ⚖️ MOD_08 // GAME_BALANCE_CALCULATOR (밸런스 & C# 수식 계산기)
+                </Text>
+                <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
+                  데미지 공식·레벨업 경험치 곡선·드랍 확률을 실시간 시뮬레이션하고 Unity C# 코드로 변환합니다.
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setBalanceCalcOpen(false)} style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X]</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+              {[
+                { k: 'damage' as const, label: '[01] 데미지·치명타 공식' },
+                { k: 'exp' as const, label: '[02] 레벨업 경험치 곡선' },
+                { k: 'drop' as const, label: '[03] 아이템 드랍·가챠 확률' },
+              ].map((t) => (
+                <TouchableOpacity
+                  key={t.k}
+                  onPress={() => { setBalTab(t.k); setBalCopied(false); }}
+                  style={{ flex: 1, backgroundColor: balTab === t.k ? '#EC4899' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>{t.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {balTab === 'damage' && (() => {
+                const atk = Math.max(1, Number(balAtk) || 100);
+                const def = Math.max(0, Number(balDef) || 40);
+                const crit = Math.min(100, Math.max(0, Number(balCritPct) || 25));
+                const flatDmg = Math.max(1, atk - def);
+                const pctDmg = Math.round(atk * (100 / (100 + def)));
+                const avgDpsMult = 1 + (crit / 100) * 0.5;
+                const csharpCode = `public static int CalculateDamage(float atk, float def, float critChance = ${crit}f)\n{\n    // LoL / RPG 표준 비율 방어력 공식 (방어력이 높아져도 0 데미지가 되지 않음)\n    float baseDmg = atk * (100f / (100f + Mathf.Max(0f, def)));\n    bool isCrit = Random.Range(0f, 100f) < critChance;\n    return Mathf.Max(1, Mathf.RoundToInt(isCrit ? baseDmg * 1.5f : baseDmg));\n}`;
+                return (
+                  <View>
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: '#FFD166', fontFamily: 'monospace', marginBottom: 4 }}>공격력 (ATK)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace' }} value={balAtk} onChangeText={setBalAtk} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: '#00E5FF', fontFamily: 'monospace', marginBottom: 4 }}>방어력 (DEF)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace' }} value={balDef} onChangeText={setBalDef} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: '#F472B6', fontFamily: 'monospace', marginBottom: 4 }}>치명타율 (%)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace' }} value={balCritPct} onChangeText={setBalCritPct} keyboardType="numeric" />
+                      </View>
+                    </View>
+                    <View style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, marginBottom: 12, gap: 6 }}>
+                      <Text style={{ fontSize: 12.5, color: Theme.colors.text, fontWeight: '800' }}>
+                        • 단순 감산 공식 (ATK - DEF): 일반 <Text style={{ color: '#FFD166' }}>{flatDmg}</Text> / 치명타(1.5배) <Text style={{ color: '#FF4D6D' }}>{Math.round(flatDmg * 1.5)}</Text>
+                      </Text>
+                      <Text style={{ fontSize: 12.5, color: Theme.colors.text, fontWeight: '800' }}>
+                        • 비율 방어 공식 (ATK × 100/(100+DEF)): 일반 <Text style={{ color: '#00E5FF' }}>{pctDmg}</Text> / 치명타 <Text style={{ color: '#10B981' }}>{Math.round(pctDmg * 1.5)}</Text> (평균 기댓값: {Math.round(pctDmg * avgDpsMult)})
+                      </Text>
+                    </View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, marginBottom: 10 }}>
+                      <Text style={{ color: '#38BDF8', fontSize: 11.5, fontFamily: 'monospace', lineHeight: 17 }}>{csharpCode}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(csharpCode); } catch {} setBalCopied(true); }}
+                      style={{ backgroundColor: balCopied ? '#10B981' : '#EC4899', paddingVertical: 11, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12, fontFamily: 'monospace' }}>
+                        {balCopied ? '[✅ C# 데미지 공식 복사됨!]' : '[📋 C# 데미지 계산 함수 복사]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+
+              {balTab === 'exp' && (() => {
+                const base = Math.max(10, Number(balExpBase) || 100);
+                const factor = Math.max(1.05, Math.min(3.0, Number(balExpFactor) || 1.45));
+                const levels = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(lv => ({
+                  lv,
+                  req: Math.round(base * Math.pow(lv, factor))
+                }));
+                const maxExp = levels[levels.length - 1].req;
+                const csharpCode = `public static int GetRequiredExp(int currentLevel)\n{\n    // 지수 성장형 경험치 테이블 (Base: ${base}, Exponent: ${factor}f)\n    return Mathf.RoundToInt(${base}f * Mathf.Pow(currentLevel, ${factor}f));\n}`;
+                return (
+                  <View>
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: '#FFD166', fontFamily: 'monospace', marginBottom: 4 }}>1레벨 기본 경험치 (Base EXP)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace' }} value={balExpBase} onChangeText={setBalExpBase} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: '#00E5FF', fontFamily: 'monospace', marginBottom: 4 }}>성장 곡선 지수 (1.2 ~ 2.0)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace' }} value={balExpFactor} onChangeText={setBalExpFactor} keyboardType="numeric" />
+                      </View>
+                    </View>
+                    <View style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, marginBottom: 12, gap: 5 }}>
+                      {levels.map((item) => (
+                        <View key={item.lv} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                          <Text style={{ width: 52, fontSize: 11, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>LV.{item.lv}</Text>
+                          <View style={{ flex: 1, height: 10, backgroundColor: '#1E2235', borderRadius: 2, overflow: 'hidden' }}>
+                            <View style={{ width: `${Math.max(4, Math.round((item.req / maxExp) * 100))}%`, height: '100%', backgroundColor: '#00E5FF' }} />
+                          </View>
+                          <Text style={{ width: 80, textAlign: 'right', fontSize: 11, fontWeight: '800', color: '#FFF', fontFamily: 'monospace' }}>{item.req} EXP</Text>
+                        </View>
+                      ))}
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(csharpCode); } catch {} setBalCopied(true); }}
+                      style={{ backgroundColor: balCopied ? '#10B981' : '#EC4899', paddingVertical: 11, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12, fontFamily: 'monospace' }}>
+                        {balCopied ? '[✅ C# 경험치 공식 복사됨!]' : '[📋 C# 경험치 요구량 함수 복사]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+
+              {balTab === 'drop' && (() => {
+                const p = Math.min(100, Math.max(0.01, Number(balDropRate) || 1.5)) / 100;
+                const n = Math.max(1, Number(balDropTries) || 50);
+                const probAtLeastOne = (1 - Math.pow(1 - p, n)) * 100;
+                const triesFor50 = Math.ceil(Math.log(0.5) / Math.log(1 - p));
+                const triesFor90 = Math.ceil(Math.log(0.1) / Math.log(1 - p));
+                return (
+                  <View>
+                    <View style={{ flexDirection: 'row', gap: 8, marginBottom: 12 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: '#FFD166', fontFamily: 'monospace', marginBottom: 4 }}>1회 드랍/뽑기 확률 (%)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace' }} value={balDropRate} onChangeText={setBalDropRate} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 11, color: '#00E5FF', fontFamily: 'monospace', marginBottom: 4 }}>반복 처치/뽑기 횟수 (N회)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace' }} value={balDropTries} onChangeText={setBalDropTries} keyboardType="numeric" />
+                      </View>
+                    </View>
+                    <View style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 6, padding: 14, gap: 8 }}>
+                      <Text style={{ fontSize: 14, fontWeight: '900', color: '#10B981' }}>
+                        🎯 {n}회 시도 시 최소 1개 이상 획득할 확률: {probAtLeastOne.toFixed(1)}%
+                      </Text>
+                      <Text style={{ fontSize: 12.5, color: Theme.colors.text }}>
+                        • 유저 절반(50%)이 획득하는 기대 횟수: 약 <Text style={{ color: '#FFD166', fontWeight: '900' }}>{triesFor50}회</Text>
+                      </Text>
+                      <Text style={{ fontSize: 12.5, color: Theme.colors.text }}>
+                        • 유저 90%가 획득하는 권장 천장(Pity) 횟수: 약 <Text style={{ color: '#00E5FF', fontWeight: '900' }}>{triesFor90}회</Text>
+                      </Text>
+                    </View>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* STEAM / DISCORD / DEVLOG PATCH NOTE BUILDER MODAL */}
+      <Modal visible={patchBuilderOpen} animationType="fade" transparent onRequestClose={() => setPatchBuilderOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, maxHeight: '90%', backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: '#22C55E', borderRadius: 6, padding: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#22C55E', fontFamily: 'monospace' }}>
+                  📋 MOD_09 // STEAM & DISCORD PATCHNOTE BUILDER
+                </Text>
+                <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
+                  업데이트 내역을 입력하면 스팀 뉴스 허브(BBCode) 및 디스코드/개발일지 마크다운으로 자동 변환합니다.
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setPatchBuilderOpen(false)} style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X]</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 9, color: '#FFD166', fontWeight: '900', marginBottom: 8, fontSize: 13 }}
+                placeholder="패치 버전명 (예: v0.3.0 Early Access)"
+                value={patchVer}
+                onChangeText={setPatchVer}
+              />
+              <Text style={{ fontSize: 11, color: '#10B981', fontWeight: '800', fontFamily: 'monospace', marginBottom: 4 }}>✨ 신규 추가 기능 (줄바꿈으로 구분)</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', height: 52, marginBottom: 8, fontSize: 12.5 }}
+                multiline
+                value={patchNew}
+                onChangeText={setPatchNew}
+              />
+              <Text style={{ fontSize: 11, color: '#00E5FF', fontWeight: '800', fontFamily: 'monospace', marginBottom: 4 }}>⚖️ 밸런스 조정 (줄바꿈으로 구분)</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', height: 52, marginBottom: 8, fontSize: 12.5 }}
+                multiline
+                value={patchBal}
+                onChangeText={setPatchBal}
+              />
+              <Text style={{ fontSize: 11, color: '#FF4D6D', fontWeight: '800', fontFamily: 'monospace', marginBottom: 4 }}>🐛 버그 수정 (줄바꿈으로 구분)</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', height: 52, marginBottom: 10, fontSize: 12.5 }}
+                multiline
+                value={patchFix}
+                onChangeText={setPatchFix}
+              />
+
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+                <TouchableOpacity
+                  onPress={() => { setPatchFormat('markdown'); setPatchCopied(false); }}
+                  style={{ flex: 1, backgroundColor: patchFormat === 'markdown' ? '#22C55E' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: patchFormat === 'markdown' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                    [디스코드 / 개발일지 마크다운]
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setPatchFormat('steam'); setPatchCopied(false); }}
+                  style={{ flex: 1, backgroundColor: patchFormat === 'steam' ? '#00E5FF' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: patchFormat === 'steam' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                    [스팀(Steam) 공지사항 BBCode]
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {(() => {
+                const newLines = patchNew.split('\n').map(s => s.trim()).filter(Boolean);
+                const balLines = patchBal.split('\n').map(s => s.trim()).filter(Boolean);
+                const fixLines = patchFix.split('\n').map(s => s.trim()).filter(Boolean);
+                const formatted = patchFormat === 'markdown'
+                  ? `# 📦 [${patchVer}] 업데이트 패치노트 안내\n\n### ✨ 신규 콘텐츠 (New Features)\n${newLines.map(l => `- ${l}`).join('\n')}\n\n### ⚖️ 밸런스 조정 (Balance Changes)\n${balLines.map(l => `- ${l}`).join('\n')}\n\n### 🐛 버그 수정 (Bug Fixes)\n${fixLines.map(l => `- ${l}`).join('\n')}\n\n항상 플레이해주시고 소중한 피드백 남겨주셔서 감사합니다!`
+                  : `[h1]📦 [${patchVer}] 업데이트 패치노트 안내[/h1]\n\n[h2]✨ 신규 콘텐츠 (New Features)[/h2]\n[list]\n${newLines.map(l => `[*] ${l}`).join('\n')}\n[/list]\n\n[h2]⚖️ 밸런스 조정 (Balance Changes)[/h2]\n[list]\n${balLines.map(l => `[*] ${l}`).join('\n')}\n[/list]\n\n[h2]🐛 버그 수정 (Bug Fixes)[/h2]\n[list]\n${fixLines.map(l => `[*] ${l}`).join('\n')}\n[/list]`;
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, marginBottom: 10 }}>
+                      <Text style={{ color: '#E2E8F0', fontSize: 11.5, fontFamily: 'monospace', lineHeight: 17 }}>{formatted}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(formatted); } catch {} setPatchCopied(true); }}
+                      style={{ backgroundColor: patchCopied ? '#10B981' : '#22C55E', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {patchCopied ? '[✅ 패치노트 양식이 클립보드에 복사되었습니다!]' : '[📋 완성된 패치노트 전체 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
             </ScrollView>
           </View>
         </View>

@@ -152,7 +152,35 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
           />
         </NeumorphView>
 
-        <Text style={styles.label}>Content (본문 · 코드블록 ``` 지원)</Text>
+        <Text style={styles.label}>Content (본문 · 1클릭 패치노트/개발일지 양식 자동 삽입)</Text>
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          <TouchableOpacity
+            onPress={() => {
+              if (!title.trim()) setTitle('[v0.2.0 패치노트] 신규 콘텐츠 추가 및 밸런스·버그 수정 안내');
+              setContent(
+                `📦 [UPDATE // v0.2.0 PATCH NOTES]\n\n✨ 신규 추가 (New Features)\n- 신규 스테이지 및 보스 패턴 추가\n- 타격감 카메라 쉐이크 및 8비트 효과음 적용\n\n⚖️ 밸런스 조정 (Balance Changes)\n- 기본 이동속도 10% 상향 및 스킬 쿨타임 감소\n- 초반부 몬스터 체력 하향 조정\n\n🐛 버그 수정 (Bug Fixes)\n- 특정 해상도에서 UI 버튼이 안 눌리던 현상 수정\n- 간헐적으로 바닥 타일맵에 끼이던 충돌 이슈 해결\n\n💬 플레이해보시고 아래 A vs B 투표함과 댓글로 피드백 남겨주시면 큰 힘이 됩니다!`
+              );
+            }}
+            style={{ backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '900', color: '#11131C', fontFamily: 'monospace' }}>
+              [📋 패치노트(Changelog) 양식 자동채우기]
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => {
+              if (!title.trim()) setTitle('[개발일지 #1] 핵심 전투 시스템 프로토타입 및 도트 그래픽 작업기');
+              setContent(
+                '🛠️ [오늘의 개발 진척도 요약]\n- 작업 목표: 핵심 이동/전투 조작감 구현 및 도트 스프라이트 적용\n- 사용 엔진: Unity / C#\n\n💡 [구현 내용 & 시행착오]\n1. 코요테 타임(Coyote Time) 점프를 적용해 조작감을 개선했습니다.\n2. 오브젝트 풀링을 적용해 탄막 생성 시 가비지 컬렉션(GC) 렉을 잡았습니다.\n\n```csharp\n// 핵심 구현 코드 스니펫\nrb.linearVelocity = new Vector2(moveInput * moveSpeed, rb.linearVelocity.y);\n```\n\n🎯 [다음 업데이트 목표]\n- 보스전 페이즈 연출 및 브금(BGM) 적용 예정'
+              );
+            }}
+            style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: '#00E5FF', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 }}
+          >
+            <Text style={{ fontSize: 11, fontWeight: '900', color: '#00E5FF', fontFamily: 'monospace' }}>
+              [📝 개발일지 표준 양식 채우기]
+            </Text>
+          </TouchableOpacity>
+        </View>
         <NeumorphView radius={6} style={[styles.inputContainer, styles.textAreaContainer]}>
           <TextInput
             style={[styles.input, styles.textArea]}

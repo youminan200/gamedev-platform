@@ -365,21 +365,59 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
         </NeumorphView>
       ) : null}
       <View style={styles.divider} />
-            <Text style={styles.commentsTitle}>💬 Comments ({devlog.comments?.length || 0})</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+            <Text style={styles.commentsTitle}>💬 DEV_FEEDBACK & STICKERS ({devlog.comments?.length || 0})</Text>
+      <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 8 }}>
+        {'> 1클릭 도트 응원 스티커 & 버그제보 리액션 (클릭 시 입력 / ⚡ 클릭 시 즉시 등록)'}
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
         {[
-          '🔥 타격감/연출이 정말 기대돼요!',
-          '💡 최적화 팁 공유 감사합니다!',
-          '🎨 아트 스타일이 너무 매력적이에요!',
-          '👏 데모 나오면 꼭 플레이해볼게요!'
-        ].map((preset) => (
-          <TouchableOpacity
-            key={preset}
-            onPress={() => setComment(preset)}
-            style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 }}
+          { badge: '🔥 [타격감 최고]', text: '🔥 [타격감 최고] 연출이랑 타격감이 정말 시원하네요! 다음 업데이트도 기대됩니다!' },
+          { badge: '🎨 [도트 장인]', text: '🎨 [도트 장인] 픽셀 아트 색감이랑 디테일이 너무 매력적이에요!' },
+          { badge: '🕹️ [데모 꿀잼]', text: '🕹️ [데모 꿀잼] 방금 데모 해봤는데 조작감도 깔끔하고 중독성 있네요!' },
+          { badge: '🙌 [출시 존버단]', text: '🙌 [출시 존버단] 스팀/스토어 출시되면 무조건 위시리스트 찜하겠습니다!' },
+          { badge: '💡 [밸런스 제안]', text: '💡 [밸런스 제안] 플레이해보니 이 부분 난이도/속도가 조금만 조절되면 더 재밌을 것 같아요: ' },
+          { badge: '🐛 [버그 제보]', text: '🐛 [버그 제보] 플레이 중 발견한 오류/버그 현상 공유드립니다: ' },
+        ].map((stk) => (
+          <View
+            key={stk.badge}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'center',
+              backgroundColor: Theme.colors.pillBg,
+              borderWidth: 1.5,
+              borderColor: Theme.colors.border,
+              borderRadius: 4,
+              overflow: 'hidden',
+            }}
           >
-            <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.primary }}>{preset}</Text>
-          </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setComment(stk.text)}
+              style={{ paddingHorizontal: 9, paddingVertical: 6 }}
+            >
+              <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>
+                {stk.badge}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              disabled={isPosting}
+              onPress={async () => {
+                if (!ApiClient.getToken()) {
+                  onRequireLogin?.();
+                  return;
+                }
+                try {
+                  setIsPosting(true);
+                  await ApiClient.postComment(id, stk.text);
+                  fetchDetail();
+                } catch {} finally {
+                  setIsPosting(false);
+                }
+              }}
+              style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 7, paddingVertical: 6 }}
+            >
+              <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>⚡즉시등록</Text>
+            </TouchableOpacity>
+          </View>
         ))}
       </View>
     </View>

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DEVGROUND // PIXEL_SPRITE_WORKSHOP (도트 찍기 공방)</title>
+  <title>DEVGROUND // PIXEL_SPRITE & ANIMATION SHEET WORKSHOP</title>
   <style>
     @font-face {
       font-family: 'DungGeunMo';
@@ -18,7 +18,7 @@
       font-family: 'DungGeunMo', 'Courier New', monospace;
     }
     .workshop-wrap {
-      max-width: 720px;
+      max-width: 750px;
       margin: 0 auto;
       background: #1A1D2B;
       border: 2px solid #3A415E;
@@ -34,7 +34,7 @@
       gap: 8px;
       padding-bottom: 10px;
       border-bottom: 2px solid #3A415E;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .title {
       font-size: 16px;
@@ -52,16 +52,16 @@
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
-    button, .btn {
+    button {
       font-family: 'DungGeunMo', monospace;
-      font-size: 12px;
+      font-size: 11.5px;
       background: #252A3E;
       color: #F3F4F6;
       border: 1.5px solid #3A415E;
       border-radius: 4px;
-      padding: 6px 10px;
+      padding: 6px 9px;
       cursor: pointer;
     }
     button:hover { border-color: #FFD166; }
@@ -82,13 +82,30 @@
       border-color: #FFD166;
       font-weight: 900;
     }
+    button.emerald {
+      background: #10B981;
+      color: #11131C;
+      border-color: #10B981;
+      font-weight: 900;
+    }
+    .frame-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      background: #11131C;
+      border: 1.5px solid #3A415E;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 12px;
+    }
     .main-grid {
       display: grid;
-      grid-template-columns: 1fr 210px;
+      grid-template-columns: 1fr 225px;
       gap: 14px;
       align-items: start;
     }
-    @media (max-width: 600px) {
+    @media (max-width: 620px) {
       .main-grid { grid-template-columns: 1fr; }
     }
     .canvas-box {
@@ -131,10 +148,10 @@
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 5px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     .swatch {
-      height: 26px;
+      height: 24px;
       border-radius: 4px;
       border: 2px solid #3A415E;
       cursor: pointer;
@@ -151,18 +168,18 @@
       border: 1.5px solid #3A415E;
       padding: 8px;
       border-radius: 4px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
-    #previewCanvas {
-      width: 48px;
-      height: 48px;
+    #animCanvas {
+      width: 56px;
+      height: 56px;
       image-rendering: pixelated;
-      border: 1px solid #3A415E;
+      border: 1.5px solid #00E5FF;
       background: #11131C;
     }
     .status-msg {
-      margin-top: 10px;
-      font-size: 12px;
+      margin-top: 8px;
+      font-size: 11.5px;
       color: #10B981;
       min-height: 18px;
     }
@@ -171,10 +188,8 @@
 <body>
   <div class="workshop-wrap">
     <div class="top-bar">
-      <div>
-        <span class="title">🎨 PIXEL_SPRITE_WORKSHOP // 도트 공방</span>
-      </div>
-      <span class="badge">FREE .PNG EXPORT</span>
+      <span class="title">🎨 PIXEL_SPRITE & 4-FRAME ANIMATOR // 도트·스프라이트 시트 공방</span>
+      <span class="badge">UNITY SPRITE SHEET READY</span>
     </div>
 
     <!-- Tools Row -->
@@ -183,19 +198,25 @@
       <button id="toolBucket" onclick="setTool('bucket')">🪣 채우기(Fill)</button>
       <button id="toolEraser" onclick="setTool('eraser')">🧽 지우개</button>
       <button id="btnMirror" onclick="toggleMirror()">🦋 좌우대칭: OFF</button>
+      <button id="btnOnion" class="active" onclick="toggleOnion()">🧅 어니언스킨: ON</button>
       <button id="btnGrid" class="active" onclick="toggleGrid()"># 격자: ON</button>
       <button onclick="setGridSize(16)" id="size16" class="active">16×16</button>
       <button onclick="setGridSize(32)" id="size32">32×32</button>
-      <button onclick="clearCanvas()">🗑️ 초기화</button>
+      <button onclick="clearCanvas()">🗑️ 현재프레임 지우기</button>
     </div>
 
-    <!-- Presets Row -->
-    <div class="toolbar">
-      <span style="font-size:11px; color:#FFD166; align-self:center; margin-right:4px;">[프리셋 도트]:</span>
-      <button onclick="loadTemplate('slime')">💧 슬라임</button>
-      <button onclick="loadTemplate('sword')">⚔️ 도트검</button>
-      <button onclick="loadTemplate('heart')">❤️ 생명포션</button>
-      <button onclick="loadTemplate('robot')">🤖 메카봇</button>
+    <!-- 4-Frame Animation Timeline Bar -->
+    <div class="frame-bar">
+      <span style="font-size:11px; color:#00E5FF; font-weight:900;">🎞️ 애니 프레임:</span>
+      <button id="frameBtn0" class="active" onclick="selectFrame(0)">[F1]</button>
+      <button id="frameBtn1" onclick="selectFrame(1)">[F2]</button>
+      <button id="frameBtn2" onclick="selectFrame(2)">[F3]</button>
+      <button id="frameBtn3" onclick="selectFrame(3)">[F4]</button>
+      <button onclick="duplicatePrevFrame()">📋 이전 프레임 복제</button>
+      <span style="font-size:11px; color:#FFD166; margin-left:auto;">[움직이는 프리셋]:</span>
+      <button onclick="loadTemplate('slime')">💧 점프 슬라임</button>
+      <button onclick="loadTemplate('sword')">⚔️ 검기 베기</button>
+      <button onclick="loadTemplate('robot')">🤖 깜빡 메카봇</button>
     </div>
 
     <div class="main-grid">
@@ -204,24 +225,27 @@
       </div>
 
       <div class="side-panel">
+        <span class="section-label">> LIVE 4-FRAME ANIMATION PREVIEW</span>
+        <div class="preview-box">
+          <canvas id="animCanvas" width="32" height="32"></canvas>
+          <div style="flex:1;">
+            <div style="font-size:11px; color:#00E5FF; font-weight:900; margin-bottom:4px;">
+              FPS: <span id="fpsLabel">6</span> (실시간 재생)
+            </div>
+            <input type="range" min="2" max="14" value="6" style="width:100%;" oninput="updateFps(this.value)" />
+          </div>
+        </div>
+
         <span class="section-label">> PICO-8 & INDIE PALETTE</span>
         <div class="palette-grid" id="paletteGrid"></div>
 
         <span class="section-label">> CUSTOM COLOR</span>
-        <input type="color" id="customColor" value="#FF4D6D" style="width:100%; height:32px; border:none; background:none; cursor:pointer; margin-bottom:12px;" onchange="selectColor(this.value)" />
-
-        <span class="section-label">> 1:1 SPRITE PREVIEW</span>
-        <div class="preview-box">
-          <canvas id="previewCanvas" width="32" height="32"></canvas>
-          <div style="font-size:11px; color:#9CA3AF; line-height:1.4;">
-            투명 배경<br/>Nearest-Neighbor<br/>Unity/Godot 호환
-          </div>
-        </div>
+        <input type="color" id="customColor" value="#FF4D6D" style="width:100%; height:28px; border:none; background:none; cursor:pointer; margin-bottom:10px;" onchange="selectColor(this.value)" />
 
         <div style="display:flex; flex-direction:column; gap:6px;">
-          <button class="gold" onclick="downloadPNG()">💾 투명 .PNG 다운로드</button>
-          <button class="cyan" onclick="copyDataUrl()">📋 이미지 주소(DataURL) 복사</button>
-          <button onclick="sendToParent()">🚀 개발일지/에셋 창고로 전송</button>
+          <button class="emerald" onclick="downloadSpriteSheetPNG()">🎞️ 4프레임 스프라이트 시트(.PNG)</button>
+          <button class="gold" onclick="downloadPNG()">💾 현재 프레임 단일(.PNG) 저장</button>
+          <button class="cyan" onclick="sendToParent()">🚀 개발일지/에셋 창고로 즉시 전송</button>
         </div>
         <div class="status-msg" id="statusMsg"></div>
       </div>
@@ -237,20 +261,59 @@
     ];
 
     let gridSize = 16;
-    let pixels = [];
+    const TOTAL_FRAMES = 4;
+    let frames = [];
+    let currentFrame = 0;
     let currentColor = '#FF4D6D';
     let currentTool = 'pen';
     let mirrorX = false;
+    let onionSkin = true;
     let showGrid = true;
     let isDrawing = false;
+    let animFps = 6;
+    let previewFrameIdx = 0;
+    let animInterval = null;
 
     const canvas = document.getElementById('editor');
     const ctx = canvas.getContext('2d');
-    const previewCanvas = document.getElementById('previewCanvas');
-    const pCtx = previewCanvas.getContext('2d');
+    const animCanvas = document.getElementById('animCanvas');
+    const aCtx = animCanvas.getContext('2d');
 
-    function initPixels(size) {
-      pixels = Array.from({ length: size }, () => Array(size).fill(null));
+    function createEmptyGrid(size) {
+      return Array.from({ length: size }, () => Array(size).fill(null));
+    }
+
+    function initAllFrames(size) {
+      frames = Array.from({ length: TOTAL_FRAMES }, () => createEmptyGrid(size));
+      currentFrame = 0;
+      updateFrameButtons();
+    }
+
+    function updateFrameButtons() {
+      for (let i = 0; i < TOTAL_FRAMES; i++) {
+        document.getElementById('frameBtn' + i).classList.toggle('active', i === currentFrame);
+      }
+    }
+
+    function selectFrame(idx) {
+      currentFrame = idx;
+      updateFrameButtons();
+      render();
+    }
+
+    function duplicatePrevFrame() {
+      const prevIdx = (currentFrame + TOTAL_FRAMES - 1) % TOTAL_FRAMES;
+      frames[currentFrame] = frames[prevIdx].map(row => [...row]);
+      render();
+      setStatus('📋 이전 프레임을 현재 프레임으로 복제했습니다! 조금만 수정해 움직임을 만들어보세요.');
+    }
+
+    function toggleOnion() {
+      onionSkin = !onionSkin;
+      const btn = document.getElementById('btnOnion');
+      btn.textContent = '🧅 어니언스킨: ' + (onionSkin ? 'ON' : 'OFF');
+      btn.classList.toggle('active', onionSkin);
+      render();
     }
 
     function buildPalette() {
@@ -298,37 +361,38 @@
       gridSize = size;
       document.getElementById('size16').classList.toggle('active', size === 16);
       document.getElementById('size32').classList.toggle('active', size === 32);
-      initPixels(size);
+      initAllFrames(size);
       render();
     }
 
     function clearCanvas() {
-      initPixels(gridSize);
+      frames[currentFrame] = createEmptyGrid(gridSize);
       render();
-      setStatus('캔버스를 초기화했습니다.');
+      setStatus('현재 프레임 캔버스를 초기화했습니다.');
     }
 
-    function floodFill(x, y, targetColor, replacementColor) {
+    function floodFill(grid, x, y, targetColor, replacementColor) {
       if (targetColor === replacementColor) return;
       const stack = [[x, y]];
       while (stack.length > 0) {
         const [cx, cy] = stack.pop();
         if (cx < 0 || cy < 0 || cx >= gridSize || cy >= gridSize) continue;
-        if (pixels[cy][cx] !== targetColor) continue;
-        pixels[cy][cx] = replacementColor;
+        if (grid[cy][cx] !== targetColor) continue;
+        grid[cy][cx] = replacementColor;
         stack.push([cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]);
       }
     }
 
     function applyAt(x, y) {
       if (x < 0 || y < 0 || x >= gridSize || y >= gridSize) return;
+      const grid = frames[currentFrame];
       if (currentTool === 'bucket') {
-        floodFill(x, y, pixels[y][x], currentColor);
+        floodFill(grid, x, y, grid[y][x], currentColor);
       } else {
         const val = currentTool === 'eraser' ? null : currentColor;
-        pixels[y][x] = val;
+        grid[y][x] = val;
         if (mirrorX) {
-          pixels[y][gridSize - 1 - x] = val;
+          grid[y][gridSize - 1 - x] = val;
         }
       }
       render();
@@ -359,10 +423,27 @@
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       const cell = canvas.width / gridSize;
 
+      // Onion skin of previous frame
+      if (onionSkin && currentFrame > 0) {
+        const prevGrid = frames[currentFrame - 1];
+        ctx.save();
+        ctx.globalAlpha = 0.25;
+        for (let y = 0; y < gridSize; y++) {
+          for (let x = 0; x < gridSize; x++) {
+            if (prevGrid[y][x]) {
+              ctx.fillStyle = prevGrid[y][x];
+              ctx.fillRect(x * cell, y * cell, Math.ceil(cell), Math.ceil(cell));
+            }
+          }
+        }
+        ctx.restore();
+      }
+
+      const grid = frames[currentFrame];
       for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
-          if (pixels[y][x]) {
-            ctx.fillStyle = pixels[y][x];
+          if (grid[y][x]) {
+            ctx.fillStyle = grid[y][x];
             ctx.fillRect(x * cell, y * cell, Math.ceil(cell), Math.ceil(cell));
           }
         }
@@ -372,29 +453,33 @@
         ctx.strokeStyle = 'rgba(255,255,255,0.08)';
         ctx.lineWidth = 1;
         for (let i = 0; i <= gridSize; i++) {
-          ctx.beginPath();
-          ctx.moveTo(i * cell, 0);
-          ctx.lineTo(i * cell, canvas.height);
-          ctx.stroke();
-          ctx.beginPath();
-          ctx.moveTo(0, i * cell);
-          ctx.lineTo(canvas.width, i * cell);
-          ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(i * cell, 0); ctx.lineTo(i * cell, canvas.height); ctx.stroke();
+          ctx.beginPath(); ctx.moveTo(0, i * cell); ctx.lineTo(canvas.width, i * cell); ctx.stroke();
         }
       }
+    }
 
-      // Render 1:1 preview
-      previewCanvas.width = gridSize;
-      previewCanvas.height = gridSize;
-      pCtx.clearRect(0, 0, gridSize, gridSize);
+    function renderAnimTick() {
+      animCanvas.width = gridSize;
+      animCanvas.height = gridSize;
+      aCtx.clearRect(0, 0, gridSize, gridSize);
+      const g = frames[previewFrameIdx] || frames[0];
       for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
-          if (pixels[y][x]) {
-            pCtx.fillStyle = pixels[y][x];
-            pCtx.fillRect(x, y, 1, 1);
+          if (g[y][x]) {
+            aCtx.fillStyle = g[y][x];
+            aCtx.fillRect(x, y, 1, 1);
           }
         }
       }
+      previewFrameIdx = (previewFrameIdx + 1) % TOTAL_FRAMES;
+    }
+
+    function updateFps(val) {
+      animFps = Number(val);
+      document.getElementById('fpsLabel').textContent = val;
+      if (animInterval) clearInterval(animInterval);
+      animInterval = setInterval(renderAnimTick, 1000 / animFps);
     }
 
     function getExportDataUrl(scale = 16) {
@@ -403,11 +488,33 @@
       out.height = gridSize * scale;
       const octx = out.getContext('2d');
       octx.imageSmoothingEnabled = false;
+      const grid = frames[currentFrame];
       for (let y = 0; y < gridSize; y++) {
         for (let x = 0; x < gridSize; x++) {
-          if (pixels[y][x]) {
-            octx.fillStyle = pixels[y][x];
+          if (grid[y][x]) {
+            octx.fillStyle = grid[y][x];
             octx.fillRect(x * scale, y * scale, scale, scale);
+          }
+        }
+      }
+      return out.toDataURL('image/png');
+    }
+
+    function getSpriteSheetDataUrl(scale = 8) {
+      const out = document.createElement('canvas');
+      out.width = gridSize * scale * TOTAL_FRAMES;
+      out.height = gridSize * scale;
+      const octx = out.getContext('2d');
+      octx.imageSmoothingEnabled = false;
+      for (let f = 0; f < TOTAL_FRAMES; f++) {
+        const g = frames[f];
+        const xOff = f * gridSize * scale;
+        for (let y = 0; y < gridSize; y++) {
+          for (let x = 0; x < gridSize; x++) {
+            if (g[y][x]) {
+              octx.fillStyle = g[y][x];
+              octx.fillRect(xOff + x * scale, y * scale, scale, scale);
+            }
           }
         }
       }
@@ -418,28 +525,29 @@
       const url = getExportDataUrl(16);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'devground-sprite-' + gridSize + 'x' + gridSize + '.png';
+      a.download = `devground-sprite-f${currentFrame + 1}-${gridSize}x${gridSize}.png`;
       a.click();
-      setStatus('✅ 투명 배경 .PNG 스프라이트가 다운로드되었습니다!');
+      setStatus('✅ 현재 프레임 투명 배경 .PNG가 다운로드되었습니다!');
     }
 
-    function copyDataUrl() {
-      const url = getExportDataUrl(8);
-      if (navigator.clipboard) {
-        navigator.clipboard.writeText(url);
-        setStatus('✅ 이미지 DataURL이 복사되었습니다! (게시글/에셋 이미지 칸에 붙여넣기 가능)');
-      }
+    function downloadSpriteSheetPNG() {
+      const url = getSpriteSheetDataUrl(8);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `devground-spritesheet-4frames-${gridSize}x${gridSize}.png`;
+      a.click();
+      setStatus('🎞️ Unity/Godot용 4프레임 가로 스프라이트 시트(.PNG)가 다운로드되었습니다!');
     }
 
     function sendToParent() {
-      const url = getExportDataUrl(8);
+      const url = getSpriteSheetDataUrl(8);
       if (window.parent) {
         window.parent.postMessage({ type: 'PIXEL_ART_EXPORT', dataUrl: url }, '*');
       }
       if (navigator.clipboard) {
         navigator.clipboard.writeText(url);
       }
-      setStatus('🚀 도트 스프라이트가 복사 및 전송되었습니다!');
+      setStatus('🚀 4프레임 스프라이트 시트가 게시글/에셋 창고로 전송되었습니다!');
     }
 
     function setStatus(msg) {
@@ -448,64 +556,51 @@
 
     function loadTemplate(name) {
       setGridSize(16);
-      const put = (coords, color) => coords.forEach(([x, y]) => {
-        if (x >= 0 && x < 16 && y >= 0 && y < 16) pixels[y][x] = color;
-      });
-      if (name === 'slime') {
-        for (let y = 6; y <= 13; y++) {
-          for (let x = 3; x <= 12; x++) {
-            if ((y === 6 || y === 13) && (x < 5 || x > 10)) continue;
-            pixels[y][x] = '#00E5FF';
-          }
-        }
-        put([[5,6],[6,5],[7,4],[8,4],[9,5],[10,6]], '#00E5FF');
-        put([[5,8],[6,8],[5,7]], '#FFFFFF');
-        put([[6,10],[6,11],[9,10],[9,11]], '#11131C');
-      } else if (name === 'sword') {
-        for (let i = 0; i < 9; i++) {
-          put([[12 - i, 3 + i]], '#FFFFFF');
-          put([[11 - i, 3 + i], [12 - i, 4 + i]], '#CBD5E1');
-        }
-        put([[4,10],[5,10],[6,11],[6,12],[3,9]], '#FFD166');
-        put([[3,12],[2,13]], '#7F5539');
-        put([[1,14]], '#FF4D6D');
-      } else if (name === 'heart') {
-        const rows = [
-          "  XXXX    XXXX  ",
-          " XXXXXX  XXXXXX ",
-          "XXXXXXXXXXXXXXXX",
-          "XXXXXXXXXXXXXXXX",
-          "XXXXXXXXXXXXXXXX",
-          " XXXXXXXXXXXXXX ",
-          "  XXXXXXXXXXXX  ",
-          "   XXXXXXXXXX   ",
-          "    XXXXXXXX    ",
-          "     XXXXXX     ",
-          "      XXXX      ",
-          "       XX       "
-        ];
-        rows.forEach((r, idx) => {
-          for (let x = 0; x < 16; x++) {
-            if (r[x] === 'X') pixels[idx + 2][x] = '#FF4D6D';
-          }
+      for (let f = 0; f < TOTAL_FRAMES; f++) {
+        const g = frames[f];
+        const put = (coords, color) => coords.forEach(([x, y]) => {
+          if (x >= 0 && x < 16 && y >= 0 && y < 16) g[y][x] = color;
         });
-        put([[3,4],[4,4],[3,5]], '#FFFFFF');
-      } else if (name === 'robot') {
-        for (let y = 3; y <= 12; y++) {
-          for (let x = 4; x <= 11; x++) pixels[y][x] = '#64748B';
+        if (name === 'slime') {
+          const yShift = (f === 1 || f === 2) ? -2 : 0;
+          for (let y = 6 + yShift; y <= 13 + yShift; y++) {
+            for (let x = 3; x <= 12; x++) {
+              if ((y === 6 + yShift || y === 13 + yShift) && (x < 5 || x > 10)) continue;
+              if (y >= 0 && y < 16) g[y][x] = '#00E5FF';
+            }
+          }
+          put([[5, 6 + yShift],[6, 5 + yShift],[7, 4 + yShift],[8, 4 + yShift],[9, 5 + yShift],[10, 6 + yShift]], '#00E5FF');
+          put([[5, 8 + yShift],[6, 8 + yShift],[5, 7 + yShift]], '#FFFFFF');
+          put([[6, 10 + yShift],[6, 11 + yShift],[9, 10 + yShift],[9, 11 + yShift]], '#11131C');
+        } else if (name === 'sword') {
+          for (let i = 0; i < 9; i++) {
+            put([[12 - i, 3 + i]], '#FFFFFF');
+            put([[11 - i, 3 + i], [12 - i, 4 + i]], '#CBD5E1');
+          }
+          put([[4,10],[5,10],[6,11],[6,12],[3,9]], '#FFD166');
+          put([[3,12],[2,13]], '#7F5539');
+          put([[1,14]], '#FF4D6D');
+          if (f === 1 || f === 2) {
+            put([[13,2],[14,3],[14,4],[13,5],[12,6]], f === 1 ? '#00E5FF' : '#FFD166');
+          }
+        } else if (name === 'robot') {
+          for (let y = 3; y <= 12; y++) {
+            for (let x = 4; x <= 11; x++) g[y][x] = '#64748B';
+          }
+          put([[7,1],[8,1],[7,2],[8,2]], f % 2 === 0 ? '#FFD166' : '#FF4D6D');
+          put([[5,5],[6,5],[9,5],[10,5]], f === 2 ? '#FF4D6D' : '#00E5FF');
+          put([[6,9],[7,9],[8,9],[9,9]], '#10B981');
+          put([[5,13],[6,13],[9,13],[10,13]], '#1E293B');
         }
-        put([[7,1],[8,1],[7,2],[8,2]], '#FFD166');
-        put([[5,5],[6,5],[9,5],[10,5]], '#00E5FF');
-        put([[6,9],[7,9],[8,9],[9,9]], '#10B981');
-        put([[5,13],[6,13],[9,13],[10,13]], '#1E293B');
       }
       render();
-      setStatus('✨ 프리셋 도트 템플릿을 불러왔습니다!');
+      setStatus('✨ 4프레임 움직이는 도트 프리셋이 로드되었습니다! 우측 상단 애니메이션을 확인해보세요.');
     }
 
-    initPixels(16);
+    initAllFrames(16);
     buildPalette();
     loadTemplate('slime');
+    updateFps(6);
   </script>
 </body>
 </html>
