@@ -267,6 +267,37 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [inputGenre, setInputGenre] = useState<'action2d' | 'roguelike' | 'sim'>('action2d');
   const [inputCopied, setInputCopied] = useState(false);
 
+  const [hitboxOpen, setHitboxOpen] = useState(false);
+  const [hbPreset, setHbPreset] = useState<'fast' | 'heavy' | 'parry'>('fast');
+  const [hbStartup, setHbStartup] = useState('5');
+  const [hbActive, setHbActive] = useState('4');
+  const [hbRecovery, setHbRecovery] = useState('9');
+  const [hbRangeX, setHbRangeX] = useState('1.8');
+  const [hbRangeY, setHbRangeY] = useState('1.2');
+  const [hbCopied, setHbCopied] = useState(false);
+
+  const [saveEncryptOpen, setSaveEncryptOpen] = useState(false);
+  const [saveSalt, setSaveSalt] = useState('INDIE_SECRET_SALT_2026');
+  const [saveSample, setSaveSample] = useState('{\n  "playerLevel": 18,\n  "gold": 12450,\n  "clearedStage": 4,\n  "weapons": ["FlameSword", "PixelBow"]\n}');
+  const [saveEngine, setSaveEngine] = useState<'unity' | 'godot'>('unity');
+  const [saveCopied, setSaveCopied] = useState(false);
+
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const [trGameName, setTrGameName] = useState('SHADOW DUNGEON: 심연의 검');
+  const [trHook, setTrHook] = useState('거대 보스의 레이저 패턴을 아슬아슬하게 패링하고 반격기를 꽂아넣는 하이라이트 장면');
+  const [trCore, setTrCore] = useState('무기를 던져 순간이동하고 30종의 도트 유물을 조합하는 기본 전투 루프 시연');
+  const [trClimax, setTrClimax] = useState('최종 각성 궁극기 연출과 함께 8비트 칩튠 브금이 최고조로 터지는 컷');
+  const [trCta, setTrCta] = useState('지금 스팀(Steam)에서 위시리스트(찜하기) 추가! 무료 데모 플레이 가능');
+  const [trCopied, setTrCopied] = useState(false);
+
+  const [bossFsmOpen, setBossFsmOpen] = useState(false);
+  const [bossName, setBossName] = useState('심연의 기사 아르토리우스');
+  const [bossAggroDist, setBossAggroDist] = useState('10.0');
+  const [bossAtkDist, setBossAtkDist] = useState('2.5');
+  const [bossTelegraphSec, setBossTelegraphSec] = useState('0.55');
+  const [bossEnragePct, setBossEnragePct] = useState('50');
+  const [bossCopied, setBossCopied] = useState(false);
+
   const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
   const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
   const [scriptSpeed, setScriptSpeed] = useState<string>('8');
@@ -993,28 +1024,56 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               onPress: () => setInputMapOpen(true)
             },
             {
-              code: 'MOD_18 // ARCADE_CABINET',
+              code: 'MOD_18 // HITBOX_FRAME_EDITOR',
+              title: '2D 히트박스 · 피격 판정 & 60FPS 프레임 데이터 에디터',
+              desc: '선딜레이(Startup)·공격 판정(Active)·후딜레이(Recovery) 프레임 바를 시각화하고 Physics2D.OverlapBoxAll C# 판정 코드를 추출합니다.',
+              accent: '#EF4444',
+              onPress: () => setHitboxOpen(true)
+            },
+            {
+              code: 'MOD_19 // SAVE_ENCRYPT_BUILDER',
+              title: '인디게임 세이브 파일(JSON) 암호화 & 치트 변조 방지 생성기',
+              desc: '세이브 데이터 XOR/Base64 난독화 및 SHA256 해시 무결성 검증을 시뮬레이션하고 Unity C# · Godot 4 암호화 저장 코드를 복사합니다.',
+              accent: '#10B981',
+              onPress: () => setSaveEncryptOpen(true)
+            },
+            {
+              code: 'MOD_20 // TRAILER_STORYBOARD',
+              title: '스팀 출시 트레일러 60초 황금 비율 콘티 & 타임코드 빌더',
+              desc: '0~5초 초반 훅(Hook)부터 게임플레이·클라이맥스·스팀 위시리스트 유도까지 60초 영상 편집 타임라인과 자막 시트를 생성합니다.',
+              accent: '#F59E0B',
+              onPress: () => setTrailerOpen(true)
+            },
+            {
+              code: 'MOD_21 // BOSS_FSM_DESIGNER',
+              title: '보스 패턴 & 몬스터 AI 유한상태머신(FSM) 설계기',
+              desc: '대기➔추적➔전조(Telegraph)➔돌진/탄막➔2페이즈 광폭화 흐름을 다이어그램으로 설계하고 C# 코루틴 상태머신 코드를 추출합니다.',
+              accent: '#EC4899',
+              onPress: () => setBossFsmOpen(true)
+            },
+            {
+              code: 'MOD_22 // ARCADE_CABINET',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
               accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_19 // PARTY_RECRUIT',
+              code: 'MOD_23 // PARTY_RECRUIT',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
               accent: '#F97316',
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_20 // IDEA_SLOT_MACHINE',
+              code: 'MOD_24 // IDEA_SLOT_MACHINE',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
               accent: '#A855F7',
               onPress: () => setIdeaMachineOpen(true)
             },
             {
-              code: 'MOD_13 // HALL_OF_FAME & APP',
+              code: 'MOD_25 // HALL_OF_FAME & APP',
               title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
               accent: '#06B6D4',
@@ -3612,6 +3671,526 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                     >
                       <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
                         {inputCopied ? '[✅ PC & 콘솔 패드 조작키 안내 표가 복사되었습니다!]' : '[📋 스팀/개발일지용 조작키 매핑 마크다운 표 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_18: 2D 히트박스 · 피격 판정 & 60FPS 프레임 데이터 에디터 모달 */}
+      <Modal visible={hitboxOpen} transparent animationType="fade" onRequestClose={() => setHitboxOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EF4444', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#F87171', fontFamily: 'monospace' }}>
+                📐 MOD_18 // 2D 히트박스 · 피격 판정 & 60FPS 프레임 데이터 에디터
+              </Text>
+              <TouchableOpacity onPress={() => setHitboxOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+                {[
+                  { key: 'fast', label: '🗡️ 쌍검 고속 베기 (18F)', s: '4', a: '3', r: '11', rx: '1.5', ry: '1.0' },
+                  { key: 'heavy', label: '🪓 대검 모아치기 (38F)', s: '14', a: '6', r: '18', rx: '2.8', ry: '1.8' },
+                  { key: 'parry', label: '🛡️ 패링 카운터 (24F)', s: '2', a: '8', r: '14', rx: '1.6', ry: '1.6' }
+                ].map((p) => (
+                  <TouchableOpacity
+                    key={p.key}
+                    onPress={() => {
+                      setHbPreset(p.key as any);
+                      setHbStartup(p.s);
+                      setHbActive(p.a);
+                      setHbRecovery(p.r);
+                      setHbRangeX(p.rx);
+                      setHbRangeY(p.ry);
+                      setHbCopied(false);
+                    }}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 7,
+                      borderRadius: 4,
+                      backgroundColor: hbPreset === p.key ? '#EF4444' : Theme.colors.pillBg,
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: hbPreset === p.key ? '#FFF' : Theme.colors.border
+                    }}
+                  >
+                    <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>{p.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {(() => {
+                const sF = Math.max(1, parseInt(hbStartup, 10) || 4);
+                const aF = Math.max(1, parseInt(hbActive, 10) || 3);
+                const rF = Math.max(1, parseInt(hbRecovery, 10) || 10);
+                const totalF = sF + aF + rF;
+                const totalSec = (totalF / 60).toFixed(2);
+
+                const csharpCode = [
+                  '// [Unity 2D 프레임 동기화 히트박스(OverlapBoxAll) 판정 코루틴]',
+                  'using System.Collections;',
+                  'using UnityEngine;',
+                  '',
+                  'public class MeleeHitboxController : MonoBehaviour {',
+                  '    public Transform attackPoint;',
+                  `    public Vector2 hitboxSize = new Vector2(${hbRangeX}f, ${hbRangeY}f);`,
+                  '    public LayerMask enemyLayer;',
+                  '',
+                  '    public IEnumerator ExecuteAttackRoutine() {',
+                  `        // 1. 선딜레이 (Startup: ${sF} Frames @ 60FPS)`,
+                  `        yield return new WaitForSeconds(${(sF / 60).toFixed(3)}f);`,
+                  '',
+                  `        // 2. 공격 활성 판정 (Active: ${aF} Frames @ 60FPS)`,
+                  '        Collider2D[] hits = Physics2D.OverlapBoxAll(attackPoint.position, hitboxSize, 0f, enemyLayer);',
+                  '        foreach (var hit in hits) {',
+                  '            Debug.Log($"[HIT!] Target: {hit.name}");',
+                  '        }',
+                  `        yield return new WaitForSeconds(${(aF / 60).toFixed(3)}f);`,
+                  '',
+                  `        // 3. 후딜레이 (Recovery: ${rF} Frames @ 60FPS)`,
+                  `        yield return new WaitForSeconds(${(rF / 60).toFixed(3)}f);`,
+                  '    }',
+                  '',
+                  '    private void OnDrawGizmosSelected() {',
+                  '        if (attackPoint == null) return;',
+                  '        Gizmos.color = new Color(1f, 0.15f, 0.2f, 0.65f);',
+                  '        Gizmos.DrawWireCube(attackPoint.position, hitboxSize);',
+                  '    }',
+                  '}'
+                ].join('\n');
+
+                return (
+                  <View>
+                    {/* 시각적 Hurtbox vs Hitbox 다이어그램 */}
+                    <View style={{ backgroundColor: '#0A0D16', borderWidth: 1, borderColor: '#2D3446', borderRadius: 6, padding: 14, marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+                        <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
+                          ⏱️ 총 모션 프레임: {totalF}F ({totalSec}초 @60FPS)
+                        </Text>
+                        <Text style={{ fontSize: 11, color: '#F87171', fontFamily: 'monospace', fontWeight: '900' }}>
+                          Hitbox 크기: {hbRangeX}m × {hbRangeY}m
+                        </Text>
+                      </View>
+
+                      {/* 60FPS 프레임 바 시각화 */}
+                      <View style={{ flexDirection: 'row', height: 26, borderRadius: 4, overflow: 'hidden', marginBottom: 8, borderWidth: 1, borderColor: '#334155' }}>
+                        <View style={{ flex: sF, backgroundColor: '#10B981', justifyContent: 'center', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '900', color: '#090D16', fontFamily: 'monospace' }}>선딜 {sF}F</Text>
+                        </View>
+                        <View style={{ flex: aF, backgroundColor: '#EF4444', justifyContent: 'center', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>판정 {aF}F</Text>
+                        </View>
+                        <View style={{ flex: rF, backgroundColor: '#3B82F6', justifyContent: 'center', alignItems: 'center' }}>
+                          <Text style={{ fontSize: 10, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>후딜 {rF}F</Text>
+                        </View>
+                      </View>
+
+                      {/* 캐릭터 Hurtbox(초록) + 공격 Hitbox(빨강) */}
+                      <View style={{ height: 90, backgroundColor: '#111522', borderRadius: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                        <View style={{ width: 42, height: 58, borderWidth: 2, borderColor: '#22C55E', backgroundColor: 'rgba(34,197,94,0.18)', justifyContent: 'center', alignItems: 'center', borderRadius: 3 }}>
+                          <Text style={{ fontSize: 9.5, color: '#4ADE80', fontWeight: '900', fontFamily: 'monospace' }}>HURT</Text>
+                        </View>
+                        <View style={{ width: Math.min(180, Math.max(44, parseFloat(hbRangeX || '1.5') * 48)), height: Math.min(78, Math.max(32, parseFloat(hbRangeY || '1.0') * 36)), borderWidth: 2, borderColor: '#EF4444', backgroundColor: 'rgba(239,68,68,0.28)', justifyContent: 'center', alignItems: 'center', borderRadius: 3 }}>
+                          <Text style={{ fontSize: 10, color: '#FCA5A5', fontWeight: '900', fontFamily: 'monospace' }}>HITBOX ({hbRangeX}×{hbRangeY})</Text>
+                        </View>
+                      </View>
+                    </View>
+
+                    <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: '#10B981', fontFamily: 'monospace', marginBottom: 3 }}>선딜(Startup F)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={hbStartup} onChangeText={setHbStartup} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: '#EF4444', fontFamily: 'monospace', marginBottom: 3 }}>판정(Active F)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={hbActive} onChangeText={setHbActive} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: '#3B82F6', fontFamily: 'monospace', marginBottom: 3 }}>후딜(Recovery F)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={hbRecovery} onChangeText={setHbRecovery} keyboardType="numeric" />
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={{ fontSize: 10.5, color: '#FACC15', fontFamily: 'monospace', marginBottom: 3 }}>가로 사거리(X)</Text>
+                        <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={hbRangeX} onChangeText={setHbRangeX} keyboardType="numeric" />
+                      </View>
+                    </View>
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#FCA5A5', fontFamily: 'monospace', lineHeight: 16 }}>{csharpCode}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(csharpCode); } catch {} setHbCopied(true); }}
+                      style={{ backgroundColor: hbCopied ? '#10B981' : '#EF4444', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {hbCopied ? '[✅ 2D 히트박스 & 기즈모 C# 스크립트가 복사되었습니다!]' : '[📋 Unity 2D 히트박스 판정 & 기즈모 C# 코드 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_19: 인디게임 세이브 파일(JSON) 암호화 & 치트 방지 검증기 모달 */}
+      <Modal visible={saveEncryptOpen} transparent animationType="fade" onRequestClose={() => setSaveEncryptOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#34D399', fontFamily: 'monospace' }}>
+                💾 MOD_19 // 세이브 파일(JSON) 암호화 & 메모장 치트 방지 생성기
+              </Text>
+              <TouchableOpacity onPress={() => setSaveEncryptOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginBottom: 8 }}>
+                유저가 메모장으로 세이브 파일(gold, level 등)을 임의 수정하지 못하도록 비밀 Salt 키 기반 XOR 난독화 및 무결성 해시 검증 코드를 생성합니다.
+              </Text>
+
+              <Text style={{ fontSize: 11, color: '#34D399', fontFamily: 'monospace', marginBottom: 4 }}>비밀 암호화 키 (Secret Salt Key)</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace', fontSize: 12, marginBottom: 8 }}
+                value={saveSalt}
+                onChangeText={(t) => { setSaveSalt(t); setSaveCopied(false); }}
+              />
+
+              <Text style={{ fontSize: 11, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 4 }}>원본 세이브 JSON 데이터</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontFamily: 'monospace', fontSize: 11.5, minHeight: 85, marginBottom: 10 }}
+                value={saveSample}
+                onChangeText={(t) => { setSaveSample(t); setSaveCopied(false); }}
+                multiline
+              />
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                <TouchableOpacity
+                  onPress={() => { setSaveEngine('unity'); setSaveCopied(false); }}
+                  style={{ flex: 1, backgroundColor: saveEngine === 'unity' ? '#10B981' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: saveEngine === 'unity' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                    [Unity C# SecureSaveManager.cs]
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setSaveEngine('godot'); setSaveCopied(false); }}
+                  style={{ flex: 1, backgroundColor: saveEngine === 'godot' ? '#10B981' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: saveEngine === 'godot' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                    [Godot 4 Encrypted FileAccess]
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {(() => {
+                const code = saveEngine === 'unity'
+                  ? [
+                      '// [Unity C# 세이브 파일 XOR + SHA256 무결성 검증 매니저]',
+                      'using System;',
+                      'using System.IO;',
+                      'using System.Text;',
+                      'using System.Security.Cryptography;',
+                      'using UnityEngine;',
+                      '',
+                      'public static class SecureSaveManager {',
+                      `    private const string SALT = "${saveSalt}";`,
+                      '    private static string SavePath => Path.Combine(Application.persistentDataPath, "save.dat");',
+                      '',
+                      '    public static void SaveEncrypted<T>(T data) {',
+                      '        string json = JsonUtility.ToJson(data);',
+                      '        string hash = ComputeSha256(json + SALT);',
+                      '        string payload = hash + "|" + json;',
+                      '        File.WriteAllText(SavePath, XorObfuscate(payload));',
+                      '    }',
+                      '',
+                      '    public static T LoadEncrypted<T>() where T : new() {',
+                      '        if (!File.Exists(SavePath)) return new T();',
+                      '        string raw = XorObfuscate(File.ReadAllText(SavePath));',
+                      '        string[] parts = raw.Split(new char[] { \'|\' }, 2);',
+                      '        if (parts.Length != 2 || ComputeSha256(parts[1] + SALT) != parts[0]) {',
+                      '            Debug.LogWarning("[Anti-Cheat] 세이브 파일 변조가 감지되어 초기화합니다!");',
+                      '            return new T();',
+                      '        }',
+                      '        return JsonUtility.FromJson<T>(parts[1]);',
+                      '    }',
+                      '',
+                      '    private static string XorObfuscate(string input) {',
+                      '        char[] outChars = new char[input.Length];',
+                      '        for (int i = 0; i < input.Length; i++)',
+                      '            outChars[i] = (char)(input[i] ^ SALT[i % SALT.Length]);',
+                      '        return new string(outChars);',
+                      '    }',
+                      '',
+                      '    private static string ComputeSha256(string raw) {',
+                      '        using (SHA256 sha = SHA256.Create()) {',
+                      '            byte[] bytes = sha.ComputeHash(Encoding.UTF8.GetBytes(raw));',
+                      '            return BitConverter.ToString(bytes).Replace("-", "");',
+                      '        }',
+                      '    }',
+                      '}'
+                    ].join('\n')
+                  : [
+                      '# [Godot 4.x 내장 AES-256 암호화 세이브 & 로드 스크립트]',
+                      'extends Node',
+                      'const SAVE_PATH = "user://secure_save.dat"',
+                      `const SECRET_PASS = "${saveSalt}"`,
+                      '',
+                      'func save_game(data: Dictionary) -> void:',
+                      '    var file = FileAccess.open_encrypted_with_pass(SAVE_PATH, FileAccess.WRITE, SECRET_PASS)',
+                      '    if file:',
+                      '        file.store_string(JSON.stringify(data))',
+                      '        file.close()',
+                      '',
+                      'func load_game() -> Dictionary:',
+                      '    if not FileAccess.file_exists(SAVE_PATH):',
+                      '        return {}',
+                      '    var file = FileAccess.open_encrypted_with_pass(SAVE_PATH, FileAccess.READ, SECRET_PASS)',
+                      '    if file == null:',
+                      '        push_warning("[Anti-Cheat] 암호화 키 불일치 또는 세이브 변조 감지!")',
+                      '        return {}',
+                      '    var parsed = JSON.parse_string(file.get_as_text())',
+                      '    file.close()',
+                      '    return parsed if typeof(parsed) == TYPE_DICTIONARY else {}'
+                    ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#6EE7B7', fontFamily: 'monospace', lineHeight: 16 }}>{code}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(code); } catch {} setSaveCopied(true); }}
+                      style={{ backgroundColor: saveCopied ? '#059669' : '#10B981', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {saveCopied ? '[✅ 치트 방지 암호화 세이브 코드가 복사되었습니다!]' : '[📋 암호화 세이브 & 변조 감지 코드 전체 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_20: 스팀 출시 트레일러 60초 황금 비율 콘티 빌더 모달 */}
+      <Modal visible={trailerOpen} transparent animationType="fade" onRequestClose={() => setTrailerOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F59E0B', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#FBBF24', fontFamily: 'monospace' }}>
+                🎬 MOD_20 // 스팀 트레일러 60초 황금 비율 콘티 & 타임코드 빌더
+              </Text>
+              <TouchableOpacity onPress={() => setTrailerOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginBottom: 10 }}>
+                스팀 상점 페이지 이탈률을 줄이는 황금 공식: 첫 5초 안에 스튜디오 로고 대신 가장 타격감 넘치는 인게임 장면을 배치하세요!
+              </Text>
+
+              <Text style={{ fontSize: 11, color: '#FBBF24', fontFamily: 'monospace', marginBottom: 4 }}>게임 타이틀</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 12, marginBottom: 8 }}
+                value={trGameName}
+                onChangeText={(t) => { setTrGameName(t); setTrCopied(false); }}
+              />
+
+              <Text style={{ fontSize: 11, color: '#EF4444', fontFamily: 'monospace', marginBottom: 4 }}>[00:00 ~ 00:05] 초반 5초 훅 (로고 금지 · 가장 강렬한 장면)</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 12, marginBottom: 8 }}
+                value={trHook}
+                onChangeText={(t) => { setTrHook(t); setTrCopied(false); }}
+              />
+
+              <Text style={{ fontSize: 11, color: '#38BDF8', fontFamily: 'monospace', marginBottom: 4 }}>[00:05 ~ 00:25] 핵심 게임플레이 루프 & 차별화 기믹</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 12, marginBottom: 8 }}
+                value={trCore}
+                onChangeText={(t) => { setTrCore(t); setTrCopied(false); }}
+              />
+
+              <Text style={{ fontSize: 11, color: '#A855F7', fontFamily: 'monospace', marginBottom: 4 }}>[00:25 ~ 00:50] 템포 가속 & 보스전 클라이맥스</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 12, marginBottom: 8 }}
+                value={trClimax}
+                onChangeText={(t) => { setTrClimax(t); setTrCopied(false); }}
+              />
+
+              <Text style={{ fontSize: 11, color: '#10B981', fontFamily: 'monospace', marginBottom: 4 }}>[00:50 ~ 01:00] 엔드카드 & 스팀 위시리스트 유도(CTA)</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 12, marginBottom: 10 }}
+                value={trCta}
+                onChangeText={(t) => { setTrCta(t); setTrCopied(false); }}
+              />
+
+              {(() => {
+                const sheet = [
+                  `# 🎬 [${trGameName}] 60초 스팀 공식 트레일러 편집 콘티`,
+                  '',
+                  '## ⏱️ 타임코드 구성표 (프리미어 / 다빈치 리졸브 마커용)',
+                  `- **00:00 ~ 00:05 [HOOK / 콜드오픈]**: ${trHook}`,
+                  '  - 💡 주의: 검은 화면 페이드인이나 로고 애니메이션 절대 금지! 0.1초부터 바로 인게임 액션 시작',
+                  `- **00:05 ~ 00:25 [CORE MECHANIC]**: ${trCore}`,
+                  '  - 💬 화면 자막 1: "던전의 법칙을 뒤집는 새로운 액션"',
+                  `- **00:25 ~ 00:50 [ESCALATION & CLIMAX]**: ${trClimax}`,
+                  '  - 🎵 사운드: BGM 비트 드롭에 맞춰 타격 컷 전환 (1컷당 1.5~2초 빠른 템포)',
+                  `- **00:50 ~ 01:00 [CALL TO ACTION]**: ${trCta}`,
+                  '  - 📌 엔드카드: 스팀 로고 + [지금 위시리스트에 추가하세요 (Wishlist Now on Steam)]'
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11.5, color: '#FDE68A', fontFamily: 'monospace', lineHeight: 17 }}>{sheet}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(sheet); } catch {} setTrCopied(true); }}
+                      style={{ backgroundColor: trCopied ? '#10B981' : '#F59E0B', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {trCopied ? '[✅ 60초 트레일러 타임코드 콘티가 복사되었습니다!]' : '[📋 60초 스팀 트레일러 콘티 & 편집 체크리스트 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_21: 보스 패턴 & 몬스터 AI 유한상태머신(FSM) 설계기 모달 */}
+      <Modal visible={bossFsmOpen} transparent animationType="fade" onRequestClose={() => setBossFsmOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EC4899', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#F472B6', fontFamily: 'monospace' }}>
+                👾 MOD_21 // 보스 패턴 & 몬스터 AI 유한상태머신(FSM) 설계기
+              </Text>
+              <TouchableOpacity onPress={() => setBossFsmOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* 시각적 FSM 상태 전이 흐름도 */}
+              <View style={{ backgroundColor: '#0A0D16', borderWidth: 1, borderColor: '#2D3446', borderRadius: 6, padding: 12, marginBottom: 12 }}>
+                <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#F472B6', fontFamily: 'monospace', marginBottom: 8 }}>
+                  🔄 [{bossName}] AI 상태 전이 파이프라인 (Finite State Machine)
+                </Text>
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
+                  {[
+                    { name: 'IDLE (대기)', color: '#64748B' },
+                    { name: `CHASE (<${bossAggroDist}m)`, color: '#38BDF8' },
+                    { name: `TELEGRAPH (${bossTelegraphSec}s 전조)`, color: '#FACC15' },
+                    { name: `ATTACK (<${bossAtkDist}m)`, color: '#EF4444' },
+                    { name: `ENRAGE (HP≤${bossEnragePct}%)`, color: '#A855F7' }
+                  ].map((st, idx) => (
+                    <View key={st.name} style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <View style={{ backgroundColor: '#161C2E', borderWidth: 1.5, borderColor: st.color, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 4 }}>
+                        <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>{st.name}</Text>
+                      </View>
+                      {idx < 4 ? <Text style={{ color: '#94A3B8', fontWeight: '900' }}>➔</Text> : null}
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flex: 1.5 }}>
+                  <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace', marginBottom: 3 }}>보스/몬스터 이름</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontSize: 12 }} value={bossName} onChangeText={setBossName} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#38BDF8', fontFamily: 'monospace', marginBottom: 3 }}>인식 거리(m)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={bossAggroDist} onChangeText={setBossAggroDist} keyboardType="numeric" />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#EF4444', fontFamily: 'monospace', marginBottom: 3 }}>공격 사거리(m)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={bossAtkDist} onChangeText={setBossAtkDist} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#FACC15', fontFamily: 'monospace', marginBottom: 3 }}>전조 시간(초)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={bossTelegraphSec} onChangeText={setBossTelegraphSec} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#A855F7', fontFamily: 'monospace', marginBottom: 3 }}>2페이즈 체력(%)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={bossEnragePct} onChangeText={setBossEnragePct} keyboardType="numeric" />
+                </View>
+              </View>
+
+              {(() => {
+                const fsmCode = [
+                  `// [Unity C# 보스 AI 상태머신(FSM) - ${bossName}]`,
+                  'using System.Collections;',
+                  'using UnityEngine;',
+                  '',
+                  'public class BossAIController : MonoBehaviour {',
+                  '    public enum BossState { Idle, Chase, Telegraph, Attack, Enrage, Groggy }',
+                  '    public BossState currentState = BossState.Idle;',
+                  '    public Transform player;',
+                  '    public float maxHp = 1000f, currentHp = 1000f;',
+                  `    public float aggroRange = ${bossAggroDist}f, attackRange = ${bossAtkDist}f;`,
+                  `    public float telegraphTime = ${bossTelegraphSec}f;`,
+                  '    private bool isEnraged = false;',
+                  '',
+                  '    private void Update() {',
+                  '        if (player == null) return;',
+                  '        float dist = Vector2.Distance(transform.position, player.position);',
+                  `        if (!isEnraged && (currentHp / maxHp) <= ${(parseFloat(bossEnragePct || '50') / 100).toFixed(2)}f) {`,
+                  '            isEnraged = true;',
+                  '            currentState = BossState.Enrage;',
+                  '        }',
+                  '        switch (currentState) {',
+                  '            case BossState.Idle:',
+                  '                if (dist <= aggroRange) currentState = BossState.Chase;',
+                  '                break;',
+                  '            case BossState.Chase:',
+                  '                transform.position = Vector2.MoveTowards(transform.position, player.position, (isEnraged ? 5.5f : 3.5f) * Time.deltaTime);',
+                  '                if (dist <= attackRange) StartCoroutine(AttackPatternRoutine());',
+                  '                break;',
+                  '        }',
+                  '    }',
+                  '',
+                  '    private IEnumerator AttackPatternRoutine() {',
+                  '        currentState = BossState.Telegraph; // 붉은 안광 전조 연출',
+                  '        yield return new WaitForSeconds(telegraphTime);',
+                  '        currentState = BossState.Attack; // 돌진 또는 탄막 패턴 실행',
+                  '        yield return new WaitForSeconds(0.4f);',
+                  '        currentState = BossState.Groggy; // 후딜레이 빈틈 노출',
+                  '        yield return new WaitForSeconds(0.8f);',
+                  '        currentState = BossState.Chase;',
+                  '    }',
+                  '}'
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#FBCFE8', fontFamily: 'monospace', lineHeight: 16 }}>{fsmCode}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(fsmCode); } catch {} setBossCopied(true); }}
+                      style={{ backgroundColor: bossCopied ? '#10B981' : '#EC4899', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {bossCopied ? '[✅ 보스 AI 상태머신(FSM) C# 스크립트가 복사되었습니다!]' : '[📋 Unity 보스 AI 상태머신(FSM) C# 코드 복사하기]'}
                       </Text>
                     </TouchableOpacity>
                   </View>
