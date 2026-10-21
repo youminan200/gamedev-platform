@@ -795,37 +795,27 @@ app.post('/api/errors/diagnose', async (req, res) => {
   } else if (lower.includes('cs1513') || lower.includes('} expected') || lower.includes('cs1525')) {
     cause = '중괄호 { } 또는 소괄호 ( )의 짝이 맞지 않아 문법 분석이 깨졌습니다.';
     solution = '함수나 if문, 클래스 맨 아래에 닫는 중괄호 } 가 빠지지 않았는지 확인하세요.';
-    code_fix = 'void Update() {
-    if (isReady) {
-        Move();
-    } // <- 닫는 중괄호 개수 확인!
-}';
+    code_fix = 'void Update() { if (isReady) { Move(); } } // 중괄호 개수 확인!';
   } else if (lower.includes('sendmessage cannot be called') || lower.includes('onvalidate')) {
     cause = 'OnValidate()나 Awake() 도중에 오브젝트 활성화/파괴 또는 SendMessage를 호출해 Unity 내부 라이프사이클과 충돌했습니다.';
     solution = '해당 로직을 Start() 함수로 옮기거나 코루틴으로 1프레임 뒤에 실행하도록 변경하세요.';
-    code_fix = 'void Start() {
-    // Awake/OnValidate 대신 Start에서 안전하게 초기화
-}';
+    code_fix = 'void Start() { /* Awake/OnValidate 대신 Start에서 안전하게 초기화 */ }';
   } else if (lower.includes('tag:') && lower.includes('not defined')) {
     cause = 'CompareTag("...")에 적은 태그 이름이 Unity 에디터의 Tags & Layers 목록에 등록되어 있지 않습니다.';
     solution = 'Inspector 최상단 Tag 드롭다운 → [Add Tag...]를 눌러 해당 태그 이름을 대소문자까지 똑같이 등록하세요.';
-    code_fix: '// Inspector > Tag > Add Tag에서 태그 먼저 생성 후 CompareTag 사용';
+    code_fix = '// Inspector > Tag > Add Tag에서 태그 먼저 생성 후 CompareTag 사용';
   } else if (lower.includes('missingcomponentexception')) {
     cause = '오브젝트에 해당 컴포넌트(Rigidbody, Animator, AudioSource 등)가 부착되어 있지 않은데 스크립트에서 접근했습니다.';
     solution = 'Inspector 하단 [Add Component] 버튼을 눌러 필요한 컴포넌트를 부착하거나 스크립트 상단에 [RequireComponent]를 추가하세요.';
-    code_fix = '[RequireComponent(typeof(Rigidbody2D))]
-public class Player : MonoBehaviour { }';
+    code_fix = '[RequireComponent(typeof(Rigidbody2D))] public class Player : MonoBehaviour { }';
   } else if (lower.includes('stackoverflow')) {
     cause = '함수가 자기 자신을 끝없이 호출(무한 재귀)하여 메모리가 초과되었습니다.';
     solution = '프로퍼티 getter/setter 안에서 자기 자신의 이름을 다시 호출하지 않았는지 확인하고 종료 조건을 추가하세요.';
-    code_fix = 'private int _hp;
-public int Hp { get => _hp; set => _hp = value; } // Hp 대신 _hp 사용!';
+    code_fix = 'private int _hp; public int Hp { get => _hp; set => _hp = value; }';
   } else if (lower.includes('keynotfound')) {
     cause = 'Dictionary에 존재하지 않는 키(Key)로 값을 꺼내려고 시도했습니다.';
     solution = 'dict[key] 대신 dict.TryGetValue(key, out var val)를 사용하면 에러 없이 안전하게 값을 꺼낼 수 있습니다.';
-    code_fix = 'if (myDict.TryGetValue("sword", out var item)) {
-    item.Use();
-}';
+    code_fix = 'if (myDict.TryGetValue("sword", out var item)) { item.Use(); }';
   } else if (lower.includes('gradle') || lower.includes('duplicate class') || lower.includes('dex')) {
     cause = '안드로이드 플러그인(AdMob, Firebase 등) 간의 라이브러리 버전이 중복되거나 충돌했습니다.';
     solution = 'Assets → External Dependency Manager → Android Resolver → [Force Resolve]를 실행해 중복 라이브러리를 정리하세요.';
