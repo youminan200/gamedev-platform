@@ -329,6 +329,30 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [pkLang, setPkLang] = useState<'ko' | 'en'>('ko');
   const [pkCopied, setPkCopied] = useState(false);
 
+  // [03] 공방 도구 검색 & 카테고리 필터
+  const [toolSearchQuery, setToolSearchQuery] = useState('');
+  const [toolCategoryFilter, setToolCategoryFilter] = useState<'all' | 'art_sound' | 'code_design' | 'launch_mkt' | 'arcade_collab'>('all');
+
+  // MOD_26: RPG 스킬 트리 & 로그라이크 퍽(Perk) 노드 설계기
+  const [skillTreeOpen, setSkillTreeOpen] = useState(false);
+  const [skillPreset, setSkillPreset] = useState<'berserker' | 'shadow' | 'archmage'>('shadow');
+  const [skillPoints, setSkillPoints] = useState(5);
+  const [unlockedSkills, setUnlockedSkills] = useState<string[]>(['tier1_dash']);
+  const [skillCopied, setSkillCopied] = useState(false);
+
+  // MOD_27: 뱀서라이크 · 디펜스 몬스터 웨이브(Wave) 스포너 설계기
+  const [waveSpawnerOpen, setWaveSpawnerOpen] = useState(false);
+  const [waveBaseCount, setWaveBaseCount] = useState('12');
+  const [waveGrowthRate, setWaveGrowthRate] = useState('1.35');
+  const [waveSpawnRadius, setWaveSpawnRadius] = useState('14.0');
+  const [waveBossMin, setWaveBossMin] = useState('10');
+  const [waveCopied, setWaveCopied] = useState(false);
+
+  // MOD_28: GRAC 심의 & 스토어 출시 검수(QA) 체크리스트
+  const [gracQaOpen, setGracQaOpen] = useState(false);
+  const [qaCheckedIds, setQaCheckedIds] = useState<string[]>(['qa_1', 'qa_2', 'qa_5']);
+  const [qaCopied, setQaCopied] = useState(false);
+
   const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
   const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
   const [scriptSpeed, setScriptSpeed] = useState<string>('8');
@@ -934,16 +958,79 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       {/* SECTION 03: INDIE DEV LAB & TOOLS CARTRIDGE GRID */}
       {activeSection === 'tools' && (
         <View style={{ marginBottom: 14, gap: 10 }}>
+          {/* 🔍 32종 공방 카트리지 초고속 검색 & 카테고리 필터 바 */}
+          <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: '#00E5FF', borderRadius: 6, padding: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={{ fontSize: 12.5, fontWeight: '900', color: '#00E5FF', fontFamily: 'monospace' }}>
+                // INDIE_WORKSTATION_LAUNCHER (총 32종 무료 개발 카트리지)
+              </Text>
+              {toolSearchQuery.trim() !== '' || toolCategoryFilter !== 'all' ? (
+                <TouchableOpacity onPress={() => { setToolSearchQuery(''); setToolCategoryFilter('all'); }}>
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>[초기화 ↺]</Text>
+                </TouchableOpacity>
+              ) : null}
+            </View>
+            <TextInput
+              style={{
+                backgroundColor: Theme.colors.background,
+                borderWidth: 1.5,
+                borderColor: Theme.colors.border,
+                borderRadius: 4,
+                paddingHorizontal: 12,
+                paddingVertical: 8,
+                color: Theme.colors.text,
+                fontSize: 12.5,
+                fontFamily: 'monospace',
+                marginBottom: 8,
+              }}
+              placeholder="🔎 공방 도구 초고속 검색 (예: 도트, 브금, 에러, 셰이더, 스킬트리, 웨이브, 스팀, 세이브, 심의...)"
+              placeholderTextColor={Theme.colors.textLight}
+              value={toolSearchQuery}
+              onChangeText={setToolSearchQuery}
+            />
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+              {[
+                { key: 'all' as const, label: '⚡ 전체 (32)' },
+                { key: 'art_sound' as const, label: '🎨 도트·사운드·연출' },
+                { key: 'code_design' as const, label: '💻 코딩·기획·에러' },
+                { key: 'launch_mkt' as const, label: '🚀 스팀출시·심의·번역' },
+                { key: 'arcade_collab' as const, label: '🕹️ 오락실·팀원·아이디어' },
+              ].map((cat) => {
+                const active = toolCategoryFilter === cat.key;
+                return (
+                  <TouchableOpacity
+                    key={cat.key}
+                    onPress={() => setToolCategoryFilter(cat.key)}
+                    style={{
+                      backgroundColor: active ? '#00E5FF' : Theme.colors.pillBg,
+                      borderWidth: 1.5,
+                      borderColor: active ? '#00E5FF' : Theme.colors.border,
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 4,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '900', color: active ? '#11131C' : Theme.colors.text, fontFamily: 'monospace' }}>
+                      {cat.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          </View>
+
           {[
             {
               code: 'MOD_01 // PIXEL_SPRITE_WORKSHOP',
-              title: '16×16 · 32×32 웹 도트 찍기 스튜디오 (투명 PNG 저장)',
-              desc: '브라우저에서 좌우대칭·채우기·Pico-8 팔레트로 도트 캐릭터/아이콘을 찍고 투명 배경 .PNG로 즉시 추출합니다.',
+              cat: 'art_sound',
+              title: '16×16 · 32×32 웹 도트 찍기 & 4프레임 스프라이트 시트 스튜디오',
+              desc: '브라우저에서 좌우대칭·어니언스킨·4프레임 애니메이션을 찍고 투명 배경 .PNG 시트로 즉시 추출합니다.',
               accent: '#FFD166',
               onPress: () => setPixelStudioOpen(true)
             },
             {
               code: 'MOD_02 // CSHARP_SCRIPT_VENDING',
+              cat: 'code_design',
               title: 'Unity / C# 필수 스크립트 자판기 (이동·점프·세이브·풀링)',
               desc: '이동속도·점프력 수치만 입력하면 2D 플랫포머, 3D 카메라, 오브젝트 풀링, JSON 세이브 C# 코드를 자동 생성합니다.',
               accent: '#10B981',
@@ -951,20 +1038,23 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_03 // ERR_DOCTOR',
-              title: 'Unity · Unreal · Godot 만능 에러 해결 센터',
-              desc: '콘솔 에러 로그를 붙여넣으면 발생 줄 번호·한글 번역·수정 코드를 1초 만에 진단합니다. (23종 필수 에러 수록)',
+              cat: 'code_design',
+              title: 'Unity · Unreal · Godot 만능 에러 해결 센터 (50+ 에러 사전)',
+              desc: '콘솔 에러 로그를 붙여넣으면 발생 줄 번호·한글 번역·수정 코드를 1초 만에 진단합니다. (50종 이상 필수 에러 수록)',
               accent: '#FF4D6D',
               onPress: handleOpenErrorWiki
             },
             {
               code: 'MOD_04 // 8BIT_SFX_SYNTH',
-              title: '8-Bit 레트로 효과음(SFX) 합성 스튜디오',
+              cat: 'art_sound',
+              title: '8-Bit 레트로 효과음(SFX) 합성 스튜디오 (.WAV 추출)',
               desc: '점프·레이저·폭발·코인 효과음을 파형으로 조절하고 상업용 무료 .WAV 오디오 파일로 즉시 추출합니다.',
               accent: '#00E5FF',
               onPress: () => setSfxStudioOpen(true)
             },
             {
               code: 'MOD_05 // 8BIT_BGM_SEQUENCER',
+              cat: 'art_sound',
               title: '8-Bit 칩튠 브금(BGM) 작곡 시퀀서 & 루프 .WAV 추출',
               desc: '보스전·평화로운 마을·아케이드 프리셋 또는 16스텝 피아노롤로 저작권 무료 배경음악(BGM)을 작곡합니다.',
               accent: '#14B8A6',
@@ -972,6 +1062,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_06 // STEAM_STORE_SIM',
+              cat: 'launch_mkt',
               title: '스팀·스토어 캡슐 썸네일 시뮬레이터 & 출시 준비 진단기',
               desc: '내 인디게임 배너와 제목이 실제 스토어 진열대에서 얼마나 눈에 띄는지 비교하고 출시 체크리스트 점수를 진단합니다.',
               accent: '#6366F1',
@@ -979,6 +1070,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_07 // 60FPS_OPT_DOCTOR',
+              cat: 'code_design',
               title: 'Unity·Godot 60FPS 최적화 방어 진단기 & 엔진 단축키 사전',
               desc: 'Draw Call·GC Alloc·배칭·물리 렉 원인을 체크리스트로 점검하고 3대 게임 엔진 필수 단축키를 확인합니다.',
               accent: '#F59E0B',
@@ -986,6 +1078,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_08 // GAME_BALANCE_CALC',
+              cat: 'code_design',
               title: '인디게임 밸런스 계산기 (데미지·경험치 곡선·가챠/드랍 확률)',
               desc: '공격/방어 공식 비교, 레벨별 요구 경험치 테이블, 아이템 드랍 천장 확률을 시뮬레이션하고 C# 수식 코드로 변환합니다.',
               accent: '#EC4899',
@@ -993,6 +1086,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_09 // PATCHNOTE_BUILDER',
+              cat: 'launch_mkt',
               title: '스팀(BBCode) · 디스코드 · 개발일지 패치노트 자동 생성기',
               desc: '신규 기능·밸런스 조정·버그 수정 내역만 적으면 스팀 공지사항 태그([h1], [list])와 마크다운 양식으로 1초 변환합니다.',
               accent: '#22C55E',
@@ -1000,6 +1094,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_10 // DUNGEON_MAP_GEN',
+              cat: 'code_design',
               title: '2D 타일맵 · 절차적 던전 맵 생성기 & Unity C# 배열 추출기',
               desc: '로그라이크 방+복도(BSP), 자연동굴(Cellular), 보스 아레나를 랜덤 생성하고 미니맵 .PNG와 C# int[,] 배열로 추출합니다.',
               accent: '#A855F7',
@@ -1007,6 +1102,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_11 // SHADER_RECIPE_BOOK',
+              cat: 'art_sound',
               title: 'Unity / Godot 셰이더(Shader) 시각 효과 레시피 사전',
               desc: '피격 하얀 점멸(Hit Flash), 2D 도트 외곽선(Outline), 타들어가는 디졸브, 홀로그램, 물결 셰이더 코드를 복사합니다.',
               accent: '#06B6D4',
@@ -1014,6 +1110,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_12 // LOCALIZATION_SHEET',
+              cat: 'launch_mkt',
               title: '인디게임 다국어 번역 시트 생성기 (한·영·일·중 CSV/JSON)',
               desc: '자주 쓰는 게임 UI/전투/상점 문구를 한국어로 입력하면 영어·일본어·중국어(간체) 로컬라이징 테이블로 즉시 변환합니다.',
               accent: '#10B981',
@@ -1021,6 +1118,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_13 // PALETTE_DEX',
+              cat: 'art_sound',
               title: '레트로 명작 & 인디 도트 컬러 팔레트 도감 (Hex & C# Color)',
               desc: 'PICO-8, Sweetie-16, GameBoy DMG, 사이버펑크, 다크 판타지 팔레트를 클릭해 Hex 코드와 Unity Color 구조체를 복사합니다.',
               accent: '#F43F5E',
@@ -1028,6 +1126,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_14 // DIALOGUE_TREE_EDITOR',
+              cat: 'code_design',
               title: 'NPC 대사창 & 선택지 분기 에디터 (JSON & C# 타이핑 스크립트)',
               desc: '화자 이름·감정 아이콘·선택지 분기를 실시간 RPG 대화창으로 미리보고 JSON 데이터 및 C# 타이핑 코루틴으로 추출합니다.',
               accent: '#EAB308',
@@ -1035,6 +1134,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_15 // PARTICLE_FX_LAB',
+              cat: 'art_sound',
               title: '2D 파티클 · 타격 이펙트 & 카메라 흔들림(Juice) 시뮬레이터',
               desc: '피격 스파크·도트 폭발·레벨업 오라·던전 포털을 캔버스에서 클릭해 실험하고 Unity ParticleSystem C# 코드를 복사합니다.',
               accent: '#FB923C',
@@ -1042,6 +1142,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_16 // STEAM_ACHIEVEMENT_GEN',
+              cat: 'launch_mkt',
               title: '스팀 도전과제(Achievements) 기획 & Steamworks C# 생성기',
               desc: '장르별 필수 도전과제(첫 처치·보스·히든 기믹·플래티넘)와 도트 트로피 배지를 생성하고 SteamUserStats 연동 코드를 추출합니다.',
               accent: '#8B5CF6',
@@ -1049,6 +1150,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_17 // INPUT_MAPPING_BUILDER',
+              cat: 'code_design',
               title: 'PC 키보드 & Xbox/PS/Switch 게임패드 조작키 매핑 시트 생성기',
               desc: '장르별 표준 조작키(이동·점프·대시·상호작용)를 4대 컨트롤러 규격 표로 시각화하고 스팀 스토어 안내문과 C# 입력 코드를 생성합니다.',
               accent: '#14B8A6',
@@ -1056,6 +1158,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_18 // HITBOX_FRAME_EDITOR',
+              cat: 'code_design',
               title: '2D 히트박스 · 피격 판정 & 60FPS 프레임 데이터 에디터',
               desc: '선딜레이(Startup)·공격 판정(Active)·후딜레이(Recovery) 프레임 바를 시각화하고 Physics2D.OverlapBoxAll C# 판정 코드를 추출합니다.',
               accent: '#EF4444',
@@ -1063,6 +1166,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_19 // SAVE_ENCRYPT_BUILDER',
+              cat: 'code_design',
               title: '인디게임 세이브 파일(JSON) 암호화 & 치트 변조 방지 생성기',
               desc: '세이브 데이터 XOR/Base64 난독화 및 SHA256 해시 무결성 검증을 시뮬레이션하고 Unity C# · Godot 4 암호화 저장 코드를 복사합니다.',
               accent: '#10B981',
@@ -1070,6 +1174,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_20 // TRAILER_STORYBOARD',
+              cat: 'launch_mkt',
               title: '스팀 출시 트레일러 60초 황금 비율 콘티 & 타임코드 빌더',
               desc: '0~5초 초반 훅(Hook)부터 게임플레이·클라이맥스·스팀 위시리스트 유도까지 60초 영상 편집 타임라인과 자막 시트를 생성합니다.',
               accent: '#F59E0B',
@@ -1077,6 +1182,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_21 // BOSS_FSM_DESIGNER',
+              cat: 'code_design',
               title: '보스 패턴 & 몬스터 AI 유한상태머신(FSM) 설계기',
               desc: '대기➔추적➔전조(Telegraph)➔돌진/탄막➔2페이즈 광폭화 흐름을 다이어그램으로 설계하고 C# 코루틴 상태머신 코드를 추출합니다.',
               accent: '#EC4899',
@@ -1084,6 +1190,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_22 // ITEM_DB_BUILDER',
+              cat: 'code_design',
               title: 'RPG 아이템 · 인벤토리 & 장비 DB 생성기 (ScriptableObject & JSON)',
               desc: '등급별(일반~전설) 아이템 툴팁 카드를 실시간 미리보고 Unity ScriptableObject C# 클래스와 JSON 테이블로 변환합니다.',
               accent: '#F59E0B',
@@ -1091,6 +1198,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_23 // CAMERA_FEEL_LAB',
+              cat: 'art_sound',
               title: '2D 카메라 연출 & 타격 역경직(Hitstop) 손맛 레시피 계산기',
               desc: '크리티컬 역경직(TimeScale Freeze), 카메라 줌 펀치(OrthoSize), 시선 유도 SmoothDamp 통합 C# 매니저를 생성합니다.',
               accent: '#38BDF8',
@@ -1098,6 +1206,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_24 // LICENSE_CHECKER_DEX',
+              cat: 'launch_mkt',
               title: '인디게임 상업적 무료 폰트 · 에셋 라이선스 검증 사전 & 크레딧 생성기',
               desc: '갈무리·둥근모꼴·프리텐다드 등 인기 도트/UI 폰트와 CC0/CC-BY/OFL 상업적 이용 규정을 확인하고 크레딧 문구를 복사합니다.',
               accent: '#10B981',
@@ -1105,70 +1214,106 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
             },
             {
               code: 'MOD_25 // PRESSKIT_MAIL_GEN',
+              cat: 'launch_mkt',
               title: '스팀 출시용 프레스킷(Press Kit) & 유튜버/스트리머 리뷰키 메일 생성기',
               desc: '보도자료용 게임 팩트시트(Fact Sheet)와 인플루언서에게 스팀 리뷰키를 전달하는 한국어/영어 콜드메일 양식을 자동 작성합니다.',
               accent: '#8B5CF6',
               onPress: () => setPresskitOpen(true)
             },
             {
-              code: 'MOD_26 // ARCADE_CABINET',
+              code: 'MOD_26 // SKILL_TREE_BUILDER',
+              cat: 'code_design',
+              title: 'RPG 스킬 트리 & 로그라이크 퍽(Perk) 해금 노드 설계기',
+              desc: '선행 스킬 해금 조건(Prerequisite)과 스킬 포인트 투자를 시뮬레이션하고 Unity C# 스킬 트리 매니저 & JSON을 추출합니다.',
+              accent: '#EC4899',
+              onPress: () => setSkillTreeOpen(true)
+            },
+            {
+              code: 'MOD_27 // WAVE_SPAWNER_LAB',
+              cat: 'code_design',
+              title: '뱀서라이크 · 디펜스 몬스터 웨이브(Wave) 스포너 설계기',
+              desc: '시간대별(1분~20분) 몬스터 스폰 밀도·오브젝트 풀 최대치·보스 등장 주기를 계산하고 화면 외곽 원형 스포너 C# 코드를 생성합니다.',
+              accent: '#F97316',
+              onPress: () => setWaveSpawnerOpen(true)
+            },
+            {
+              code: 'MOD_28 // GRAC_QA_CHECKLIST',
+              cat: 'launch_mkt',
+              title: '한국 게임물관리위원회(GRAC) 심의 & 스팀/모바일 스토어 출시 검수(QA) 진단기',
+              desc: '스팀 빌드 반려 사유 1위 항목, 확률형 아이템/등급분류 필수 고지, 세이브 경로·해상도 대응을 출시 전 체크리스트로 점검합니다.',
+              accent: '#22C55E',
+              onPress: () => setGracQaOpen(true)
+            },
+            {
+              code: 'MOD_29 // ARCADE_CABINET',
+              cat: 'arcade_collab',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
               accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_27 // PARTY_RECRUIT',
+              code: 'MOD_30 // PARTY_RECRUIT',
+              cat: 'arcade_collab',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
               accent: '#F97316',
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_28 // IDEA_SLOT_MACHINE',
+              code: 'MOD_31 // IDEA_SLOT_MACHINE',
+              cat: 'arcade_collab',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
               accent: '#A855F7',
               onPress: () => setIdeaMachineOpen(true)
             },
             {
-              code: 'MOD_29 // HALL_OF_FAME & APP',
+              code: 'MOD_32 // HALL_OF_FAME & APP',
+              cat: 'arcade_collab',
               title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
               accent: '#06B6D4',
               onPress: handleInstallAppClick
             }
-          ].map((mod) => (
-            <TouchableOpacity
-              key={mod.code}
-              activeOpacity={0.85}
-              onPress={mod.onPress}
-              style={{
-                backgroundColor: Theme.colors.surface,
-                borderWidth: 2,
-                borderColor: Theme.colors.border,
-                borderLeftWidth: 6,
-                borderLeftColor: mod.accent,
-                borderRadius: 6,
-                padding: 14,
-              }}
-            >
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                <Text style={{ fontSize: 10.5, fontWeight: '900', color: mod.accent, fontFamily: 'monospace' }}>
-                  [{mod.code}]
+          ]
+            .filter((mod) => {
+              const matchCat = toolCategoryFilter === 'all' || mod.cat === toolCategoryFilter;
+              const q = toolSearchQuery.trim().toLowerCase();
+              const matchQuery = !q || (mod.code + ' ' + mod.title + ' ' + mod.desc).toLowerCase().includes(q);
+              return matchCat && matchQuery;
+            })
+            .map((mod) => (
+              <TouchableOpacity
+                key={mod.code}
+                activeOpacity={0.85}
+                onPress={mod.onPress}
+                style={{
+                  backgroundColor: Theme.colors.surface,
+                  borderWidth: 2,
+                  borderColor: Theme.colors.border,
+                  borderLeftWidth: 6,
+                  borderLeftColor: mod.accent,
+                  borderRadius: 6,
+                  padding: 14,
+                }}
+              >
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                  <Text style={{ fontSize: 10.5, fontWeight: '900', color: mod.accent, fontFamily: 'monospace' }}>
+                    [{mod.code}]
+                  </Text>
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: Theme.colors.textLight, fontFamily: 'monospace' }}>
+                    [LAUNCH →]
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>
+                  {mod.title}
                 </Text>
-                <Text style={{ fontSize: 11, fontWeight: '900', color: Theme.colors.textLight, fontFamily: 'monospace' }}>
-                  [LAUNCH →]
+                <Text style={{ fontSize: 12, color: Theme.colors.textLight, lineHeight: 17 }}>
+                  {mod.desc}
                 </Text>
-              </View>
-              <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>
-                {mod.title}
-              </Text>
-              <Text style={{ fontSize: 12, color: Theme.colors.textLight, lineHeight: 17 }}>
-                {mod.desc}
-              </Text>
-            </TouchableOpacity>
-          ))}
+              </TouchableOpacity>
+            ))}
         </View>
       )}
     </View>
@@ -4712,6 +4857,387 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                     >
                       <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
                         {pkCopied ? '[✅ 프레스킷 팩트시트 & 리뷰키 메일 양식이 복사되었습니다!]' : '[📋 프레스킷 팩트시트 & 스트리머 리뷰키 메일 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_26: RPG 스킬 트리 & 로그라이크 퍽(Perk) 해금 노드 설계기 모달 */}
+      <Modal visible={skillTreeOpen} transparent animationType="fade" onRequestClose={() => setSkillTreeOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EC4899', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#F472B6', fontFamily: 'monospace' }}>
+                🕸️ MOD_26 // RPG 스킬 트리 & 로그라이크 퍽(Perk) 노드 설계기
+              </Text>
+              <TouchableOpacity onPress={() => setSkillTreeOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+                {[
+                  { key: 'shadow' as const, label: '🗡️ 암살자·그림자 트리' },
+                  { key: 'berserker' as const, label: '🪓 광전사·피격강화 트리' },
+                  { key: 'archmage' as const, label: '🔮 대마법사·원소연쇄 트리' },
+                ].map((p) => (
+                  <TouchableOpacity
+                    key={p.key}
+                    onPress={() => {
+                      setSkillPreset(p.key);
+                      setUnlockedSkills(['tier1_dash']);
+                      setSkillPoints(5);
+                      setSkillCopied(false);
+                    }}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 7,
+                      borderRadius: 4,
+                      backgroundColor: skillPreset === p.key ? '#EC4899' : Theme.colors.pillBg,
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>{p.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {(() => {
+                const trees: Record<'shadow' | 'berserker' | 'archmage', Array<{ id: string; tier: number; name: string; req: string | null; cost: number; desc: string }>> = {
+                  shadow: [
+                    { id: 'tier1_dash', tier: 1, name: '[Tier 1] 그림자 잔상 대시', req: null, cost: 1, desc: '회피 기동 시 0.25초 무적 판정 및 잔상 생성' },
+                    { id: 'tier2_backstab', tier: 2, name: '[Tier 2] 배후 기습 치명타', req: 'tier1_dash', cost: 1, desc: '적의 등 뒤에서 공격 시 치명타 피해량 +65% 증가' },
+                    { id: 'tier2_poison', tier: 2, name: '[Tier 2] 맹독 단검 코팅', req: 'tier1_dash', cost: 1, desc: '공격 적중 시 5초간 초당 중독 도트 피해 부여' },
+                    { id: 'tier3_ult', tier: 3, name: '[Tier 3 궁극기] 무한 환영 난무', req: 'tier2_backstab', cost: 2, desc: '처치 시 대시 쿨타임 즉시 초기화 및 그림자 분신 소환' },
+                  ],
+                  berserker: [
+                    { id: 'tier1_dash', tier: 1, name: '[Tier 1] 피의 갈증 (흡혈)', req: null, cost: 1, desc: '근접 공격 적중 시 피해량의 8%만큼 체력 즉시 회복' },
+                    { id: 'tier2_backstab', tier: 2, name: '[Tier 2] 분노의 카운터', req: 'tier1_dash', cost: 1, desc: '체력이 50% 이하일 때 공격 속도 +40% 폭증' },
+                    { id: 'tier2_poison', tier: 2, name: '[Tier 2] 강철 슈퍼아머', req: 'tier1_dash', cost: 1, desc: '차징 공격 도중 피격 경직(Knockback) 완전 면역' },
+                    { id: 'tier3_ult', tier: 3, name: '[Tier 3 궁극기] 불사의 광전사', req: 'tier2_backstab', cost: 2, desc: '치명상 피격 시 5초간 사망하지 않고 모든 공격이 치명타로 적중' },
+                  ],
+                  archmage: [
+                    { id: 'tier1_dash', tier: 1, name: '[Tier 1] 비전 마나 순환', req: null, cost: 1, desc: '스킬 재사용 대기시간 -15% 감소 및 마나 재생 +30%' },
+                    { id: 'tier2_backstab', tier: 2, name: '[Tier 2] 연쇄 번개 전이', req: 'tier1_dash', cost: 1, desc: '투사체 적중 시 주변 4m 내 적에게 최대 3회 연쇄 감전' },
+                    { id: 'tier2_poison', tier: 2, name: '[Tier 2] 절대영도 빙결장', req: 'tier1_dash', cost: 1, desc: '피격된 적의 이동속도 -50% 둔화 및 확률적 빙결' },
+                    { id: 'tier3_ult', tier: 3, name: '[Tier 3 궁극기] 아케인 메테오 스톰', req: 'tier2_backstab', cost: 2, desc: '원소 중첩 5회 달성 시 화면 전체에 운석 낙하 자동 발동' },
+                  ],
+                };
+                const nodes = trees[skillPreset];
+
+                const toggleNode = (node: typeof nodes[0]) => {
+                  const isUnlocked = unlockedSkills.includes(node.id);
+                  if (isUnlocked) {
+                    if (node.id === 'tier1_dash') return;
+                    setUnlockedSkills((prev) => prev.filter((x) => x !== node.id));
+                    setSkillPoints((p) => p + node.cost);
+                  } else {
+                    if (node.req && !unlockedSkills.includes(node.req)) return;
+                    if (skillPoints < node.cost) return;
+                    setUnlockedSkills((prev) => [...prev, node.id]);
+                    setSkillPoints((p) => p - node.cost);
+                  }
+                  setSkillCopied(false);
+                };
+
+                const csharpCode = [
+                  '// [Unity C# RPG 스킬 트리 선행 조건 검증 & 해금 매니저]',
+                  'using System.Collections.Generic;',
+                  'using UnityEngine;',
+                  '',
+                  '[System.Serializable]',
+                  'public class SkillNode {',
+                  '    public string id;',
+                  '    public string skillName;',
+                  '    public string prerequisiteId;',
+                  '    public int cost;',
+                  '    public bool unlocked;',
+                  '}',
+                  '',
+                  'public class SkillTreeManager : MonoBehaviour {',
+                  `    public int skillPoints = ${skillPoints};`,
+                  '    public List<SkillNode> nodes = new List<SkillNode>();',
+                  '',
+                  '    public bool CanUnlock(SkillNode target) {',
+                  '        if (target.unlocked || skillPoints < target.cost) return false;',
+                  '        if (string.IsNullOrEmpty(target.prerequisiteId)) return true;',
+                  '        SkillNode req = nodes.Find(n => n.id == target.prerequisiteId);',
+                  '        return req != null && req.unlocked;',
+                  '    }',
+                  '',
+                  '    public bool TryUnlockSkill(string skillId) {',
+                  '        SkillNode node = nodes.Find(n => n.id == skillId);',
+                  '        if (node == null || !CanUnlock(node)) return false;',
+                  '        skillPoints -= node.cost;',
+                  '        node.unlocked = true;',
+                  '        return true;',
+                  '    }',
+                  '}',
+                  '',
+                  '// [현재 설정된 스킬 트리 JSON 데이터]',
+                  JSON.stringify(nodes.map(n => ({ ...n, unlocked: unlockedSkills.includes(n.id) })), null, 2),
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#11131C', padding: 10, borderRadius: 6, marginBottom: 10, borderWidth: 1, borderColor: '#EC4899' }}>
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>
+                        ✨ 잔여 스킬 포인트(SP): {skillPoints} PT
+                      </Text>
+                      <TouchableOpacity
+                        onPress={() => { setUnlockedSkills(['tier1_dash']); setSkillPoints(5); }}
+                        style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#FFF', fontFamily: 'monospace' }}>[SP 초기화]</Text>
+                      </TouchableOpacity>
+                    </View>
+
+                    {nodes.map((node) => {
+                      const isUnlocked = unlockedSkills.includes(node.id);
+                      const reqMet = !node.req || unlockedSkills.includes(node.req);
+                      return (
+                        <TouchableOpacity
+                          key={node.id}
+                          onPress={() => toggleNode(node)}
+                          style={{
+                            backgroundColor: isUnlocked ? '#1F122B' : '#090B10',
+                            borderWidth: 2,
+                            borderColor: isUnlocked ? '#EC4899' : reqMet ? '#38BDF8' : '#2D3446',
+                            borderRadius: 6,
+                            padding: 12,
+                            marginBottom: 8,
+                            marginLeft: (node.tier - 1) * 18,
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                            <Text style={{ fontSize: 13, fontWeight: '900', color: isUnlocked ? '#F472B6' : reqMet ? '#38BDF8' : Theme.colors.textLight }}>
+                              {node.name}
+                            </Text>
+                            <Text style={{ fontSize: 10.5, fontWeight: '900', color: isUnlocked ? '#10B981' : reqMet ? '#FFD166' : '#64748B', fontFamily: 'monospace' }}>
+                              {isUnlocked ? '[✅ 해금됨]' : reqMet ? `[해금 가능: ${node.cost} SP]` : '[🔒 선행 스킬 필요]'}
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 11.5, color: Theme.colors.textLight }}>{node.desc}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginVertical: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#FBCFE8', fontFamily: 'monospace', lineHeight: 16 }}>{csharpCode}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(csharpCode); } catch {} setSkillCopied(true); }}
+                      style={{ backgroundColor: skillCopied ? '#10B981' : '#EC4899', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {skillCopied ? '[✅ 스킬 트리 C# 매니저 & JSON이 복사되었습니다!]' : '[📋 Unity 스킬 트리 C# 스크립트 & JSON 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_27: 뱀서라이크 · 디펜스 몬스터 웨이브(Wave) 스포너 설계기 모달 */}
+      <Modal visible={waveSpawnerOpen} transparent animationType="fade" onRequestClose={() => setWaveSpawnerOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F97316', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#FB923C', fontFamily: 'monospace' }}>
+                🌊 MOD_27 // 뱀서라이크 · 디펜스 몬스터 웨이브(Wave) 스포너 설계기
+              </Text>
+              <TouchableOpacity onPress={() => setWaveSpawnerOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#FACC15', fontFamily: 'monospace', marginBottom: 3 }}>1분 기본 스폰(마리)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={waveBaseCount} onChangeText={setWaveBaseCount} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#FB923C', fontFamily: 'monospace', marginBottom: 3 }}>웨이브 증가 배율</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={waveGrowthRate} onChangeText={setWaveGrowthRate} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#38BDF8', fontFamily: 'monospace', marginBottom: 3 }}>외곽 스폰 반경(m)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={waveSpawnRadius} onChangeText={setWaveSpawnRadius} keyboardType="numeric" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 10.5, color: '#F43F5E', fontFamily: 'monospace', marginBottom: 3 }}>보스 출현 주기(분)</Text>
+                  <TextInput style={{ backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 7, color: '#FFF', fontFamily: 'monospace' }} value={waveBossMin} onChangeText={setWaveBossMin} keyboardType="numeric" />
+                </View>
+              </View>
+
+              {(() => {
+                const base = Math.max(1, parseInt(waveBaseCount, 10) || 12);
+                const growth = Math.max(1.05, Math.min(2.5, parseFloat(waveGrowthRate) || 1.35));
+                const radius = parseFloat(waveSpawnRadius) || 14.0;
+                const bossEvery = Math.max(1, parseInt(waveBossMin, 10) || 10);
+                const timeline = [1, 3, 5, 10, 15, 20].map((min) => {
+                  const count = Math.round(base * Math.pow(growth, min / 2));
+                  const isBoss = min % bossEvery === 0;
+                  return { min, count, isBoss };
+                });
+                const maxPoolRecommend = timeline[timeline.length - 1].count * 2;
+
+                const spawnerCode = [
+                  '// [Unity 2D 뱀서라이크 화면 외곽 원형(Ring) 웨이브 스포너]',
+                  'using System.Collections;',
+                  'using UnityEngine;',
+                  '',
+                  'public class SurvivorWaveSpawner : MonoBehaviour {',
+                  '    public Transform player;',
+                  '    public GameObject normalMobPrefab, eliteMobPrefab, bossPrefab;',
+                  `    public float spawnRadius = ${radius.toFixed(1)}f;`,
+                  `    public int baseCountPerWave = ${base};`,
+                  `    public float growthFactor = ${growth.toFixed(2)}f;`,
+                  '    private int currentMinute = 1;',
+                  '',
+                  '    private void Start() => StartCoroutine(WaveLoopRoutine());',
+                  '',
+                  '    private IEnumerator WaveLoopRoutine() {',
+                  '        while (true) {',
+                  '            int mobCount = Mathf.RoundToInt(baseCountPerWave * Mathf.Pow(growthFactor, currentMinute * 0.5f));',
+                  '            for (int i = 0; i < mobCount; i++) {',
+                  '                SpawnAroundPlayer(normalMobPrefab);',
+                  '                yield return new WaitForSeconds(60f / Mathf.Max(1, mobCount));',
+                  '            }',
+                  `            if (currentMinute % ${bossEvery} == 0) SpawnAroundPlayer(bossPrefab);`,
+                  '            currentMinute++;',
+                  '        }',
+                  '    }',
+                  '',
+                  '    private void SpawnAroundPlayer(GameObject prefab) {',
+                  '        if (player == null || prefab == null) return;',
+                  '        float angle = Random.Range(0f, Mathf.PI * 2f);',
+                  '        Vector2 offset = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * spawnRadius;',
+                  '        Instantiate(prefab, (Vector2)player.position + offset, Quaternion.identity);',
+                  '    }',
+                  '}',
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#11131C', borderWidth: 1, borderColor: '#F97316', borderRadius: 6, padding: 12, marginBottom: 10 }}>
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: '#FDBA74', marginBottom: 8, fontFamily: 'monospace' }}>
+                        📊 시간대별 스폰 물량 시뮬레이션 (권장 Object Pool 크기: {maxPoolRecommend}개)
+                      </Text>
+                      {timeline.map((row) => (
+                        <View key={row.min} style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 5, gap: 8 }}>
+                          <Text style={{ width: 52, fontSize: 11, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>{row.min}분</Text>
+                          <View style={{ flex: 1, height: 10, backgroundColor: '#1E293B', borderRadius: 3, overflow: 'hidden' }}>
+                            <View style={{ width: `${Math.min(100, Math.round((row.count / timeline[timeline.length - 1].count) * 100))}%`, height: '100%', backgroundColor: row.isBoss ? '#EF4444' : '#F97316' }} />
+                          </View>
+                          <Text style={{ width: 135, textAlign: 'right', fontSize: 11, fontWeight: '800', color: row.isBoss ? '#FCA5A5' : '#FFF', fontFamily: 'monospace' }}>
+                            {row.count}마리/분 {row.isBoss ? '👑[보스]' : ''}
+                          </Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#FED7AA', fontFamily: 'monospace', lineHeight: 16 }}>{spawnerCode}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(spawnerCode); } catch {} setWaveCopied(true); }}
+                      style={{ backgroundColor: waveCopied ? '#10B981' : '#F97316', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {waveCopied ? '[✅ 뱀서라이크 원형 웨이브 스포너 C# 코드가 복사되었습니다!]' : '[📋 Unity 뱀서라이크 원형 웨이브 스포너 C# 코드 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_28: 한국 게임물관리위원회(GRAC) 심의 & 스팀/모바일 스토어 출시 검수(QA) 진단기 모달 */}
+      <Modal visible={gracQaOpen} transparent animationType="fade" onRequestClose={() => setGracQaOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#22C55E', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#4ADE80', fontFamily: 'monospace' }}>
+                🏛️ MOD_28 // 한국 심의(GRAC) & 스팀/모바일 스토어 출시 검수(QA) 체크리스트
+              </Text>
+              <TouchableOpacity onPress={() => setGracQaOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {(() => {
+                const checks = [
+                  { id: 'qa_1', cat: 'Steam 빌드', title: 'Steamworks 실행 파일(Executable) 경로 및 작업 디렉터리 일치 확인', desc: '스팀 검수 반려 1위 사유! Steamworks 대시보드의 Launch Options 실행 파일명(.exe)과 대소문자까지 일치해야 합니다.' },
+                  { id: 'qa_2', cat: '세이브/클라우드', title: '세이브 경로를 Application.dataPath가 아닌 persistentDataPath로 지정', desc: '설치 폴더(Program Files)에 저장하면 관리자 권한 오류 및 패치 시 세이브 초기화가 발생합니다.' },
+                  { id: 'qa_3', cat: '디스플레이/UI', title: '16:9(FHD/QHD) 및 16:10(스팀덱 1280×800) 해상도 UI 잘림 방어', desc: 'Canvas Scaler를 Scale With Screen Size로 설정하고 Match Width Or Height를 0.5로 맞춰 UI 잘림을 방지하세요.' },
+                  { id: 'qa_4', cat: '한국 심의(GRAC)', title: '국내 유통 시 자체등급분류(IARC/스팀·구글·앱스토어) 설문 정확 입력', desc: '인앱 결제·확률형 유료 아이템·폭력성 여부를 설문에 사실대로 체크하면 별도 수수료 없이 즉시 등급분류가 완료됩니다.' },
+                  { id: 'qa_5', cat: '확률형 아이템법', title: '유료 확률형 뽑기(가챠) 포함 시 인게임 및 스토어에 소수점 확률 명시', desc: '완전 무료 인게임 재화 드랍은 해당 없으나, 유료 결제와 연동된 랜덤 뽑기가 있다면 반드시 확률표를 공개해야 합니다.' },
+                  { id: 'qa_6', cat: '사운드/오디오', title: '백그라운드 전환(Alt+Tab) 시 오디오 일시정지 & 마스터 볼륨 저장', desc: '첫 실행 시 볼륨이 100%로 고정되어 스트리머/유저 고막이 테러당하지 않도록 기본 볼륨을 70%로 설정하세요.' },
+                ];
+                const score = Math.round((qaCheckedIds.length / checks.length) * 100);
+                const reportText = [
+                  `[인디게임 출시 검수(QA) & 심의 진단 리포트 - 준비도 ${score}%]`,
+                  ...checks.map(c => `${qaCheckedIds.includes(c.id) ? '✅' : '⬜'} [${c.cat}] ${c.title}`),
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#11131C', borderWidth: 1, borderColor: '#22C55E', borderRadius: 6, padding: 12, marginBottom: 10 }}>
+                      <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#4ADE80', fontFamily: 'monospace' }}>
+                        🛡️ 현재 스토어 출시 검수 통과 준비도: {score}% ({qaCheckedIds.length} / {checks.length} 완료)
+                      </Text>
+                    </View>
+
+                    {checks.map((item) => {
+                      const done = qaCheckedIds.includes(item.id);
+                      return (
+                        <TouchableOpacity
+                          key={item.id}
+                          onPress={() => {
+                            setQaCheckedIds((prev) => (done ? prev.filter((x) => x !== item.id) : [...prev, item.id]));
+                            setQaCopied(false);
+                          }}
+                          style={{
+                            backgroundColor: Theme.colors.background,
+                            borderWidth: 1.5,
+                            borderColor: done ? '#22C55E' : Theme.colors.border,
+                            borderRadius: 6,
+                            padding: 11,
+                            marginBottom: 8,
+                          }}
+                        >
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>[{item.cat}]</Text>
+                            <Text style={{ fontSize: 11, fontWeight: '900', color: done ? '#4ADE80' : Theme.colors.textLight, fontFamily: 'monospace' }}>
+                              {done ? '[✅ PASS]' : '[클릭하여 점검 완료 체크]'}
+                            </Text>
+                          </View>
+                          <Text style={{ fontSize: 13, fontWeight: '800', color: '#FFF', marginBottom: 3 }}>{item.title}</Text>
+                          <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, lineHeight: 17 }}>💡 {item.desc}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(reportText); } catch {} setQaCopied(true); }}
+                      style={{ backgroundColor: qaCopied ? '#059669' : '#22C55E', paddingVertical: 12, borderRadius: 4, alignItems: 'center', marginTop: 4 }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {qaCopied ? '[✅ 스토어 출시 QA 체크리스트 리포트가 복사되었습니다!]' : '[📋 출시 검수(QA) 체크리스트 결과 리포트 복사하기]'}
                       </Text>
                     </TouchableOpacity>
                   </View>
