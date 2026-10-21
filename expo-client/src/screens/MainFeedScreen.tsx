@@ -399,117 +399,118 @@ p.Jump();', helpful_count: 48 },
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      <View style={[styles.titleRow, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-        <View>
-          <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
-            <Text style={{ fontSize: 11, fontWeight: '700', color: Theme.colors.textLight }}>
-              {lang === 'en' ? `👁️ Today ${visitStats.today} • Total ${visitStats.total} visits` : `👁️ 오늘 ${visitStats.today}명 • 누적 ${visitStats.total}명 방문`}
-            </Text>
-            <TouchableOpacity
-              onPress={handleOpenLeaderboard}
-              style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>{lang === 'en' ? '🏆 Top Creators' : '🏆 개발자 랭킹'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setToolboxVisible(true)}
-              style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>{lang === 'en' ? '🧰 Free Dev Tools' : '🧰 무료 개발도구함'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleOpenArcade}
-              style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>{lang === 'en' ? '🕹️ Mini Arcade' : '🕹️ 미니오락실'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleOpenTeamBoard}
-              style={{ backgroundColor: '#FCE7F3', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#BE185D' }}>{lang === 'en' ? '🤝 Team Board' : '🤝 팀원모집 보드'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleInstallAppClick}
-              style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>{lang === 'en' ? '📲 Install App' : '📲 무료 앱 설치'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setSfxStudioOpen(true)}
-              style={{ backgroundColor: '#F3E8FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#7E22CE' }}>{lang === 'en' ? '🔊 8-Bit SFX Studio' : '🔊 효과음 제작기'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={handleOpenErrorWiki}
-              style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#C2410C' }}>{lang === 'en' ? '🛠️ Error Wiki' : '🛠️ 에러 해결 사전'}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setIdeaMachineOpen(true)}
-              style={{ backgroundColor: '#FEF9C3', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
-            >
-              <Text style={{ fontSize: 11, fontWeight: '800', color: '#A16207' }}>{lang === 'en' ? '🎲 Idea Generator' : '🎲 신작 아이디어 뽑기'}</Text>
-            </TouchableOpacity>
-          </View>
+      {/* Row 1: Compact Brand Title + Right Quick Action Buttons */}
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <View style={{ flex: 1, marginRight: 8 }}>
+          <Text numberOfLines={1} style={{ fontSize: 21, fontWeight: '800', color: Theme.colors.primary }}>
+            📜 DevLogs Hub
+          </Text>
+          <Text numberOfLines={1} style={{ fontSize: 11, fontWeight: '700', color: Theme.colors.textLight, marginTop: 2 }}>
+            {lang === 'en' ? `👁️ Today ${visitStats.today} • Total ${visitStats.total}` : `👁️ 오늘 ${visitStats.today}명 • 누적 ${visitStats.total}명 방문`}
+          </Text>
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
           {username ? (
             <TouchableOpacity
-              style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20 }}
+              style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14 }}
               onPress={handleOpenNotifications}
             >
-              <Text style={{ color: Theme.colors.text, fontWeight: '700', fontSize: 13 }}>
+              <Text style={{ color: Theme.colors.text, fontWeight: '800', fontSize: 12 }}>
                 🔔{unreadCount > 0 ? ` ${unreadCount}` : ''}
               </Text>
             </TouchableOpacity>
           ) : null}
           <TouchableOpacity
-            style={{
-              backgroundColor: Theme.colors.pillBg,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 20,
-            }}
+            style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14 }}
             onPress={handleToggleTheme}
           >
-            <Text style={{ color: Theme.colors.text, fontWeight: '700', fontSize: 13 }}>
-              {Theme.isDark ? '☀️ Light' : '🌙 Dark'}
+            <Text style={{ color: Theme.colors.text, fontWeight: '800', fontSize: 12 }}>
+              {Theme.isDark ? '☀️' : '🌙'}
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={{
-              backgroundColor: copied ? '#10B981' : Theme.colors.pillBg,
-              paddingHorizontal: 12,
-              paddingVertical: 8,
-              borderRadius: 20,
-            }}
+            style={{ backgroundColor: copied ? '#10B981' : Theme.colors.pillBg, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 14 }}
             onPress={handleShare}
           >
-            <Text style={{ color: copied ? '#FFFFFF' : '#334155', fontWeight: '700', fontSize: 13 }}>
-              {copied ? '✅ 링크 복사됨' : '🔗 공유'}
+            <Text style={{ color: copied ? '#FFFFFF' : Theme.colors.text, fontWeight: '800', fontSize: 12 }}>
+              {copied ? '✅ 복사됨' : '🔗 공유'}
             </Text>
           </TouchableOpacity>
           {onAuthClick && (
             <TouchableOpacity
               style={{
                 backgroundColor: username ? Theme.colors.pillBg : Theme.colors.primary,
-                paddingHorizontal: 14,
-                paddingVertical: 8,
-                borderRadius: 20,
+                paddingHorizontal: 11,
+                paddingVertical: 6,
+                borderRadius: 14,
               }}
               onPress={onAuthClick}
             >
-              <Text style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '700', fontSize: 13 }}>
-                {username ? `👤 ${username}` : '🔑 로그인 / 가입'}
+              <Text numberOfLines={1} style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '800', fontSize: 12 }}>
+                {username ? `👤 ${username.slice(0, 8)}` : '🔑 로그인'}
               </Text>
             </TouchableOpacity>
           )}
         </View>
       </View>
+
+      {/* Row 2: Horizontal Scrollable Feature Dock (Never squishes or overflows!) */}
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={{ gap: 6, paddingVertical: 2 }}
+        style={{ marginBottom: 10 }}
+      >
+        <TouchableOpacity
+          onPress={handleOpenErrorWiki}
+          style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#C2410C' }}>🛠️ Unity 에러 해결사전</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleOpenArcade}
+          style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#15803D' }}>🕹️ 미니오락실</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setSfxStudioOpen(true)}
+          style={{ backgroundColor: '#F3E8FF', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#7E22CE' }}>🔊 효과음 제작기</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleOpenTeamBoard}
+          style={{ backgroundColor: '#FCE7F3', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#BE185D' }}>🤝 팀원모집 보드</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setIdeaMachineOpen(true)}
+          style={{ backgroundColor: '#FEF9C3', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#A16207' }}>🎲 신작 아이디어 뽑기</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleOpenLeaderboard}
+          style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#D97706' }}>🏆 개발자 랭킹</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => setToolboxVisible(true)}
+          style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#4F46E5' }}>🧰 무료 개발도구함</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={handleInstallAppClick}
+          style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 12, flexShrink: 0 }}
+        >
+          <Text style={{ fontSize: 11.5, fontWeight: '800', color: '#0369A1' }}>📲 무료 앱 설치</Text>
+        </TouchableOpacity>
+      </ScrollView>
 
       {/* Search Input */}
       <NeumorphView radius={12} style={styles.searchBox}>
@@ -577,31 +578,31 @@ p.Jump();', helpful_count: 48 },
       </ScrollView>
 
       {/* Indie Game Homepage & Web Demo Showcase Strip */}
-      <View style={{ marginBottom: 16 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.primary }}>
-            {lang === 'en' ? '🕹️ Indie Game Websites & Web Demos' : '🕹️ 인디게임 공식 홈페이지 & 웹데모 홍보관'}
+      <View style={{ marginBottom: 14 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+          <Text numberOfLines={1} style={{ fontSize: 13.5, fontWeight: '800', color: Theme.colors.primary }}>
+            🕹️ 인디게임 & 웹데모 홍보관
           </Text>
-          <View style={{ flexDirection: 'row', gap: 6 }}>
+          <View style={{ flexDirection: 'row', gap: 6, flexShrink: 0 }}>
             <TouchableOpacity
               onPress={handleCopyFeaturedBadge}
-              style={{ backgroundColor: badgeCopied ? '#10B981' : '#EEF2FF', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 }}
+              style={{ backgroundColor: badgeCopied ? '#10B981' : '#EEF2FF', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8 }}
             >
-              <Text style={{ color: badgeCopied ? '#FFF' : '#4F46E5', fontSize: 11, fontWeight: '800' }}>
-                {badgeCopied ? '✅ 배지코드 복사됨!' : lang === 'en' ? '🎖️ Copy Badge' : '🎖️ 공식 배지 복사'}
+              <Text numberOfLines={1} style={{ color: badgeCopied ? '#FFF' : '#4F46E5', fontSize: 10.5, fontWeight: '800' }}>
+                {badgeCopied ? '✅ 복사됨' : '🎖️ 배지 복사'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setShowcaseModalOpen(true)}
-              style={{ backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 10 }}
+              style={{ backgroundColor: '#10B981', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 }}
             >
-              <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
-                {lang === 'en' ? '+ Add My Game Site' : '+ 내 게임 홈페이지 등록'}
+              <Text numberOfLines={1} style={{ color: '#FFF', fontSize: 10.5, fontWeight: '800' }}>
+                + 내 게임 등록
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 12 }}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
           {showcases.map((game: any) => (
             <View
               key={game.id}
@@ -614,7 +615,7 @@ p.Jump();', helpful_count: 48 },
               }}
             >
               {game.thumbnail_url ? (
-                <Image source={{ uri: game.thumbnail_url }} style={{ width: '100%', height: 100 }} resizeMode="cover" />
+                <Image source={{ uri: game.thumbnail_url }} style={{ width: '100%', height: 80 }} resizeMode="cover" />
               ) : null}
               <View style={{ paddingHorizontal: 12, paddingTop: 10 }}>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>

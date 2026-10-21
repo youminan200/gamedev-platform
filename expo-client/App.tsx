@@ -285,13 +285,18 @@ export default function App() {
           </View>
         )}
         {noticeMsg && !maintenanceMsg && (
-          <View style={{ backgroundColor: '#4F46E5', paddingVertical: 8, paddingHorizontal: 16, flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }}>
-            <Text style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 12, textAlign: 'center', flex: 1 }}>{noticeMsg}</Text>
-            <TouchableOpacity onPress={() => setUpdatePopupVisible(true)} style={{ backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8, marginLeft: 8 }}>
-              <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 11 }}>🎉 업데이트 내역 보기</Text>
+          <View style={{ backgroundColor: '#4F46E5', paddingVertical: 7, paddingHorizontal: 12, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+            <Text numberOfLines={1} style={{ color: '#FFFFFF', fontWeight: '700', fontSize: 11.5, flex: 1 }}>
+              {noticeMsg}
+            </Text>
+            <TouchableOpacity
+              onPress={() => setUpdatePopupVisible(true)}
+              style={{ backgroundColor: 'rgba(255,255,255,0.22)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, flexShrink: 0 }}
+            >
+              <Text numberOfLines={1} style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 10.5 }}>🎉 업데이트</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => setNoticeMsg(null)} style={{ marginLeft: 8 }}>
-              <Text style={{ color: '#E0E7FF', fontWeight: '800', fontSize: 12 }}>✕</Text>
+            <TouchableOpacity onPress={() => setNoticeMsg(null)} style={{ paddingHorizontal: 4, flexShrink: 0 }}>
+              <Text style={{ color: '#E0E7FF', fontWeight: '800', fontSize: 13 }}>✕</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -307,25 +312,25 @@ export default function App() {
         )}
 
         <Modal visible={updatePopupVisible} animationType="fade" transparent onRequestClose={() => setUpdatePopupVisible(false)}>
-          <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.65)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-            <View style={{ width: '100%', maxWidth: 460, backgroundColor: '#FFFFFF', borderRadius: 24, padding: 24, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 20, elevation: 10 }}>
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-                <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 999 }}>
-                  <Text style={{ color: '#4F46E5', fontWeight: '800', fontSize: 11 }}>TODAY'S UPDATE</Text>
+          <View style={{ flex: 1, backgroundColor: 'rgba(15, 23, 42, 0.68)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
+            <View style={{ width: '100%', maxWidth: 400, maxHeight: '82%', backgroundColor: '#FFFFFF', borderRadius: 20, padding: 18, shadowColor: '#000', shadowOpacity: 0.25, shadowRadius: 16, elevation: 10 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                <View style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999 }}>
+                  <Text style={{ color: '#4F46E5', fontWeight: '800', fontSize: 10.5 }}>TODAY'S UPDATE</Text>
                 </View>
-                <TouchableOpacity onPress={() => setUpdatePopupVisible(false)}>
-                  <Text style={{ fontSize: 18, fontWeight: '800', color: '#64748B' }}>✕</Text>
+                <TouchableOpacity onPress={() => setUpdatePopupVisible(false)} style={{ padding: 4 }}>
+                  <Text style={{ fontSize: 16, fontWeight: '800', color: '#64748B' }}>✕</Text>
                 </TouchableOpacity>
               </View>
 
-              <Text style={{ fontSize: 20, fontWeight: '800', color: '#0F172A', marginBottom: 6 }}>
+              <Text style={{ fontSize: 17, fontWeight: '800', color: '#0F172A', marginBottom: 4, lineHeight: 23 }}>
                 {updatePopupTitle}
               </Text>
-              <Text style={{ fontSize: 13, color: '#64748B', marginBottom: 16 }}>
+              <Text style={{ fontSize: 12, color: '#64748B', marginBottom: 10 }}>
                 DevGround에 새롭게 추가된 기능들을 지금 바로 체험해 보세요!
               </Text>
 
-              <ScrollView style={{ maxHeight: 280, marginBottom: 18 }}>
+              <ScrollView style={{ maxHeight: 210, marginBottom: 12 }} showsVerticalScrollIndicator={true}>
                 {updatePopupItems.map((item, idx) => (
                   <View
                     key={idx}
@@ -333,20 +338,20 @@ export default function App() {
                       backgroundColor: '#F8FAFC',
                       borderWidth: 1,
                       borderColor: '#E2E8F0',
-                      borderRadius: 14,
-                      paddingVertical: 11,
-                      paddingHorizontal: 14,
-                      marginBottom: 8,
+                      borderRadius: 12,
+                      paddingVertical: 9,
+                      paddingHorizontal: 12,
+                      marginBottom: 6,
                     }}
                   >
-                    <Text style={{ fontSize: 13, fontWeight: '700', color: '#1E293B', lineHeight: 19 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '700', color: '#1E293B', lineHeight: 17 }}>
                       {item}
                     </Text>
                   </View>
                 ))}
               </ScrollView>
 
-              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
                 <TouchableOpacity
                   onPress={() => {
                     try {
@@ -357,16 +362,16 @@ export default function App() {
                     } catch {}
                     setUpdatePopupVisible(false);
                   }}
-                  style={{ paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, backgroundColor: '#F1F5F9' }}
+                  style={{ paddingVertical: 11, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#F1F5F9', flexShrink: 0 }}
                 >
-                  <Text style={{ fontSize: 13, fontWeight: '700', color: '#475569' }}>오늘 하루 보지 않기</Text>
+                  <Text numberOfLines={1} style={{ fontSize: 12, fontWeight: '700', color: '#475569' }}>오늘 하루 닫기</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   onPress={() => setUpdatePopupVisible(false)}
-                  style={{ flex: 1, paddingVertical: 12, paddingHorizontal: 18, borderRadius: 12, backgroundColor: '#4F46E5', alignItems: 'center' }}
+                  style={{ flex: 1, paddingVertical: 11, paddingHorizontal: 12, borderRadius: 12, backgroundColor: '#4F46E5', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <Text style={{ fontSize: 14, fontWeight: '800', color: '#FFFFFF' }}>확인하고 둘러보기 🚀</Text>
+                  <Text numberOfLines={1} style={{ fontSize: 13, fontWeight: '800', color: '#FFFFFF' }}>확인하고 시작하기 🚀</Text>
                 </TouchableOpacity>
               </View>
             </View>
