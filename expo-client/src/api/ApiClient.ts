@@ -424,6 +424,28 @@ export const ApiClient = {
     return await response.json();
   },
 
+  getArcadeScores: async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/arcade/scores`);
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  getTeams: async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/teams`);
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
+  postTeam: async (data: { project_title: string; role_needed: string; engine: string; author: string; contact_url: string; description: string }): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/teams`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
   getUserProfile: async (username: string): Promise<any> => {
     const response = await fetch(`${BASE_URL}/users/${username}`, { headers: ApiClient.getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch user profile');

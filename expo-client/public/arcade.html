@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+  <title>DevGround Mini Arcade - Bug Slayer</title>
+  <style>
+    * { box-sizing: border-box; user-select: none; }
+    body { margin: 0; background: #0f172a; color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
+    .hud { display: flex; gap: 20px; align-items: center; margin-bottom: 10px; font-weight: 800; font-size: 15px; }
+    .score { color: #38bdf8; font-size: 20px; }
+    canvas { background: #1e293b; border: 2px solid #334155; border-radius: 16px; max-width: 95vw; max-height: 70vh; touch-action: none; cursor: crosshair; }
+    .controls { margin-top: 10px; display: flex; gap: 10px; align-items: center; }
+    .btn { background: #4f46e5; color: #fff; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 13px; }
+    .hint { color: #94a3b8; font-size: 12px; margin-top: 6px; }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div>🕹️ BUG SLAYER (인디 개발자 버그 피하기)</div>
+    <div class="score">SCORE: <span id="scoreVal">0</span></div>
+    <div style="color:#fbbf24;">BEST: <span id="bestVal">0</span></div>
+  </div>
+  <canvas id="game" width="520" height="320"></canvas>
+  <div class="controls">
+    <button class="btn" id="restartBtn">🔄 다시 시작 (Restart)</button>
+  </div>
+  <div class="hint">마우스 이동 / 터치 드래그 / 방향키(WASD)로 ☕커피를 먹고 🐛버그를 피하세요!</div>
+
+  <script>
+    const canvas = document.getElementById('game');
+    const ctx = canvas.getContext('2d');
+    const scoreEl = document.getElementById('scoreVal');
+    const bestEl = document.getElementById('bestVal');
+    const params = new URLSearchParams(window.location.search);
+    const playerName = params.get('user') || 'IndieDev';
+
+    let best = Number(localStorage.getItem('dg_arcade_best') || 0);
+    bestEl.textContent = best;
+
+    let player = { x: 260, y: 160, r: 14 };
+    let bugs = [];
+    let coffees = [];
+    let score = 0;
+    let gameOver = false;
+    let keys = {};
+
+    function reset() {
+      player = { x: 260, y: 160, r: 14 };
+      bugs = [];
+      coffees = [];
+      score = 0;
+      gameOver = false;
+      scoreEl.textContent = 0;
+      for (let i = 0; i < 4; i++) spawnBug();
+      for (let i = 0; i < 2; i++) spawnCoffee();
+    }
+
+    function spawnBug() {
+      const edge = Math.floor(Math.random() * 4);
+      let x = edge === 0 ? 10 : edge === 1 ? 510 : Math.random() * 520;
+      let y = edge === 2 ? 10 : edge === 3 ? 310 : Math.random() * 320;
+      const angle = Math.atan2(player.y - y, player.x - x);
+      const speed = 1.6 + Math.random() * 1.5 + Math.min(score / 150, 2.2);
+      bugs.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, r: 11 });
+    }
+
+    function spawnCoffee() {
+      coffees.push({
+        x: 30 + Math.random() * 460,
+        y: 30 + Math.random() * 260,
+        r: 10
+      });
+    }
+
+    window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+    window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+    canvas.addEventListener('mousemove', e => {
+      if (gameOver) return;
+      const rect = canvas.getBoundingClientRect();
+      player.x = ((e.clientX - rect.left) / rect.width) * canvas.width;
+      player.y = ((e.clientY - rect.top) / rect.height) * canvas.height;
+    });
+
+    canvas.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (gameOver || !e.touches[0]) return;
+      const rect = canvas.getBoundingClientRect();
+      player.x = ((e.touches[0].clientX - rect.left) / rect.width) * canvas.width;
+      player.y = ((e.touches[0].clientY - rect.top) / rect.height) * canvas.height;
+    }, { passive: false });
+
+    function submitScore(finalScore) {
+      if (finalScore <= 0) return;
+      fetch('https://gamedev-platform.onrender.com/api/arcade/scores', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: playerName, score: finalScore })
+      }).catch(() => {});
+    }
+
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      if (!gameOver) {
+        const spd = 4;
+        if (keys['arrowleft'] || keys['a']) player.x -= spd;
+        if (keys['arrowright'] || keys['d']) player.x += spd;
+        if (keys['arrowup'] || keys['w']) player.y -= spd;
+        if (keys['arrowdown'] || keys['s']) player.y += spd;
+        player.x = Math.max(15, Math.min(canvas.width - 15, player.x));
+        player.y = Math.max(15, Math.min(canvas.height - 15, player.y));
+
+        // Draw coffees
+        ctx.font = '18px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        for (let i = coffees.length - 1; i >= 0; i--) {
+          const c = coffees[i];
+          ctx.fillText('☕', c.x, c.y);
+          if (Math.hypot(player.x - c.x, player.y - c.y) < player.r + c.r) {
+            coffees.splice(i, 1);
+            score += 10;
+            scoreEl.textContent = score;
+            spawnCoffee();
+            if (score % 30 === 0) spawnBug();
+          }
+        }
+
+        // Update & draw bugs
+        for (const b of bugs) {
+          b.x += b.vx;
+          b.y += b.vy;
+          if (b.x < 10 || b.x > canvas.width - 10) b.vx *= -1;
+          if (b.y < 10 || b.y > canvas.height - 10) b.vy *= -1;
+          ctx.fillText('🐛', b.x, b.y);
+          if (Math.hypot(player.x - b.x, player.y - b.y) < player.r + b.r - 4) {
+            gameOver = true;
+            if (score > best) {
+              best = score;
+              localStorage.setItem('dg_arcade_best', String(best));
+              bestEl.textContent = best;
+            }
+            submitScore(score);
+          }
+        }
+
+        // Draw player
+        ctx.fillText('🧑‍💻', player.x, player.y);
+      } else {
+        ctx.fillStyle = 'rgba(15,23,42,0.82)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#f8fafc';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('💥 GAME OVER! (버그 발생)', canvas.width / 2, 130);
+        ctx.fillStyle = '#38bdf8';
+        ctx.font = 'bold 18px sans-serif';
+        ctx.fillText('최종 점수: ' + score + '점 (랭킹 자동 등록됨)', canvas.width / 2, 168);
+        ctx.fillStyle = '#94a3b8';
+        ctx.font = '14px sans-serif';
+        ctx.fillText('아래 [다시 시작] 버튼을 눌러 재도전하세요!', canvas.width / 2, 205);
+      }
+      requestAnimationFrame(loop);
+    }
+
+    document.getElementById('restartBtn').addEventListener('click', reset);
+    reset();
+    loop();
+  </script>
+</body>
+</html>

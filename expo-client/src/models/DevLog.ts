@@ -3,6 +3,7 @@ export interface DevLog {
   title: string;
   content?: string;
   image_url?: string;
+  code_snippet?: string;
   author: string;
   likes: number;
   views?: number;

@@ -367,6 +367,25 @@ db.exec(`
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   );
 
+
+  CREATE TABLE IF NOT EXISTS arcade_scores (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    score INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS team_posts (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    project_title TEXT NOT NULL,
+    role_needed TEXT NOT NULL,
+    engine TEXT DEFAULT 'Unity',
+    author TEXT NOT NULL,
+    contact_url TEXT NOT NULL,
+    description TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
   CREATE TABLE IF NOT EXISTS site_settings (
     key TEXT PRIMARY KEY,
     value TEXT
@@ -416,6 +435,139 @@ try {
     );
   }
 } catch {}
+
+
+try { db.exec('ALTER TABLE assets ADD COLUMN code_snippet TEXT;'); } catch {}
+try {
+  const sampleSnippet = `using UnityEngine;
+
+public class PlatformerController : MonoBehaviour {
+    public float jumpForce = 14f;
+    public float coyoteTime = 0.12f;
+    private float coyoteCounter;
+    private Rigidbody2D rb;
+
+    void Update() {
+        if (IsGrounded()) coyoteCounter = coyoteTime;
+        else coyoteCounter -= Time.deltaTime;
+
+        if (Input.GetButtonDown("Jump") && coyoteCounter > 0f) {
+            rb.velocity = new Vector2(rb.velocity.x, jumpForce);
+            coyoteCounter = 0f;
+        }
+    }
+}`;
+  db.prepare("UPDATE assets SET code_snippet = ? WHERE category = 'Code' AND (code_snippet IS NULL OR code_snippet = '')").run(sampleSnippet);
+} catch {}
+
+try {
+  const arcCount = (db.prepare('SELECT COUNT(*) as c FROM arcade_scores').get() as any).c;
+  if (arcCount === 0) {
+    const insArc = db.prepare('INSERT INTO arcade_scores (username, score) VALUES (?, ?)');
+    insArc.run('PixelKnight', 420);
+    insArc.run('GodotCrafter', 310);
+    insArc.run('ShaderWizard', 250);
+  }
+} catch {}
+
+try {
+  const teamCount = (db.prepare('SELECT COUNT(*) as c FROM team_posts').get() as any).c;
+  if (teamCount === 0) {
+    const insTeam = db.prepare('INSERT INTO team_posts (project_title, role_needed, engine, author, contact_url, description) VALUES (?, ?, ?, ?, ?, ?)');
+    insTeam.run(
+      '2D 도트 로그라이크 신작 <Shadow Dungeon> 스팀 출시 프로젝트',
+      '🎨 2D 픽셀 아티스트',
+      'Unity',
+      'PixelKnight',
+      'https://discord.com',
+      '전투/보스 프로토타입은 80% 완성되었습니다! 캐릭터 스킨 및 보스 이펙트 도트를 함께 작업하실 아티스트분을 찾습니다. (수익 5:5 쉐어)'
+    );
+    insTeam.run(
+      '힐링 농장 시뮬레이션 <Cozy Pixel Valley> 사운드 협업',
+      '🎵 BGM / 효과음 작곡가',
+      'Godot 4',
+      'GodotCrafter',
+      'https://open.kakao.com',
+      '계절별 잔잔한 어쿠스틱/칩튠 BGM 4곡과 환경음(빗소리, 발소리) 제작에 관심 있으신 사운드 디자이너분 연락 주세요!'
+    );
+    insTeam.run(
+      '언리얼5 카툰풍 3D 액션 멀티플레이 데모 팀원 모집',
+      '💻 클라이언트 프로그래머',
+      'Unreal 5',
+      'ShaderWizard',
+      'https://discord.com',
+      '카툰 셰이더 및 기본 전투 에셋은 준비되어 있습니다. 네트워크 동기화 및 보스 AI 패턴을 함께 구현할 개발자분 환영합니다!'
+    );
+  }
+} catch {}
+
+app.get('/api/arcade/scores', (_req, res) => {
+  const rows = db.prepare('SELECT username, MAX(score) as score, MAX(created_at) as created_at FROM arcade_scores GROUP BY username ORDER BY score DESC LIMIT 10').all();
+  res.json(rows);
+});
+
+app.post('/api/arcade/scores', (req, res) => {
+  const username = String(req.body?.username || 'IndieDev').trim().slice(0, 24) || 'IndieDev';
+  const score = Math.max(0, Math.min(999999, Number(req.body?.score) || 0));
+  if (score > 0) {
+    db.prepare('INSERT INTO arcade_scores (username, score) VALUES (?, ?)').run(username, score);
+  }
+  const rows = db.prepare('SELECT username, MAX(score) as score, MAX(created_at) as created_at FROM arcade_scores GROUP BY username ORDER BY score DESC LIMIT 10').all();
+  res.status(201).json(rows);
+});
+
+app.get('/api/teams', (_req, res) => {
+  const rows = db.prepare('SELECT * FROM team_posts ORDER BY id DESC LIMIT 30').all();
+  res.json(rows);
+});
+
+app.post('/api/teams', (req, res) => {
+  const { project_title, role_needed, engine, author, contact_url, description } = req.body || {};
+  if (!project_title || !role_needed) return res.status(400).json({ error: 'project_title and role_needed required' });
+  db.prepare(
+    'INSERT INTO team_posts (project_title, role_needed, engine, author, contact_url, description) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(
+    String(project_title).trim(),
+    String(role_needed).trim(),
+    String(engine || 'Unity').trim(),
+    String(author || 'IndieDev').trim(),
+    String(contact_url || 'https://discord.com').trim(),
+    String(description || '').trim()
+  );
+  const rows = db.prepare('SELECT * FROM team_posts ORDER BY id DESC LIMIT 30').all();
+  res.status(201).json(rows);
+});
+
+app.post('/admin/delete-team/:id', (req, res) => {
+  db.prepare('DELETE FROM team_posts WHERE id = ?').run(req.params.id);
+  res.redirect('/admin');
+});
+
+app.get('/admin/export.json', (_req, res) => {
+  const users = db.prepare('SELECT id, username, email, engine, bio, created_at FROM users ORDER BY id DESC').all();
+  const devlogs = db.prepare('SELECT id, user_id, title, likes, views, created_at FROM devlogs ORDER BY id DESC').all();
+  const assets = db.prepare('SELECT id, user_id, title, category, likes, downloads, created_at FROM assets ORDER BY id DESC').all();
+  const showcases = db.prepare('SELECT * FROM game_showcases ORDER BY id DESC').all();
+  const teams = db.prepare('SELECT * FROM team_posts ORDER BY id DESC').all();
+  res.setHeader('Content-Disposition', 'attachment; filename="devground_export.json"');
+  res.json({ exported_at: new Date().toISOString(), users, devlogs, assets, showcases, teams });
+});
+
+app.get('/admin/export.csv', (_req, res) => {
+  const users = db.prepare(`
+    SELECT u.id, u.username, u.email, COALESCE(u.engine, 'Unity') as engine, u.created_at,
+      (SELECT COUNT(*) FROM devlogs d WHERE d.user_id = u.id) as devlog_count,
+      (SELECT COUNT(*) FROM assets a WHERE a.user_id = u.id) as asset_count
+    FROM users u ORDER BY u.id DESC
+  `).all() as any[];
+  const escCsv = (v: any) => '"' + String(v ?? '').replace(/"/g, '""') + '"';
+  const header = ['ID', 'Username', 'Email', 'Engine', 'DevLogs', 'Assets', 'CreatedAt'].join(',');
+  const lines = users.map(u => [u.id, escCsv(u.username), escCsv(u.email), escCsv(u.engine), u.devlog_count, u.asset_count, escCsv(u.created_at)].join(','));
+  const csv = '\uFEFF' + [header, ...lines].join('\r\n');
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+  res.setHeader('Content-Disposition', 'attachment; filename="devground_users_stats.csv"');
+  res.send(csv);
+});
 
 app.get('/api/showcases', (_req, res) => {
   const rows = db.prepare('SELECT * FROM game_showcases ORDER BY id DESC LIMIT 30').all();
@@ -794,7 +946,11 @@ app.get('/admin', (_req, res) => {
   <div class="container">
     <div class="top-row">
       <h1>📊 DevGround 실시간 이용자 현황 & 서버 관리</h1>
-      <a class="btn" href="/admin/backup.sqlite">📥 실서버 DB 백업 다운로드 (.sqlite)</a>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <a class="btn btn-success" href="/admin/export.csv">📊 회원·통계 엑셀(CSV) 다운로드</a>
+        <a class="btn btn-outline" href="/admin/export.json">📄 전체 데이터 JSON 다운로드</a>
+        <a class="btn" href="/admin/backup.sqlite">📥 DB 원본 백업 (.sqlite)</a>
+      </div>
     </div>
     <div class="sub">새로고침(F5)하면 실시간 가입자 및 게시글 통계를 확인할 수 있습니다. | <a href="https://gamedev-platform-expo-client.vercel.app" target="_blank">서비스 바로가기 ↗</a></div>
 
@@ -1372,13 +1528,13 @@ app.get('/api/assets/:id', optionalAuthenticateToken, (req: any, res: any) => {
 });
 
 app.post('/api/assets', authenticateToken, (req: any, res: any) => {
-  const { title, description, category, file_url, image_url, tags } = req.body;
+  const { title, description, category, file_url, image_url, tags, code_snippet } = req.body;
   const userId = req.user.id;
 
   if (!title) return res.status(400).json({ error: 'Title is required' });
 
-  const stmt = db.prepare('INSERT INTO assets (user_id, title, description, category, file_url, image_url, tags) VALUES (?, ?, ?, ?, ?, ?, ?)');
-  const info = stmt.run(userId, title, description || '', category || '2D', file_url || '', image_url || null, JSON.stringify(tags || []));
+  const stmt = db.prepare('INSERT INTO assets (user_id, title, description, category, file_url, image_url, tags, code_snippet) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+  const info = stmt.run(userId, title, description || '', category || '2D', file_url || '', image_url || null, JSON.stringify(tags || []), code_snippet || null);
 
   res.status(201).json({
     id: info.lastInsertRowid.toString(),

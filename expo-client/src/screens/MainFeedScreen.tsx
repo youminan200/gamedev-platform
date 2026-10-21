@@ -41,6 +41,32 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [submittingSc, setSubmittingSc] = useState(false);
   const [previewGame, setPreviewGame] = useState<any>(null);
   const [badgeCopied, setBadgeCopied] = useState(false);
+  const [arcadeOpen, setArcadeOpen] = useState(false);
+  const [arcadeScores, setArcadeScores] = useState<any[]>([]);
+  const [teamBoardOpen, setTeamBoardOpen] = useState(false);
+  const [teams, setTeams] = useState<any[]>([]);
+  const [teamTitle, setTeamTitle] = useState('');
+  const [teamRole, setTeamRole] = useState('🎨 2D 픽셀 아티스트');
+  const [teamEngine, setTeamEngine] = useState('Unity');
+  const [teamContact, setTeamContact] = useState('');
+  const [teamDesc, setTeamDesc] = useState('');
+  const [submittingTeam, setSubmittingTeam] = useState(false);
+
+  const handleOpenArcade = async () => {
+    setArcadeOpen(true);
+    try {
+      const s = await ApiClient.getArcadeScores();
+      setArcadeScores(s);
+    } catch {}
+  };
+
+  const handleOpenTeamBoard = async () => {
+    setTeamBoardOpen(true);
+    try {
+      const t = await ApiClient.getTeams();
+      setTeams(t);
+    } catch {}
+  };
 
   const handleCopyFeaturedBadge = () => {
     const badgeMd = '[![Featured on DevGround](https://img.shields.io/badge/🎮_Featured_on-DevGround-4F46E5?style=for-the-badge)](https://gamedev-platform-expo-client.vercel.app)';
@@ -220,6 +246,18 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               style={{ backgroundColor: '#EEF2FF', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
             >
               <Text style={{ fontSize: 11, fontWeight: '800', color: '#4F46E5' }}>{lang === 'en' ? '🧰 Free Dev Tools' : '🧰 무료 개발도구함'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleOpenArcade}
+              style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>{lang === 'en' ? '🕹️ Mini Arcade' : '🕹️ 미니오락실'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleOpenTeamBoard}
+              style={{ backgroundColor: '#FCE7F3', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#BE185D' }}>{lang === 'en' ? '🤝 Team Board' : '🤝 팀원모집 보드'}</Text>
             </TouchableOpacity>
           </View>
         </View>

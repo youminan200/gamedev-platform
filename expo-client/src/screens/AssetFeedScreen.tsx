@@ -31,6 +31,8 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
   const [newImageUrl, setNewImageUrl] = useState('');
   const [newFileUrl, setNewFileUrl] = useState('');
   const [newCategory, setNewCategory] = useState<'2D' | '3D' | 'Audio' | 'UI' | 'Code'>('2D');
+  const [newCodeSnippet, setNewCodeSnippet] = useState('');
+  const [copiedSnippetId, setCopiedSnippetId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const currentUsername = ApiClient.getUsername();
@@ -125,8 +127,9 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
     }
   };
 
-  const handleOpenLink = (url?: string) => {
+  const handleOpenLink = (url?: string, id?: string) => {
     if (!url) return;
+    if (id) ApiClient.recordAssetDownload(id).catch(() => {});
     Linking.openURL(url).catch(() => {});
   };
 
@@ -227,6 +230,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
         category: newCategory,
         image_url: newImageUrl.trim() || undefined,
         file_url: newFileUrl.trim() || undefined,
+        code_snippet: newCodeSnippet.trim() || undefined,
         tags: [newCategory, 'Asset']
       });
       setModalVisible(false);
@@ -234,6 +238,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
       setNewDescription('');
       setNewImageUrl('');
       setNewFileUrl('');
+      setNewCodeSnippet('');
       fetchAssets();
     } catch (e) {
       console.error(e);
@@ -333,6 +338,31 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
           <Text style={styles.assetTitle}>{item.title}</Text>
           <Text style={styles.assetDesc}>{item.description || 'No description provided.'}</Text>
 
+
+          {(item.category === 'Code' || Boolean(item.code_snippet)) && (
+            <View style={{ backgroundColor: '#0F172A', borderRadius: 12, padding: 12, marginBottom: 12 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <Text style={{ color: '#38BDF8', fontSize: 11, fontWeight: '800' }}>💻 C# / Shader 스크립트 미리보기</Text>
+                <TouchableOpacity
+                  onPress={(e: any) => {
+                    e?.stopPropagation?.();
+                    const codeText = item.code_snippet || '// Script snippet';
+                    try { navigator?.clipboard?.writeText(codeText); } catch {}
+                    setCopiedSnippetId(item.id);
+                    setTimeout(() => setCopiedSnippetId(null), 2000);
+                  }}
+                  style={{ backgroundColor: copiedSnippetId === item.id ? '#10B981' : '#1E293B', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>
+                    {copiedSnippetId === item.id ? '✅ 코드 복사됨!' : '📋 코드 복사'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+              <Text numberOfLines={6} style={{ color: '#E2E8F0', fontSize: 11, fontFamily: 'monospace', lineHeight: 16 }}>
+                {item.code_snippet || 'using UnityEngine;\n// 클릭하여 전체 스크립트 및 다운로드 링크를 확인하세요.'}
+              </Text>
+            </View>
+          )}
           {item.category === 'Audio' && (
             <TouchableOpacity
               onPress={(e: any) => {
@@ -494,7 +524,17 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                           <Text style={styles.uploadFileBtnText}>{isUploading ? '업로드 중...' : '📁 이미지 파일 업로드'}</Text>
                         </TouchableOpacity>
                       )}
-                      <View style={styles.modalButtonRow}>
+          
+            {newCategory === 'Code' && (
+              <TextInput
+                style={[styles.modalInput, { height: 90, fontFamily: 'monospace', fontSize: 12 }]}
+                placeholder="핵심 C# / GDScript / Shader 코드 스니펫 붙여넣기 (선택사항)"
+                multiline
+                value={newCodeSnippet}
+                onChangeText={setNewCodeSnippet}
+              />
+            )}
+            <View style={styles.modalButtonRow}>
                         <TouchableOpacity style={styles.cancelModalButton} onPress={() => setEditing(false)}>
                           <Text style={styles.cancelModalText}>취소</Text>
                         </TouchableOpacity>
