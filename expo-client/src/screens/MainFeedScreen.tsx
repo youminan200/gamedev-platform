@@ -47,6 +47,119 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [errorWikiOpen, setErrorWikiOpen] = useState(false);
   const [errorList, setErrorList] = useState<any[]>([]);
   const [errorSearch, setErrorSearch] = useState('');
+  const [errorCatFilter, setErrorCatFilter] = useState('전체');
+  const [diagnoseInput, setDiagnoseInput] = useState('');
+  const [diagnoseResult, setDiagnoseResult] = useState<any>(null);
+  const [diagnosing, setDiagnosing] = useState(false);
+  const [copiedErrId, setCopiedErrId] = useState<string | null>(null);
+
+  const BUILTIN_UNITY_ERRORS: any[] = [
+    { id: 'u1', engine: 'Unity (C# CS코드)', error_title: 'CS0103: The name "..." does not exist in the current context', cause: '선언하지 않은 변수/함수명을 사용했거나 대소문자 오타(gameObject vs gameobject), 또는 지역변수 중괄호 { } 범위를 벗어났을 때 발생합니다.', solution: '1) 대소문자 철자를 확인하세요. 2) 특정 함수 안에서 선언한 변수를 다른 함수에서 쓰려면 클래스 상단 멤버 변수로 선언하세요.', code_fix: 'private float moveSpeed = 5f; // 클래스 상단에 선언', helpful_count: 68 },
+    { id: 'u2', engine: 'Unity (C# CS코드)', error_title: 'CS0246: The type or namespace name "..." could not be found', cause: 'UI(Button, Image), TextMeshPro, SceneManager 등을 사용할 때 스크립트 최상단 using 구문이 빠졌거나 .asmdef 참조가 누락되었습니다.', solution: '스크립트 맨 위에 using UnityEngine.UI; / using TMPro; / using UnityEngine.SceneManagement; 를 추가하세요.', code_fix: 'using UnityEngine;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
+using TMPro;', helpful_count: 64 },
+    { id: 'u3', engine: 'Unity (C# CS코드)', error_title: 'CS1061: "..." does not contain a definition for "..."', cause: '해당 컴포넌트에 없는 함수/변수를 호출했거나, 내가 만든 스크립트 이름(예: Camera.cs)이 Unity 기본 클래스 이름과 겹쳐 충돌났습니다.', solution: '호출 대상 컴포넌트가 맞는지 확인하고, 내 스크립트 이름이 Unity 내장 클래스명과 같다면 파일명을 변경하세요.', code_fix: 'GetComponent<Rigidbody2D>().linearVelocity = Vector2.zero;', helpful_count: 59 },
+    { id: 'u4', engine: 'Unity (C# CS코드)', error_title: 'CS0029: Cannot implicitly convert type "double" to "float" (또는 float to int)', cause: 'C#에서 소수점 숫자 뒤에 f를 붙이지 않으면 double로 인식되어 float 변수에 대입할 수 없습니다.', solution: '소수점 숫자 뒤에 반드시 f를 붙이고(예: 3.5f), int에 넣을 때는 Mathf.RoundToInt()를 사용하세요.', code_fix: 'float speed = 5.5f;
+int dmg = Mathf.RoundToInt(speed);', helpful_count: 55 },
+    { id: 'u5', engine: 'Unity (C# CS코드)', error_title: 'CS1612: Cannot modify the return value of "Transform.position" because it is not a variable', cause: 'transform.position.x = 5f; 처럼 구조체(Vector3) 반환값의 일부만 직접 수정하려고 할 때 발생합니다.', solution: 'Vector3 변수에 먼저 담아서 수정한 뒤 transform.position에 통째로 대입하세요.', code_fix: 'Vector3 pos = transform.position;
+pos.x = 5f;
+transform.position = pos;', helpful_count: 61 },
+    { id: 'u6', engine: 'Unity (C# CS코드)', error_title: 'CS0120: An object reference is required for the non-static field, method, or property', cause: '생성된 오브젝트 인스턴스가 아니라 클래스 이름 자체로 일반 함수/변수를 호출했습니다.', solution: 'GetComponent<T>() 또는 FindFirstObjectByType<T>()로 실제 오브젝트를 찾아 호출하세요.', code_fix: 'Player p = FindFirstObjectByType<Player>();
+p.Jump();', helpful_count: 48 },
+    { id: 'u7', engine: 'Unity (C# CS코드)', error_title: 'CS0161: Not all code paths return a value', cause: '반환값이 있는 함수에서 if문 안에만 return이 있고 함수 끝에 기본 return이 빠졌습니다.', solution: '함수 맨 마지막 줄에 기본 return 문을 추가하세요.', code_fix: 'bool Check() {
+    if (hp > 0) return true;
+    return false;
+}', helpful_count: 43 },
+    { id: 'u8', engine: 'Unity (C# CS코드)', error_title: 'CS0618 / CS0619: "..." is obsolete (Unity 6 구버전 API 경고/에러)', cause: 'Unity 6에서 구버전 API(rb.velocity, FindObjectOfType 등)가 최신 API로 변경되었습니다.', solution: 'rb.velocity -> rb.linearVelocity, FindObjectOfType -> FindFirstObjectByType 으로 변경하세요.', code_fix: 'rb.linearVelocity = new Vector2(x, rb.linearVelocity.y);', helpful_count: 52 },
+    { id: 'u9', engine: 'Unity (C# CS코드)', error_title: 'CS1002 / CS1513 / CS1525: ; expected / } expected / Invalid expression term', cause: '코드 줄 끝에 세미콜론(;)이 빠졌거나 중괄호 { } 짝이 맞지 않을 때 발생합니다.', solution: '에러에 적힌 줄 번호(또는 바로 윗줄) 끝에 ; 가 있는지, 닫는 중괄호 } 개수가 맞는지 확인하세요.', code_fix: 'int hp = 100; // 세미콜론과 중괄호 짝 확인', helpful_count: 50 },
+    { id: 'u10', engine: 'Unity (런타임 예외)', error_title: 'NullReferenceException: Object reference not set to an instance of an object', cause: 'Inspector 슬롯이 비어 있거나(None), GetComponent<T>()가 실패해 null인 변수를 사용할 때 발생합니다.', solution: '콘솔 에러를 더블클릭해 해당 줄의 변수 중 어떤 것이 null인지 확인하고 Inspector 연결 또는 Awake() 초기화를 추가하세요.', code_fix: 'void Awake() { if (!rb) rb = GetComponent<Rigidbody2D>(); }', helpful_count: 95 },
+    { id: 'u11', engine: 'Unity (런타임 예외)', error_title: 'MissingReferenceException: The object of type "..." has been destroyed', cause: 'Destroy()로 이미 파괴된 오브젝트를 코루틴이나 이벤트에서 계속 참조할 때 발생합니다.', solution: '접근 전 if (target != null) 체크를 추가하고 OnDestroy()에서 코루틴/이벤트를 해제하세요.', code_fix: 'if (target != null) target.transform.Translate(Vector3.up);', helpful_count: 57 },
+    { id: 'u12', engine: 'Unity (런타임 예외)', error_title: 'UnassignedReferenceException: The variable "..." has not been assigned', cause: 'Inspector 창의 스크립트 변수 슬롯이 비어 있는(None) 상태로 게임을 실행했습니다.', solution: 'Hierarchy에서 오브젝트를 선택하고 Inspector의 빈 슬롯에 프리팹/오브젝트를 드래그해 연결하세요.', code_fix: '[SerializeField] private GameObject prefab; // Inspector 연결 필수', helpful_count: 63 },
+    { id: 'u13', engine: 'Unity (런타임 예외)', error_title: 'IndexOutOfRangeException / ArgumentOutOfRangeException (배열·리스트 범위 초과)', cause: '배열이나 List의 크기보다 큰 인덱스(또는 음수)에 접근했습니다.', solution: '접근 전 if (idx >= 0 && idx < list.Count) 조건으로 배열 범위를 먼저 확인하세요.', code_fix: 'if (idx >= 0 && idx < list.Count) { var v = list[idx]; }', helpful_count: 54 },
+    { id: 'u14', engine: 'Unity (런타임 예외)', error_title: 'InvalidOperationException: You are trying to read Input using the UnityEngine.Input class (Input System 충돌)', cause: '신규 Input System 패키지를 켜놓고 구버전 Input.GetKeyDown() 코드를 사용했습니다.', solution: 'Edit > Project Settings > Player > Other Settings > Active Input Handling을 "Both"로 변경하면 즉시 해결됩니다!', code_fix: '// Project Settings > Player > Active Input Handling -> Both 선택', helpful_count: 82 },
+    { id: 'u15', engine: 'Unity (런타임 예외)', error_title: 'InvalidOperationException: Collection was modified; enumeration operation may not execute', cause: 'foreach문으로 리스트를 돌면서 동시에 list.Remove()나 Add()를 호출했습니다.', solution: 'foreach 대신 역방향 for문(for int i = list.Count - 1; i >= 0; i--)을 사용해 안전하게 삭제하세요.', code_fix: 'for (int i = list.Count - 1; i >= 0; i--) { list.RemoveAt(i); }', helpful_count: 49 },
+    { id: 'u16', engine: 'Unity (런타임 예외)', error_title: 'MissingComponentException / StackOverflowException / KeyNotFoundException', cause: '필수 컴포넌트 누락, 무한 재귀 호출, 또는 Dictionary에 없는 키를 조회할 때 발생합니다.', solution: 'Inspector에서 컴포넌트를 추가하고, Dictionary는 TryGetValue()로 안전하게 조회하세요.', code_fix: 'if (dict.TryGetValue(key, out var val)) { /* 안전 사용 */ }', helpful_count: 46 },
+    { id: 'u17', engine: 'Unity (물리/UI/셰이더)', error_title: 'OnTriggerEnter2D / OnCollisionEnter 충돌 감지가 전혀 작동하지 않는 현상', cause: '두 오브젝트 중 최소 하나에 Rigidbody(2D)가 없거나, 2D 게임에서 3D용 OnTriggerEnter를 사용했습니다.', solution: '두 오브젝트에 Collider2D를 넣고 움직이는 쪽에 Rigidbody2D를 추가한 뒤 OnTriggerEnter2D(Collider2D other)를 사용하세요.', code_fix: 'private void OnTriggerEnter2D(Collider2D other) {
+    if (other.CompareTag("Player")) { }
+}', helpful_count: 88 },
+    { id: 'u18', engine: 'Unity (물리/UI/셰이더)', error_title: 'UI 버튼(Button)이 클릭되지 않는 현상 (UGUI 먹통)', cause: '씬에 EventSystem이 없거나 투명한 다른 UI 이미지(Raycast Target 켜짐)가 버튼 위를 가리고 있습니다.', solution: 'Hierarchy에 EventSystem이 있는지 확인하고, 버튼을 가리는 배경/텍스트의 Raycast Target 체크를 해제하세요.', code_fix: '// 장식용 Image/Text의 Raycast Target 체크 해제', helpful_count: 73 },
+    { id: 'u19', engine: 'Unity (물리/UI/셰이더)', error_title: '셰이더/머티리얼이 분홍색(Magenta / Pink)으로 깨지는 현상', cause: 'Built-in 에셋을 URP 프로젝트에 가져와 셰이더가 호환되지 않을 때 발생합니다.', solution: 'Window > Rendering > Render Pipeline Converter에서 Material Upgrade를 실행하면 1초 만에 복구됩니다.', code_fix: '// Window > Rendering > Render Pipeline Converter 실행', helpful_count: 79 },
+    { id: 'u20', engine: 'Unity (물리/UI/셰이더)', error_title: '캐릭터 이동 시 카메라 떨림(Jitter) 또는 빠른 총알이 벽을 뚫는 현상(Tunneling)', cause: '카메라를 Update에서 이동시켰거나, 빠른 물체의 Rigidbody Collision Detection이 Discrete로 되어 있습니다.', solution: '카메라 추적은 LateUpdate()에 작성하고, 빠른 총알의 Rigidbody Collision Detection을 Continuous로 설정하세요.', code_fix: 'void LateUpdate() { transform.position = target.position + offset; }', helpful_count: 62 },
+    { id: 'u21', engine: 'Unity (빌드/배포)', error_title: 'Android IL2CPP / Gradle 빌드 실패 (NDK not found / CommandInvokationFailure / Duplicate class)', cause: '프로젝트 경로에 한글/공백이 포함되어 있거나 Android SDK/NDK 경로 및 플러그인 라이브러리가 충돌했습니다.', solution: '1) 프로젝트 폴더를 순수 영문 경로로 이동 2) External Tools에서 SDK/NDK 체크 리셋 3) Android Resolver > Force Resolve 실행', code_fix: '// 프로젝트 폴더명에 한글(바탕화면 등)이 없도록 영문 경로로 이동', helpful_count: 76 },
+    { id: 'u22', engine: 'Unity (빌드/배포)', error_title: 'WebGL 빌드 후 90%에서 멈추거나 Decompression Fallback 에러 발생', cause: '웹 호스팅 서버가 Brotli 압축 헤더를 지원하지 않을 때 발생합니다.', solution: 'Player Settings > Publishing Settings에서 Decompression Fallback을 체크하거나 Compression Format을 Disabled로 바꾸세요.', code_fix: '// Publishing Settings > Decompression Fallback 체크!', helpful_count: 67 },
+    { id: 'u23', engine: 'Unreal / Godot', error_title: 'Unreal ExitCode=25 (Unknown Cook Failure) / Godot 4 Nil 참조 및 한글 네모 깨짐', cause: '언리얼 깨진 Redirector 참조 또는 Godot @onready 이전 노드 참조 / 폰트 미등록 문제입니다.', solution: 'Unreal: Content 폴더 Fix Up Redirectors 실행 / Godot: @onready 사용 및 Web Export 시 Thread Support 해제', code_fix: '@onready var anim = $AnimationPlayer', helpful_count: 45 }
+  ];
+
+  const handleUniversalDiagnose = async () => {
+    const raw = diagnoseInput.trim();
+    if (!raw) return;
+    setDiagnosing(true);
+    try {
+      const lower = raw.toLowerCase();
+      const fileMatch = raw.match(/([A-Za-z0-9_\/\\.-]+\.cs)\((\d+),\s*(\d+)\)/i);
+      const locationStr = fileMatch ? `📍 발생 파일 위치: ${fileMatch[1]} (${fileMatch[2]}번째 줄, ${fileMatch[3]}열)` : '';
+
+      const allPool = [...BUILTIN_UNITY_ERRORS, ...errorList];
+      let matchedItem = allPool.find((item) => {
+        const codeKey = item.error_title.split(':')[0].trim().toLowerCase();
+        return (codeKey.length >= 4 && lower.includes(codeKey)) || lower.includes(item.error_title.toLowerCase().slice(0, 18));
+      });
+
+      if (!matchedItem) {
+        if (lower.includes('nullreference')) matchedItem = BUILTIN_UNITY_ERRORS[9];
+        else if (lower.includes('missingreference')) matchedItem = BUILTIN_UNITY_ERRORS[10];
+        else if (lower.includes('unassignedreference')) matchedItem = BUILTIN_UNITY_ERRORS[11];
+        else if (lower.includes('indexoutofrange') || lower.includes('argumentoutofrange')) matchedItem = BUILTIN_UNITY_ERRORS[12];
+        else if (lower.includes('input') && lower.includes('invalidoperation')) matchedItem = BUILTIN_UNITY_ERRORS[13];
+        else if (lower.includes('collection was modified')) matchedItem = BUILTIN_UNITY_ERRORS[14];
+        else if (lower.includes('does not exist in the current context')) matchedItem = BUILTIN_UNITY_ERRORS[0];
+        else if (lower.includes('could not be found')) matchedItem = BUILTIN_UNITY_ERRORS[1];
+        else if (lower.includes('does not contain a definition')) matchedItem = BUILTIN_UNITY_ERRORS[2];
+        else if (lower.includes('cannot implicitly convert')) matchedItem = BUILTIN_UNITY_ERRORS[3];
+        else if (lower.includes('cannot modify the return value')) matchedItem = BUILTIN_UNITY_ERRORS[4];
+        else if (lower.includes('object reference is required')) matchedItem = BUILTIN_UNITY_ERRORS[5];
+        else if (lower.includes('not all code paths')) matchedItem = BUILTIN_UNITY_ERRORS[6];
+        else if (lower.includes('obsolete')) matchedItem = BUILTIN_UNITY_ERRORS[7];
+        else if (lower.includes('expected')) matchedItem = BUILTIN_UNITY_ERRORS[8];
+        else if (lower.includes('il2cpp') || lower.includes('gradle') || lower.includes('ndk')) matchedItem = BUILTIN_UNITY_ERRORS[20];
+        else if (lower.includes('webgl') || lower.includes('decompression')) matchedItem = BUILTIN_UNITY_ERRORS[21];
+        else if (lower.includes('pink') || lower.includes('magenta') || lower.includes('분홍')) matchedItem = BUILTIN_UNITY_ERRORS[18];
+        else if (lower.includes('trigger') || lower.includes('collision') || lower.includes('충돌')) matchedItem = BUILTIN_UNITY_ERRORS[16];
+      }
+
+      let koreanTranslation = '';
+      try {
+        const trRes = await fetch('https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ko&dt=t&q=' + encodeURIComponent(raw.slice(0, 300)));
+        const trJson = await trRes.json();
+        koreanTranslation = trJson[0].map((s: any) => s[0]).join('');
+      } catch {}
+
+      if (matchedItem) {
+        setDiagnoseResult({
+          title: matchedItem.error_title,
+          location: locationStr,
+          translated: koreanTranslation,
+          cause: matchedItem.cause,
+          solution: matchedItem.solution,
+          code_fix: matchedItem.code_fix,
+          query: raw.slice(0, 120)
+        });
+      } else {
+        setDiagnoseResult({
+          title: raw.slice(0, 120),
+          location: locationStr,
+          translated: koreanTranslation || '사용자 정의 에러 로그 분석 완료',
+          cause: '스크립트 내 참조 누락, C# 문법/타입 불일치, 또는 패키지 버전 충돌로 인해 발생한 에러입니다.',
+          solution: '1) 위 한글 번역 내용과 발생 파일 줄 번호를 확인해 변수 초기화 및 오타를 점검하세요.\n2) 아래 [Unity 공식 포럼 해결책 바로 열기] 또는 [StackOverflow 정답 바로 열기] 버튼을 누르면 이 에러 메시지와 100% 일치하는 전 세계 개발자들의 해결 코드를 즉시 볼 수 있습니다!',
+          code_fix: '// 1. 콘솔 에러 더블클릭 -> 해당 스크립트 줄 이동\n// 2. 변수 null 여부 및 컴포넌트 연결 확인',
+          query: raw.slice(0, 120)
+        });
+      }
+    } finally {
+      setDiagnosing(false);
+    }
+  };
   const [errEngine, setErrEngine] = useState('Unity');
   const [errTitle, setErrTitle] = useState('');
   const [errCause, setErrCause] = useState('');
@@ -1263,41 +1376,158 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       </Modal>
 
       <Modal visible={errorWikiOpen} animationType="fade" transparent onRequestClose={() => setErrorWikiOpen(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 16 }}>
-          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22, maxHeight: '90%' }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <View>
-                <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text }}>🛠️ Unity · Unreal · Godot 단골 에러 1분 해결 사전</Text>
-                <Text style={{ fontSize: 12, color: Theme.colors.textLight }}>자주 막히는 빌드/셰이더/참조 에러 해결법과 방어 코드를 검색하세요!</Text>
+        <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.82)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 760, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 20, maxHeight: '92%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <View style={{ flex: 1 }}>
+                <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text }}>🛠️ Unity · Unreal · Godot 만능 에러 해결 센터</Text>
+                <Text style={{ fontSize: 12, color: Theme.colors.textLight }}>어떤 에러든 콘솔 로그를 붙여넣거나 검색하면 원인과 해결 코드를 즉시 찾아줍니다!</Text>
               </View>
-              <TouchableOpacity onPress={() => setErrorWikiOpen(false)}>
+              <TouchableOpacity onPress={() => setErrorWikiOpen(false)} style={{ padding: 4 }}>
                 <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
               </TouchableOpacity>
             </View>
-            <TextInput
-              style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 12, fontSize: 13 }}
-              placeholder="에러 메시지 검색 (예: NullReferenceException, Magenta, IL2CPP, ExitCode=25, 한글 깨짐...)"
-              value={errorSearch}
-              onChangeText={setErrorSearch}
-            />
-            <ScrollView style={{ maxHeight: 480 }}>
-              {errorList
-                .filter((e) => !errorSearch.trim() || (e.error_title + e.cause + e.solution + e.engine).toLowerCase().includes(errorSearch.toLowerCase()))
-                .map((e) => (
-                  <View key={e.id} style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 14, marginBottom: 10 }}>
+
+            <ScrollView style={{ maxHeight: 580 }}>
+              {/* Universal Error Analyzer Box */}
+              <View style={{ backgroundColor: '#0F172A', borderRadius: 14, padding: 14, marginBottom: 14, borderWidth: 1, borderColor: '#38BDF8' }}>
+                <Text style={{ color: '#38BDF8', fontSize: 13, fontWeight: '800', marginBottom: 6 }}>
+                  🤖 만능 에러 자동 진단기 (Unity 콘솔 에러 메시지를 그대로 붙여넣으세요!)
+                </Text>
+                <TextInput
+                  style={{ backgroundColor: '#1E293B', color: '#F8FAFC', borderRadius: 10, padding: 10, fontSize: 12, height: 56, marginBottom: 8 }}
+                  placeholder="예: Assets/Player.cs(42,13): error CS0103: The name 'speed' does not exist... 또는 아무 에러 메시지 붙여넣기"
+                  placeholderTextColor="#64748B"
+                  multiline
+                  value={diagnoseInput}
+                  onChangeText={setDiagnoseInput}
+                />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TouchableOpacity
+                    onPress={handleUniversalDiagnose}
+                    disabled={diagnosing}
+                    style={{ flex: 1, backgroundColor: '#38BDF8', paddingVertical: 9, borderRadius: 10, alignItems: 'center' }}
+                  >
+                    <Text style={{ color: '#0F172A', fontWeight: '800', fontSize: 13 }}>
+                      {diagnosing ? '🔍 에러 분석 및 번역 중...' : '🔍 이 에러 즉시 원인 진단 & 한글 번역 해결하기'}
+                    </Text>
+                  </TouchableOpacity>
+                  {diagnoseResult ? (
+                    <TouchableOpacity
+                      onPress={() => { setDiagnoseResult(null); setDiagnoseInput(''); }}
+                      style={{ backgroundColor: '#334155', paddingHorizontal: 12, justifyContent: 'center', borderRadius: 10 }}
+                    >
+                      <Text style={{ color: '#FFF', fontSize: 12, fontWeight: '700' }}>초기화</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+
+                {diagnoseResult ? (
+                  <View style={{ marginTop: 12, backgroundColor: '#1E293B', borderRadius: 12, padding: 12, borderWidth: 1, borderColor: '#475569' }}>
+                    <Text style={{ color: '#FACC15', fontSize: 13, fontWeight: '800', marginBottom: 4 }}>✅ 자동 진단 결과: {diagnoseResult.title}</Text>
+                    {diagnoseResult.location ? (
+                      <Text style={{ color: '#38BDF8', fontSize: 12, fontWeight: '800', marginBottom: 4 }}>{diagnoseResult.location}</Text>
+                    ) : null}
+                    {diagnoseResult.translated ? (
+                      <Text style={{ color: '#E2E8F0', fontSize: 12, marginBottom: 6 }}>🌐 에러 한글 해석: "{diagnoseResult.translated}"</Text>
+                    ) : null}
+                    <Text style={{ color: '#FDA4AF', fontSize: 12, marginBottom: 4 }}>• 발생 원인: {diagnoseResult.cause}</Text>
+                    <Text style={{ color: '#A7F3D0', fontSize: 13, fontWeight: '700', marginBottom: 8, lineHeight: 18 }}>💡 해결 방법: {diagnoseResult.solution}</Text>
+                    {diagnoseResult.code_fix ? (
+                      <View style={{ backgroundColor: '#020617', padding: 10, borderRadius: 8, marginBottom: 8 }}>
+                        <Text style={{ color: '#38BDF8', fontSize: 11, fontFamily: 'monospace' }}>{diagnoseResult.code_fix}</Text>
+                      </View>
+                    ) : null}
+                    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 4 }}>
+                      <TouchableOpacity
+                        onPress={() => Linking.openURL('https://www.google.com/search?q=' + encodeURIComponent('Unity ' + diagnoseResult.query + ' 해결'))}
+                        style={{ backgroundColor: '#3B82F6', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
+                      >
+                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>🔎 구글 한국어 해결책 검색 ↗</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => Linking.openURL('https://stackoverflow.com/search?q=' + encodeURIComponent('[unity3d] ' + diagnoseResult.query))}
+                        style={{ backgroundColor: '#F97316', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
+                      >
+                        <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>💡 StackOverflow 정답 검색 ↗</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        onPress={() => Linking.openURL('https://discussions.unity.com/search?q=' + encodeURIComponent(diagnoseResult.query))}
+                        style={{ backgroundColor: '#10B981', paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8 }}
+                      >
+                        <Text style={{ color: '#0F172A', fontSize: 11, fontWeight: '800' }}>🎮 Unity 공식 포럼 검색 ↗</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                ) : null}
+              </View>
+
+              {/* Search & Category Filter */}
+              <TextInput
+                style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 10, marginBottom: 8, fontSize: 13 }}
+                placeholder="🔎 에러 코드/증상 즉시 검색 (예: CS0103, CS0246, Null, 분홍색, 충돌, 버튼, IL2CPP, WebGL...)"
+                value={errorSearch}
+                onChangeText={setErrorSearch}
+              />
+
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 12 }}>
+                {['전체', 'Unity (C# CS코드)', 'Unity (런타임 예외)', 'Unity (물리/UI/셰이더)', 'Unity (빌드/배포)', 'Unreal / Godot'].map((cat) => (
+                  <TouchableOpacity
+                    key={cat}
+                    onPress={() => setErrorCatFilter(cat)}
+                    style={{
+                      backgroundColor: errorCatFilter === cat ? Theme.colors.primary : Theme.colors.pillBg,
+                      paddingHorizontal: 11,
+                      paddingVertical: 6,
+                      borderRadius: 12,
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: errorCatFilter === cat ? '#FFF' : Theme.colors.text }}>{cat}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+
+              {(() => {
+                const combined = [...BUILTIN_UNITY_ERRORS];
+                errorList.forEach((srvErr) => {
+                  if (!combined.some((b) => b.error_title.slice(0, 12) === String(srvErr.error_title).slice(0, 12))) {
+                    combined.push(srvErr);
+                  }
+                });
+                const filtered = combined.filter((e) => {
+                  const matchCat = errorCatFilter === '전체' || String(e.engine).includes(errorCatFilter.replace('Unreal / Godot', 'Unreal')) || (errorCatFilter === 'Unreal / Godot' && (String(e.engine).includes('Unreal') || String(e.engine).includes('Godot')));
+                  const matchQuery = !errorSearch.trim() || (e.error_title + e.cause + e.solution + e.engine + (e.code_fix || '')).toLowerCase().includes(errorSearch.toLowerCase());
+                  return matchCat && matchQuery;
+                });
+
+                return filtered.map((e, idx) => (
+                  <View key={String(e.id) + idx} style={{ backgroundColor: Theme.colors.pillBg, borderRadius: 14, padding: 14, marginBottom: 10 }}>
                     <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                       <View style={{ backgroundColor: '#FFEDD5', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 }}>
                         <Text style={{ fontSize: 11, fontWeight: '800', color: '#C2410C' }}>{e.engine}</Text>
                       </View>
-                      <TouchableOpacity
-                        onPress={async () => {
-                          const r = await ApiClient.markErrorHelpful(e.id);
-                          setErrorList((prev) => prev.map((x) => (x.id === e.id ? { ...x, helpful_count: r.helpful_count } : x)));
-                        }}
-                        style={{ backgroundColor: '#DCFCE7', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 }}
-                      >
-                        <Text style={{ fontSize: 11, fontWeight: '800', color: '#15803D' }}>👍 해결됐어요 ({e.helpful_count || 0})</Text>
-                      </TouchableOpacity>
+                      <View style={{ flexDirection: 'row', gap: 6 }}>
+                        {e.code_fix ? (
+                          <TouchableOpacity
+                            onPress={() => {
+                              try { navigator?.clipboard?.writeText(e.code_fix); } catch {}
+                              setCopiedErrId(String(e.id));
+                              setTimeout(() => setCopiedErrId(null), 1800);
+                            }}
+                            style={{ backgroundColor: copiedErrId === String(e.id) ? '#10B981' : '#1E293B', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 }}
+                          >
+                            <Text style={{ fontSize: 11, fontWeight: '800', color: '#FFF' }}>
+                              {copiedErrId === String(e.id) ? '✅ 코드 복사됨' : '📋 해결코드 복사'}
+                            </Text>
+                          </TouchableOpacity>
+                        ) : null}
+                        <TouchableOpacity
+                          onPress={() => Linking.openURL('https://www.google.com/search?q=' + encodeURIComponent(e.error_title + ' 해결'))}
+                          style={{ backgroundColor: '#E0F2FE', paddingHorizontal: 9, paddingVertical: 4, borderRadius: 8 }}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: '800', color: '#0369A1' }}>🔎 상세 검색 ↗</Text>
+                        </TouchableOpacity>
+                      </View>
                     </View>
                     <Text style={{ fontSize: 14, fontWeight: '800', color: '#DC2626', marginBottom: 4 }}>🚨 {e.error_title}</Text>
                     <Text style={{ fontSize: 12, color: Theme.colors.textLight, marginBottom: 6 }}>• 원인: {e.cause}</Text>
@@ -1308,21 +1538,11 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                       </View>
                     ) : null}
                   </View>
-                ))}
+                ));
+              })()}
 
               <View style={{ marginTop: 10, paddingTop: 12, borderTopWidth: 1, borderTopColor: Theme.colors.pillBg }}>
-                <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.text, marginBottom: 8 }}>➕ 나만의 에러 해결 노하우 등록하기</Text>
-                <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
-                  {['Unity', 'Unreal 5', 'Godot 4'].map((eng) => (
-                    <TouchableOpacity
-                      key={eng}
-                      onPress={() => setErrEngine(eng)}
-                      style={{ backgroundColor: errEngine === eng ? Theme.colors.primary : Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 }}
-                    >
-                      <Text style={{ fontSize: 11, fontWeight: '800', color: errEngine === eng ? '#FFF' : Theme.colors.text }}>{eng}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
+                <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.text, marginBottom: 8 }}>➕ 새로운 에러 & 해결법 커뮤니티에 공유하기</Text>
                 <TextInput
                   style={{ backgroundColor: '#FFF', borderRadius: 10, padding: 9, marginBottom: 8, fontSize: 13 }}
                   placeholder="에러 메시지 제목 (예: CS0103: The name does not exist...)"

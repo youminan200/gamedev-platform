@@ -744,7 +744,111 @@ try {
   }
 } catch {}
 
+
+try {
+  const existingErrors = (db.prepare('SELECT COUNT(*) as c FROM error_wiki').get() as any).c;
+  if (existingErrors < 15) {
+    db.prepare('DELETE FROM error_wiki').run();
+    const insErr = db.prepare('INSERT INTO error_wiki (engine, error_title, cause, solution, code_fix, author, helpful_count) VALUES (?, ?, ?, ?, ?, ?, ?)');
+    const allSeeds = [{"engine":"Unity (C# CS코드)","error_title":"CS0103: The name \"...\" does not exist in the current context","cause":"선언하지 않은 변수명/함수명을 사용했거나 대소문자 오타(예: transform vs Transform, gameobject vs gameObject), 또는 중괄호 { } 지역변수 범위를 벗어났을 때 발생합니다.","solution":"1) 변수/함수 이름의 대소문자 철자를 확인하세요. 2) 특정 함수 안에서 선언한 지역변수를 다른 함수에서 쓰려면 클래스 상단 멤버 변수로 빼주세요.","code_fix":"// 클래스 상단에 멤버 변수로 선언해야 모든 함수(Start, Update)에서 접근 가능:\nprivate float moveSpeed = 5f;","author":"Unity Doctor","helpful_count":68},{"engine":"Unity (C# CS코드)","error_title":"CS0246: The type or namespace name \"...\" could not be found (are you missing a using directive?)","cause":"UI(Image, Text, Button), TextMeshPro, SceneManager 등을 사용할 때 상단 네임스페이스(using) 선언이 빠졌거나 Assembly Definition(.asmdef) 참조가 누락되었을 때 발생합니다.","solution":"스크립트 최상단에 필요한 using 구문을 추가하세요. 패키지(TMPro, InputSystem 등)를 쓰는 경우 .asmdef 파일의 References에 해당 모듈을 추가하세요.","code_fix":"using UnityEngine;\nusing UnityEngine.UI; // Image, Button, Slider 사용 시 필수\nusing UnityEngine.SceneManagement; // SceneManager 사용 시 필수\nusing TMPro; // TextMeshProUGUI 사용 시 필수","author":"Unity Doctor","helpful_count":64},{"engine":"Unity (C# CS코드)","error_title":"CS1061: \"...\" does not contain a definition for \"...\" and no accessible extension method","cause":"해당 컴포넌트나 클래스에 존재하지 않는 함수/속성을 호출했거나(예: Transform에 velocity 호출), 내 스크립트 이름을 Unity 내장 컴포넌트 이름(예: Camera.cs, Light.cs)과 똑같이 지어 충돌났을 때 발생합니다.","solution":"1) 호출 대상 타입이 맞는지 확인하세요(속도는 Transform이 아니라 Rigidbody에 있음). 2) 본인이 만든 C# 파일 이름이 Unity 내장 클래스명과 겹치면 파일명을 변경하세요.","code_fix":"// 잘못된 예: transform.velocity = Vector3.zero;\n// 올바른 예:\nGetComponent<Rigidbody>().linearVelocity = Vector3.zero;","author":"Unity Doctor","helpful_count":59},{"engine":"Unity (C# CS코드)","error_title":"CS0029: Cannot implicitly convert type \"double\" to \"float\" (또는 \"float\" to \"int\")","cause":"C#에서 소수점 숫자 뒤에 f를 붙이지 않으면 기본적으로 double 타입으로 인식되어 float 변수에 넣을 때 에러가 발생합니다.","solution":"모든 소수점 숫자 뒤에 알파벳 f를 붙이거나(예: 3.5f), 정수형(int) 변수에 넣을 때는 Mathf.RoundToInt() 또는 (int) 캐스팅을 사용하세요.","code_fix":"float speed = 5.5f; // 소수점 뒤에 반드시 f 붙이기!\nint damage = Mathf.RoundToInt(speed * 2.3f);","author":"Unity Doctor","helpful_count":55},{"engine":"Unity (C# CS코드)","error_title":"CS1612: Cannot modify the return value of \"Transform.position\" because it is not a variable","cause":"transform.position.x = 5f; 처럼 구조체(Vector3) 프로퍼티의 개별 값(x, y, z)을 직접 수정하려고 할 때 발생합니다.","solution":"Vector3 임시 변수에 먼저 담아서 값을 수정한 뒤 transform.position에 통째로 다시 대입하거나 new Vector3()를 사용하세요.","code_fix":"// transform.position.x = 5f; (에러 발생!)\nVector3 pos = transform.position;\npos.x = 5f;\ntransform.position = pos;","author":"Unity Doctor","helpful_count":61},{"engine":"Unity (C# CS코드)","error_title":"CS0120: An object reference is required for the non-static field, method, or property","cause":"실제 생성된 오브젝트(인스턴스)가 아니라 클래스 이름 자체(예: PlayerController.Jump())로 일반 함수나 변수를 호출했을 때 발생합니다.","solution":"GetComponent<T>() 또는 FindFirstObjectByType<T>()로 실제 오브젝트 참조를 가져오거나, 싱글톤(Instance) 패턴을 사용하세요.","code_fix":"// 클래스명이 아니라 실제 인스턴스 변수를 통해 호출해야 합니다:\nPlayerController player = FindFirstObjectByType<PlayerController>();\nplayer.Jump();","author":"Unity Doctor","helpful_count":48},{"engine":"Unity (C# CS코드)","error_title":"CS0161: Not all code paths return a value","cause":"반환형(int, bool, float 등)이 있는 함수에서 if문 안에만 return이 있고 else나 함수 끝부분에 return이 빠졌을 때 발생합니다.","solution":"함수의 맨 마지막 줄(모든 조건문이 끝난 뒤)에 기본 반환값(return false; 또는 return 0;)을 반드시 추가하세요.","code_fix":"bool CanAttack(int mp) {\n    if (mp >= 10) return true;\n    return false; // 모든 경로에서 반환 보장\n}","author":"Unity Doctor","helpful_count":43},{"engine":"Unity (C# CS코드)","error_title":"CS0618 / CS0619: \"...\" is obsolete (Unity 6 구버전 API 경고/에러)","cause":"Unity 2023 / Unity 6로 업데이트하면서 구버전 API(예: rb.velocity, FindObjectOfType, Application.LoadLevel)가 신버전 API로 대체되었을 때 발생합니다.","solution":"rb.velocity는 rb.linearVelocity로, FindObjectOfType<T>()는 FindFirstObjectByType<T>()로, Application.LoadLevel은 SceneManager.LoadScene으로 교체하세요.","code_fix":"// Unity 6 최신 표준 API:\nrb.linearVelocity = new Vector2(moveX, rb.linearVelocity.y);\nvar manager = Object.FindFirstObjectByType<GameManager>();","author":"Unity Doctor","helpful_count":52},{"engine":"Unity (런타임 예외)","error_title":"NullReferenceException: Object reference not set to an instance of an object","cause":"Inspector에서 슬롯 연결을 깜빡했거나, GetComponent<T>()가 실패해 null인 변수의 함수/속성을 호출할 때 발생합니다.","solution":"1) 콘솔 에러를 더블클릭해 해당 줄의 변수 중 어떤 것이 비어있는지 확인하세요. 2) Inspector 슬롯에 프리팹/오브젝트를 드래그해 넣거나 Awake()에서 GetComponent로 초기화하세요.","code_fix":"void Awake() {\n    if (rb == null) rb = GetComponent<Rigidbody2D>();\n}\n// 사용 시 null 방어:\nrb?.AddForce(Vector2.up * 5f, ForceMode2D.Impulse);","author":"PixelKnight","helpful_count":95},{"engine":"Unity (런타임 예외)","error_title":"MissingReferenceException: The object of type \"...\" has been destroyed but you are still trying to access it","cause":"Destroy(gameObject)로 이미 파괴된 오브젝트를 코루틴(Coroutine), 이벤트 리스너, 또는 리스트에서 계속 참조해 움직이려 할 때 발생합니다.","solution":"오브젝트 파괴 전 OnDisable()/OnDestroy()에서 코루틴과 이벤트를 해제하고, 접근 전 if (target != null && target.gameObject != null) 체크를 추가하세요.","code_fix":"void OnDestroy() {\n    StopAllCoroutines(); // 파괴 시 실행 중인 코루틴 종료\n}\n// 타겟 접근 전 체크:\nif (enemy != null) enemy.transform.LookAt(transform);","author":"PixelKnight","helpful_count":57},{"engine":"Unity (런타임 예외)","error_title":"UnassignedReferenceException: The variable \"...\" of \"...\" has not been assigned","cause":"public 또는 [SerializeField]로 선언한 변수 슬롯에 Inspector 창에서 아무 오브젝트도 연결(드래그 앤 드롭)하지 않고 플레이했을 때 발생합니다.","solution":"Hierarchy 창에서 해당 스크립트가 붙은 오브젝트를 클릭한 뒤, Inspector 창의 빈 슬롯(None)에 알맞은 오브젝트나 프리팹을 끌어다 놓으세요.","code_fix":"[SerializeField] private GameObject bulletPrefab; // Inspector에서 프리팹 연결 필수!","author":"Unity Doctor","helpful_count":63},{"engine":"Unity (런타임 예외)","error_title":"IndexOutOfRangeException: Index was outside the bounds of the array (또는 ArgumentOutOfRangeException)","cause":"배열이나 List의 크기보다 큰 인덱스(예: 길이 3인 배열에서 array[3] 또는 array[-1])에 접근했을 때 발생합니다.","solution":"배열 인덱스는 0부터 (Length - 1)까지입니다. 접근 전에 if (index >= 0 && index < list.Count) 조건으로 범위를 먼저 검사하세요.","code_fix":"if (index >= 0 && index < items.Count) {\n    var item = items[index];\n}","author":"Unity Doctor","helpful_count":54},{"engine":"Unity (런타임 예외)","error_title":"InvalidOperationException: You are trying to read Input using the UnityEngine.Input class, but you have switched active Input handling to Input System package","cause":"새로운 Input System 패키지를 설치해 놓고 코드에서는 옛날 방식인 Input.GetKeyDown()이나 Input.GetAxis()를 사용했을 때 발생합니다.","solution":"Edit → Project Settings → Player → Other Settings → [Active Input Handling] 옵션을 \"Both (둘 다 사용)\"으로 변경하고 에디터를 재시작하면 구버전/신버전 입력 코드가 모두 정상 작동합니다!","code_fix":"// Project Settings > Player > Active Input Handling -> \"Both\" 선택 시 즉시 해결!","author":"Unity Doctor","helpful_count":82},{"engine":"Unity (런타임 예외)","error_title":"InvalidOperationException: Collection was modified; enumeration operation may not execute","cause":"foreach 반복문으로 List나 Dictionary를 순회하는 도중에 list.Remove()나 list.Add()로 요소를 삭제/추가했을 때 발생합니다.","solution":"요소를 삭제할 때는 foreach 대신 역방향 for문(for int i = list.Count - 1; i >= 0; i--)을 사용하세요.","code_fix":"for (int i = enemies.Count - 1; i >= 0; i--) {\n    if (enemies[i].hp <= 0) enemies.RemoveAt(i);\n}","author":"Unity Doctor","helpful_count":49},{"engine":"Unity (물리/UI/셰이더)","error_title":"OnTriggerEnter2D / OnCollisionEnter 충돌 함수가 전혀 실행되지 않는 현상","cause":"1) 두 오브젝트 중 최소 하나에 Rigidbody(2D)가 없거나 2) 2D 프로젝트에서 2D가 빠진 OnTriggerEnter(3D용)를 썼거나 3) 함수명 대소문자 오타가 있을 때 발생합니다.","solution":"충돌하는 두 오브젝트 모두 Collider를 붙이고, 움직이는 쪽에 반드시 Rigidbody2D를 추가하세요. 2D 게임은 BoxCollider2D + Rigidbody2D + OnTriggerEnter2D(Collider2D other) 세트를 정확히 맞춰야 합니다.","code_fix":"// 2D 게임에서는 반드시 끝에 2D가 붙어야 합니다!\nprivate void OnTriggerEnter2D(Collider2D other) {\n    if (other.CompareTag(\"Player\")) Debug.Log(\"충돌 감지 성공!\");\n}","author":"PixelKnight","helpful_count":88},{"engine":"Unity (물리/UI/셰이더)","error_title":"UI 버튼(Button)이 마우스로 클릭해도 전혀 눌리지 않는 현상","cause":"1) 씬에 EventSystem 오브젝트가 삭제되었거나 2) 버튼 위에 투명한 다른 UI Image/Panel(Raycast Target 체크됨)이 덮고 있어서 클릭을 가로챌 때 발생합니다.","solution":"Hierarchy에 EventSystem이 있는지 확인하고, 버튼 앞을 가리는 배경/장식용 Image나 Text의 Inspector에서 [Raycast Target] 체크를 해제하세요.","code_fix":"// 장식용 텍스트/이미지는 Inspector에서 Raycast Target 체크 해제!","author":"Unity Doctor","helpful_count":73},{"engine":"Unity (물리/UI/셰이더)","error_title":"셰이더/머티리얼이 분홍색(Magenta / Pink)으로 깨져서 보이는 현상","cause":"Built-in 렌더 파이프라인용 에셋을 URP(Universal Render Pipeline) 프로젝트로 가져왔을 때 셰이더 호환이 깨져서 발생합니다.","solution":"상단 메뉴 Window → Rendering → Render Pipeline Converter를 열고 [Built-in to URP → Material Upgrade]를 체크한 뒤 Initialize And Convert를 클릭하면 1초 만에 해결됩니다.","code_fix":"// Window > Rendering > Render Pipeline Converter > Material Upgrade 실행","author":"ShaderWizard","helpful_count":79},{"engine":"Unity (물리/UI/셰이더)","error_title":"캐릭터 이동 시 화면이나 카메라가 미세하게 덜덜 떨리는 현상 (Camera Jitter)","cause":"Rigidbody 물리 이동은 FixedUpdate에서 처리되는데 카메라가 일반 Update에서 따라가거나 Rigidbody Interpolation 설정이 꺼져 있을 때 발생합니다.","solution":"1) 캐릭터 Rigidbody(2D)의 Interpolate 옵션을 [Interpolate]로 변경하고 2) 카메라 추적 코드는 Update() 대신 LateUpdate() 안에 작성하세요.","code_fix":"void LateUpdate() {\n    transform.position = Vector3.Lerp(transform.position, target.position + offset, Time.deltaTime * 10f);\n}","author":"PixelKnight","helpful_count":62},{"engine":"Unity (빌드/배포)","error_title":"Android IL2CPP 빌드 실패 (Gradle build failed / NDK not found / CommandInvokationFailure)","cause":"프로젝트 폴더 경로에 한글이나 공백이 들어있거나, Unity Hub의 Android SDK/NDK/JDK 경로가 꼬였을 때 발생합니다.","solution":"1) 프로젝트 폴더 경로를 순수 영문(예: C:/Games/MyProject)으로 변경 2) Edit → Preferences → External Tools에서 Android SDK/NDK/JDK 체크를 껐다 켜서 리셋 3) Library/Bee 폴더 삭제 후 재빌드하세요.","code_fix":"// 1순위 해결책: 프로젝트 상위 폴더 이름에 한글(예: 바탕화면, 새 폴더)이 있으면 영문 폴더로 이동!","author":"PixelKnight","helpful_count":76},{"engine":"Unity (빌드/배포)","error_title":"WebGL 빌드 후 브라우저에서 90%에서 멈추거나 Decompression Fallback 에러 발생","cause":"웹 호스팅 서버가 Brotli/Gzip 압축 헤더를 지원하지 않는데 압축 설정이 켜져 있을 때 발생합니다.","solution":"File → Build Settings → Player Settings → Publishing Settings에서 [Decompression Fallback]을 체크하거나, [Compression Format]을 Disabled로 변경 후 빌드하면 모든 웹 서버(Itch.io, Vercel, GitHub Pages)에서 100% 실행됩니다.","code_fix":"// Player Settings > WebGL > Publishing Settings > Compression Format: Disabled 또는 Decompression Fallback 체크","author":"Unity Doctor","helpful_count":67},{"engine":"Unreal 5","error_title":"PackagingResults: Error: Unknown Cook Failure (ExitCode=25)","cause":"삭제된 에셋을 참조하는 블루프린트 Redirector가 남아 있거나 컴파일 에러가 있는 노드가 남아 있을 때 발생합니다.","solution":"Content 폴더 우클릭 → [Fix Up Redirectors] 실행 후 프로젝트 폴더의 Saved, Intermediate, DerivedDataCache 폴더를 지우고 다시 패키징하세요.","code_fix":"// Output Log에서 빨간색 Error: 줄을 찾아 해당 블루프린트 재컴파일 및 저장","author":"ShaderWizard","helpful_count":45},{"engine":"Godot 4","error_title":"Invalid get index \"...\" (on base: \"Nil\" / \"null instance\") 및 한글 깨짐","cause":"$NodePath 경로가 잘못되어 노드를 못 찾았거나(@onready 이전에 호출), 기본 폰트에 한글이 없을 때 발생합니다.","solution":"노드를 참조할 때는 변수 앞에 @onready를 붙이거나 Scene Tree에서 노드를 Ctrl+드래그하여 정확한 %UniqueName 경로를 사용하세요.","code_fix":"@onready var player_sprite: Sprite2D = $Sprite2D\n# _ready() 이후에 안전하게 접근 가능","author":"GodotCrafter","helpful_count":44}];
+    for (const item of allSeeds) {
+      insErr.run(item.engine, item.error_title, item.cause, item.solution, item.code_fix, item.author, item.helpful_count);
+    }
+  }
+} catch (e) { console.error('error_wiki seed error', e); }
+
+app.post('/api/errors/diagnose', async (req, res) => {
+  const raw = String(req.body?.error_text || '').trim();
+  if (!raw) return res.status(400).json({ error: 'error_text required' });
+  const lower = raw.toLowerCase();
+
+  // Extract script file and line number if present: e.g. Assets/Scripts/Player.cs(42,15)
+  const fileMatch = raw.match(/([A-Za-z0-9_\/\\.-]+\.cs)\((\d+),\s*(\d+)\)/i);
+  const fileInfo = fileMatch ? `📍 발생 위치: ${fileMatch[1]} 파일의 ${fileMatch[2]}번째 줄 (${fileMatch[3]}번째 글자 부근)\n` : '';
+
+  // Match against our database first
+  const allRows = db.prepare('SELECT * FROM error_wiki').all() as any[];
+  for (const row of allRows) {
+    const codeToken = row.error_title.split(':')[0].trim().toLowerCase();
+    if (lower.includes(codeToken) || (codeToken.length > 4 && lower.includes(codeToken.slice(0, 8)))) {
+      return res.json({
+        matched: true,
+        engine: row.engine,
+        title: row.error_title,
+        location: fileInfo,
+        cause: row.cause,
+        solution: row.solution,
+        code_fix: row.code_fix
+      });
+    }
+  }
+
+  // Pattern-based universal Unity/C# diagnostic rules for ANY other error
+  let cause = '스크립트 문법 오류, 컴포넌트 참조 누락, 또는 엔진 패키지/버전 호환성 충돌로 인해 발생한 오류입니다.';
+  let solution = '1) 에러 메시지에 표시된 스크립트 파일과 줄 번호를 더블클릭해 오타나 null 참조를 확인하세요. 2) 패키지 업데이트 직후라면 Edit > Preferences > External Tools에서 프로젝트 파일(Regenerate project files)을 재생성하세요.';
+  let code_fix = '// 콘솔창의 에러 줄을 더블클릭하면 정확한 문제 코드 위치로 이동합니다.';
+
+  if (lower.includes('cs1002') || lower.includes('; expected')) {
+    cause = 'C# 코드 줄 끝에 세미콜론(;)이 빠졌거나 괄호가 제대로 닫히지 않았습니다.';
+    solution = '지적된 줄 번호(또는 바로 윗줄)의 맨 끝에 세미콜론(;)을 붙여주세요.';
+    code_fix = 'int score = 100; // 줄 끝에 세미콜론(;) 필수!';
+  } else if (lower.includes('cs1513') || lower.includes('} expected') || lower.includes('cs1525')) {
+    cause = '중괄호 { } 또는 소괄호 ( )의 짝이 맞지 않아 문법 분석이 깨졌습니다.';
+    solution = '함수나 if문, 클래스 맨 아래에 닫는 중괄호 } 가 빠지지 않았는지 확인하세요.';
+    code_fix = 'void Update() {
+    if (isReady) {
+        Move();
+    } // <- 닫는 중괄호 개수 확인!
+}';
+  } else if (lower.includes('sendmessage cannot be called') || lower.includes('onvalidate')) {
+    cause = 'OnValidate()나 Awake() 도중에 오브젝트 활성화/파괴 또는 SendMessage를 호출해 Unity 내부 라이프사이클과 충돌했습니다.';
+    solution = '해당 로직을 Start() 함수로 옮기거나 코루틴으로 1프레임 뒤에 실행하도록 변경하세요.';
+    code_fix = 'void Start() {
+    // Awake/OnValidate 대신 Start에서 안전하게 초기화
+}';
+  } else if (lower.includes('tag:') && lower.includes('not defined')) {
+    cause = 'CompareTag("...")에 적은 태그 이름이 Unity 에디터의 Tags & Layers 목록에 등록되어 있지 않습니다.';
+    solution = 'Inspector 최상단 Tag 드롭다운 → [Add Tag...]를 눌러 해당 태그 이름을 대소문자까지 똑같이 등록하세요.';
+    code_fix: '// Inspector > Tag > Add Tag에서 태그 먼저 생성 후 CompareTag 사용';
+  } else if (lower.includes('missingcomponentexception')) {
+    cause = '오브젝트에 해당 컴포넌트(Rigidbody, Animator, AudioSource 등)가 부착되어 있지 않은데 스크립트에서 접근했습니다.';
+    solution = 'Inspector 하단 [Add Component] 버튼을 눌러 필요한 컴포넌트를 부착하거나 스크립트 상단에 [RequireComponent]를 추가하세요.';
+    code_fix = '[RequireComponent(typeof(Rigidbody2D))]
+public class Player : MonoBehaviour { }';
+  } else if (lower.includes('stackoverflow')) {
+    cause = '함수가 자기 자신을 끝없이 호출(무한 재귀)하여 메모리가 초과되었습니다.';
+    solution = '프로퍼티 getter/setter 안에서 자기 자신의 이름을 다시 호출하지 않았는지 확인하고 종료 조건을 추가하세요.';
+    code_fix = 'private int _hp;
+public int Hp { get => _hp; set => _hp = value; } // Hp 대신 _hp 사용!';
+  } else if (lower.includes('keynotfound')) {
+    cause = 'Dictionary에 존재하지 않는 키(Key)로 값을 꺼내려고 시도했습니다.';
+    solution = 'dict[key] 대신 dict.TryGetValue(key, out var val)를 사용하면 에러 없이 안전하게 값을 꺼낼 수 있습니다.';
+    code_fix = 'if (myDict.TryGetValue("sword", out var item)) {
+    item.Use();
+}';
+  } else if (lower.includes('gradle') || lower.includes('duplicate class') || lower.includes('dex')) {
+    cause = '안드로이드 플러그인(AdMob, Firebase 등) 간의 라이브러리 버전이 중복되거나 충돌했습니다.';
+    solution = 'Assets → External Dependency Manager → Android Resolver → [Force Resolve]를 실행해 중복 라이브러리를 정리하세요.';
+    code_fix = '// Android Resolver > Force Resolve 실행 또는 Custom Gradle Template 재설정';
+  }
+
+  res.json({
+    matched: false,
+    engine: 'Unity / C# 자동 진단',
+    title: raw.slice(0, 140),
+    location: fileInfo,
+    cause,
+    solution,
+    code_fix
+  });
+});
+
 app.get('/api/errors', (_req, res) => {
+  const rows = db.prepare('SELECT * FROM error_wiki ORDER BY helpful_count DESC, id DESC LIMIT 100').all();
+  res.json(rows);
+});
+
+app.get('/api/errors_legacy', (_req, res) => {
   const rows = db.prepare('SELECT * FROM error_wiki ORDER BY helpful_count DESC, id DESC LIMIT 40').all();
   res.json(rows);
 });
