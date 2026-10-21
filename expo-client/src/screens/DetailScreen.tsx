@@ -483,7 +483,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 24, color: Theme.colors.text, fontWeight: '800', marginBottom: 8 },
   authorRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, flexWrap: 'wrap', gap: 8 },
   author: { fontSize: 14, color: Theme.colors.textLight },
-  ownerActionsRow: { flexDirection: 'row', gap: 10, marginBottom: 16 },
+  ownerActionsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 16 },
   editBtn: { backgroundColor: Theme.colors.pillBg, paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
   editBtnText: { fontSize: 13, fontWeight: '700', color: Theme.colors.text },
   deleteBtn: { backgroundColor: '#FEE2E2', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 10 },
