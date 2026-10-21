@@ -492,6 +492,18 @@ app.get('/admin', (_req, res) => {
     </div>
 
     <div class="panel">
+      <h2>📢 원클릭 홍보 문구 복사 & 구글 검색 노출 실시간 확인</h2>
+      <textarea id="promoBox" class="input-text" rows="5" readonly>🎮 인디 게임 개발자 개발일지 & 무료 에셋 공유 커뮤니티 [DevGround] 오픈!
+설치·로그인 없이 Unity / Unreal / Godot 개발일지(DevLog)와 2D·3D·Audio 무료 에셋을 바로 구경하고 피드백을 나눠보세요!
+👉 바로가기: https://gamedev-platform-expo-client.vercel.app/</textarea>
+      <div class="links-grid">
+        <button type="button" class="btn" onclick="navigator.clipboard.writeText(document.getElementById('promoBox').value); this.innerText='✅ 홍보 문구 복사 완료!'; setTimeout(()=>this.innerText='📋 홍보 문구 + 링크 원클릭 복사', 2000);">📋 홍보 문구 + 링크 원클릭 복사</button>
+        <a class="btn btn-outline" href="https://www.google.com/search?q=site:gamedev-platform-expo-client.vercel.app" target="_blank">🔎 구글 도메인 등록(site:) 실시간 검색 ↗</a>
+        <a class="btn btn-outline" href="https://www.google.com/search?q=DevGround+%EA%B2%8C%EC%9E%84+%EA%B0%9C%EB%B0%9C%EC%9E%90+%EC%BB%A4%EB%AE%A4%EB%8B%88%ED%8B%B0" target="_blank">🔎 구글 키워드 검색 결과 확인 ↗</a>
+      </div>
+    </div>
+
+    <div class="panel">
       <h2>🌐 배포 · 검색엔진(SEO) · 클라우드 통합 관리 바로가기</h2>
       <div class="links-grid">
         <a class="btn btn-outline" href="https://gamedev-platform-expo-client.vercel.app" target="_blank">🌐 공식 웹앱 열기 ↗</a>
