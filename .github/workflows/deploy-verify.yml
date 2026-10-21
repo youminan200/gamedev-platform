@@ -1,0 +1,94 @@
+name: Deployment & SEO Health Check
+
+on:
+  push:
+    branches: [main]
+  deployment_status:
+  workflow_dispatch:
+
+jobs:
+  verify-deployment:
+    if: github.event_name != 'deployment_status' || github.event.deployment_status.state == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Wait for Vercel CDN propagation
+        if: github.event_name == 'push'
+        run: sleep 35
+
+      - name: Verify Frontend, SEO & Backend Endpoints
+        id: check
+        run: |
+          check_url() {
+            local name="$1"
+            local url="$2"
+            local expected="$3"
+            local status
+            status=$(curl -s -o /tmp/resp.txt -w "%{http_code}" "$url")
+            if [ "$status" = "200" ]; then
+              if [ -n "$expected" ] && ! grep -q "$expected" /tmp/resp.txt; then
+                echo "❌ $name ($url) - Content mismatch"
+                echo "| $name | $url | ❌ Content Mismatch ($status) |" >> $GITHUB_STEP_SUMMARY
+                return 1
+              fi
+              echo "✅ $name ($url) - 200 OK"
+              echo "| $name | $url | ✅ 200 OK |" >> $GITHUB_STEP_SUMMARY
+              return 0
+            else
+              echo "❌ $name ($url) - HTTP $status"
+              echo "| $name | $url | ❌ HTTP $status |" >> $GITHUB_STEP_SUMMARY
+              return 1
+            fi
+          }
+
+          echo "## 🚀 DevGround 배포 & SEO 상태 자동 점검 리포트" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 점검 항목 | URL | 상태 |" >> $GITHUB_STEP_SUMMARY
+          echo "| :--- | :--- | :--- |" >> $GITHUB_STEP_SUMMARY
+
+          FAILED=0
+          check_url "공식 웹앱 (Vercel)" "https://gamedev-platform-expo-client.vercel.app/" "DevGround" || FAILED=1
+          check_url "robots.txt" "https://gamedev-platform-expo-client.vercel.app/robots.txt" "Sitemap:" || FAILED=1
+          check_url "sitemap.xml" "https://gamedev-platform-expo-client.vercel.app/sitemap.xml" "urlset" || FAILED=1
+          check_url "Google 소유권 확인" "https://gamedev-platform-expo-client.vercel.app/google0a45254e48fad007.html" "google-site-verification" || FAILED=1
+          check_url "백엔드 API (Render)" "https://gamedev-platform.onrender.com/api/stats" "" || FAILED=1
+
+          if [ "$FAILED" -ne 0 ]; then
+            echo "status=failed" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+          echo "status=success" >> $GITHUB_OUTPUT
+
+      - name: Send Email Notification (Optional SMTP)
+        if: always() && env.SMTP_USER != '' && env.SMTP_PASS != ''
+        env:
+          SMTP_HOST: ${{ secrets.SMTP_HOST || 'smtp.naver.com' }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT || '587' }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          NOTIFY_TO: ${{ secrets.NOTIFY_EMAIL || 'youminan2001@naver.com' }}
+          CHECK_STATUS: ${{ steps.check.outputs.status }}
+        run: |
+          python3 - << 'EOF'
+          import os, smtplib
+          from email.mime.text import MIMEText
+
+          status = os.environ.get("CHECK_STATUS", "unknown")
+          subject = f"[DevGround] 배포 및 SEO 점검 완료 ({'정상 ✅' if status == 'success' else '실패 ❌'})"
+          body = (
+              f"DevGround 자동 배포 및 SEO 상태 점검 결과: {status.upper()}\n\n"
+              "- 공식 웹앱: https://gamedev-platform-expo-client.vercel.app/\n"
+              "- 사이트맵: https://gamedev-platform-expo-client.vercel.app/sitemap.xml\n"
+              "- Google 인증: https://gamedev-platform-expo-client.vercel.app/google0a45254e48fad007.html\n"
+              "- 대시보드: https://gamedev-platform.onrender.com/admin\n"
+          )
+          msg = MIMEText(body, "plain", "utf-8")
+          msg["Subject"] = subject
+          msg["From"] = os.environ["SMTP_USER"]
+          msg["To"] = os.environ["NOTIFY_TO"]
+
+          with smtplib.SMTP(os.environ["SMTP_HOST"], int(os.environ["SMTP_PORT"])) as s:
+              s.starttls()
+              s.login(os.environ["SMTP_USER"], os.environ["SMTP_PASS"])
+              s.send_message(msg)
+          EOF
