@@ -2677,8 +2677,8 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
       {/* 2D 타일맵 & 절차적 던전 맵 생성기 모달 */}
       <Modal visible={dungeonGenOpen} transparent animationType="fade" onRequestClose={() => setDungeonGenOpen(false)}>
-        <View style={[styles.modalOverlay, { padding: 12 }]}>
-          <View style={[styles.modalCard, { maxWidth: 960, width: '100%', height: '90%', maxHeight: 740, padding: 0, overflow: 'hidden', borderColor: '#A855F7', borderWidth: 2 }]}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 12 }}>
+          <View style={{ maxWidth: 960, width: '100%', height: '90%', maxHeight: 740, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 0, overflow: 'hidden', borderColor: '#A855F7', borderWidth: 2 }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#11131C', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2D3446' }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontSize: 16 }}>🗺️</Text>
@@ -2710,14 +2710,14 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
       {/* Unity / Godot 셰이더 시각 효과 레시피 사전 모달 */}
       <Modal visible={shaderBookOpen} transparent animationType="fade" onRequestClose={() => setShaderBookOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxWidth: 680, borderColor: '#06B6D4', borderWidth: 2, maxHeight: '90%' }]}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#06B6D4', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <Text style={[styles.modalTitle, { marginBottom: 0, color: '#22D3EE', fontFamily: 'monospace' }]}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#22D3EE', fontFamily: 'monospace' }}>
                 ✨ MOD_11 // Unity & Godot 필수 셰이더(Shader) 레시피 사전
               </Text>
               <TouchableOpacity onPress={() => setShaderBookOpen(false)}>
-                <Text style={{ color: Theme.colors.textSecondary, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -2873,7 +2873,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                           {current.badge}
                         </Text>
                       </View>
-                      <Text style={{ fontSize: 12, color: Theme.colors.textSecondary, lineHeight: 18 }}>{current.desc}</Text>
+                      <Text style={{ fontSize: 12, color: Theme.colors.textLight, lineHeight: 18 }}>{current.desc}</Text>
                     </View>
 
                     <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
@@ -2898,18 +2898,18 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
       {/* 인디게임 다국어 번역 시트 생성기 모달 */}
       <Modal visible={locToolOpen} transparent animationType="fade" onRequestClose={() => setLocToolOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxWidth: 680, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }]}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <Text style={[styles.modalTitle, { marginBottom: 0, color: '#34D399', fontFamily: 'monospace' }]}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#34D399', fontFamily: 'monospace' }}>
                 🌍 MOD_12 // 인디게임 한·영·일·중 다국어 로컬라이징 시트 생성기
               </Text>
               <TouchableOpacity onPress={() => setLocToolOpen(false)}>
-                <Text style={{ color: Theme.colors.textSecondary, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={{ fontSize: 11.5, color: Theme.colors.textSecondary, marginBottom: 8 }}>
+              <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginBottom: 8 }}>
                 KEY=한국어 문구 형식으로 입력하면 스팀 글로벌 출시 필수 언어(한국어·영어·일본어·중국어 간체) CSV 및 JSON 테이블로 자동 변환합니다.
               </Text>
 
@@ -2944,12 +2944,12 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               </View>
 
               <TextInput
-                style={[styles.input, { minHeight: 110, textAlignVertical: 'top', marginBottom: 10, fontFamily: 'monospace', fontSize: 12 }]}
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 10, color: '#FFF', minHeight: 110, textAlignVertical: 'top', marginBottom: 10, fontFamily: 'monospace', fontSize: 12 }}
                 value={locInput}
                 onChangeText={(t) => { setLocInput(t); setLocCopied(false); }}
                 multiline
                 placeholder="KEY=한국어 텍스트"
-                placeholderTextColor={Theme.colors.textMuted}
+                placeholderTextColor={Theme.colors.textLight}
               />
 
               <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
@@ -3035,14 +3035,14 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
       {/* 레트로 명작 & 인디 도트 컬러 팔레트 도감 모달 */}
       <Modal visible={paletteDexOpen} transparent animationType="fade" onRequestClose={() => setPaletteDexOpen(false)}>
-        <View style={styles.modalOverlay}>
-          <View style={[styles.modalCard, { maxWidth: 660, borderColor: '#F43F5E', borderWidth: 2, maxHeight: '90%' }]}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 660, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F43F5E', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-              <Text style={[styles.modalTitle, { marginBottom: 0, color: '#FB7185', fontFamily: 'monospace' }]}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#FB7185', fontFamily: 'monospace' }}>
                 🎨 MOD_13 // 레트로 명작 & 인디 도트 컬러 팔레트 도감
               </Text>
               <TouchableOpacity onPress={() => setPaletteDexOpen(false)}>
-                <Text style={{ color: Theme.colors.textSecondary, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
               </TouchableOpacity>
             </View>
             <ScrollView showsVerticalScrollIndicator={false}>
@@ -3108,7 +3108,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
                     <View style={{ backgroundColor: '#11131C', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 12 }}>
                       <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#FFF', marginBottom: 4 }}>{cur.name}</Text>
-                      <Text style={{ fontSize: 12, color: Theme.colors.textSecondary }}>{cur.desc}</Text>
+                      <Text style={{ fontSize: 12, color: Theme.colors.textLight }}>{cur.desc}</Text>
                     </View>
 
                     <Text style={{ fontSize: 11.5, color: '#94A3B8', marginBottom: 8, fontFamily: 'monospace' }}>
