@@ -158,6 +158,20 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
   const [ideaMachineOpen, setIdeaMachineOpen] = useState(false);
   const [pixelStudioOpen, setPixelStudioOpen] = useState(false);
+  const [bgmStudioOpen, setBgmStudioOpen] = useState(false);
+  const [steamSimOpen, setSteamSimOpen] = useState(false);
+  const [simTitle, setSimTitle] = useState('DUNGEON VENDING: 던전 자판기 타이쿤');
+  const [simDesc, setSimDesc] = useState('용사들에게 포션과 전설 무기를 파는 2D 도트 로그라이크 상점 시뮬레이션');
+  const [simPrice, setSimPrice] = useState('₩12,500 (-15%)');
+  const [simTags, setSimTags] = useState('로그라이크, 픽셀 그래픽, 타이쿤, 인디');
+  const [simThumb, setSimThumb] = useState('');
+  const [simChecks, setSimChecks] = useState<string[]>(['c1', 'c2', 'c4', 'c6']);
+
+  const [optDoctorOpen, setOptDoctorOpen] = useState(false);
+  const [optTab, setOptTab] = useState<'checklist' | 'hotkeys'>('checklist');
+  const [optChecks, setOptChecks] = useState<string[]>(['o1', 'o3']);
+  const [hotkeyEngine, setHotkeyEngine] = useState<'Unity' | 'Unreal' | 'Godot'>('Unity');
+
   const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
   const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
   const [scriptSpeed, setScriptSpeed] = useState<string>('8');
@@ -516,6 +530,56 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       {/* SECTION 01: DEVLOGS FEED CONTROLS */}
       {activeSection === 'feed' && (
         <>
+          {/* Weekly Indie Game Jam & Dot Challenge Banner */}
+          <View
+            style={{
+              backgroundColor: Theme.colors.surface,
+              borderWidth: 2,
+              borderColor: '#FFD166',
+              borderRadius: 6,
+              padding: 11,
+              marginBottom: 10,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 8,
+            }}
+          >
+            <View style={{ flex: 1, minWidth: 200 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+                <View style={{ backgroundColor: '#FFD166', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 3 }}>
+                  <Text style={{ fontSize: 10, fontWeight: '900', color: '#11131C', fontFamily: 'monospace' }}>
+                    🏆 WEEKLY_JAM // D-{7 - (new Date().getDay() || 7) + 1}
+                  </Text>
+                </View>
+                <Text style={{ fontSize: 11, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>
+                  주간 도트 & 프로토타입 챌린지
+                </Text>
+              </View>
+              <Text style={{ fontSize: 13, fontWeight: '900', color: Theme.colors.text }}>
+                이번 주 주제: 「던전 속 수상한 자판기」 (#게임잼 태그로 출품!)
+              </Text>
+            </View>
+            <View style={{ flexDirection: 'row', gap: 6 }}>
+              <TouchableOpacity
+                onPress={() => setSelectedTag(selectedTag === '게임잼' ? null : '게임잼')}
+                style={{
+                  backgroundColor: selectedTag === '게임잼' ? Theme.colors.primary : Theme.colors.pillBg,
+                  borderWidth: 1.5,
+                  borderColor: selectedTag === '게임잼' ? Theme.colors.primary : '#FFD166',
+                  paddingHorizontal: 10,
+                  paddingVertical: 6,
+                  borderRadius: 4,
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '900', color: selectedTag === '게임잼' ? '#FFF' : '#FFD166', fontFamily: 'monospace' }}>
+                  {selectedTag === '게임잼' ? '[전체 글 보기]' : '[🔍 출품작 보기]'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+
           <NeumorphView radius={6} style={styles.searchBox}>
             <TextInput
               style={[styles.searchInput, { fontFamily: 'monospace' }]}
@@ -529,6 +593,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 10 }}>
             {[
               { label: 'ALL_LOGS', tag: null },
+              { label: '🏆 GAME_JAM', tag: '게임잼' },
               { label: 'UNITY', tag: 'Unity' },
               { label: 'UNREAL', tag: 'Unreal' },
               { label: 'GODOT', tag: 'Godot' },
@@ -742,28 +807,49 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               onPress: () => setSfxStudioOpen(true)
             },
             {
-              code: 'MOD_05 // ARCADE_CABINET',
+              code: 'MOD_05 // 8BIT_BGM_SEQUENCER',
+              title: '8-Bit 칩튠 브금(BGM) 작곡 시퀀서 & 루프 .WAV 추출',
+              desc: '보스전·평화로운 마을·아케이드 프리셋 또는 16스텝 피아노롤로 저작권 무료 배경음악(BGM)을 작곡합니다.',
+              accent: '#14B8A6',
+              onPress: () => setBgmStudioOpen(true)
+            },
+            {
+              code: 'MOD_06 // STEAM_STORE_SIM',
+              title: '스팀·스토어 캡슐 썸네일 시뮬레이터 & 출시 준비 진단기',
+              desc: '내 인디게임 배너와 제목이 실제 스토어 진열대에서 얼마나 눈에 띄는지 비교하고 출시 체크리스트 점수를 진단합니다.',
+              accent: '#6366F1',
+              onPress: () => setSteamSimOpen(true)
+            },
+            {
+              code: 'MOD_07 // 60FPS_OPT_DOCTOR',
+              title: 'Unity·Godot 60FPS 최적화 방어 진단기 & 엔진 단축키 사전',
+              desc: 'Draw Call·GC Alloc·배칭·물리 렉 원인을 체크리스트로 점검하고 3대 게임 엔진 필수 단축키를 확인합니다.',
+              accent: '#F59E0B',
+              onPress: () => setOptDoctorOpen(true)
+            },
+            {
+              code: 'MOD_08 // ARCADE_CABINET',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
               accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_06 // PARTY_RECRUIT',
+              code: 'MOD_09 // PARTY_RECRUIT',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
               accent: '#F97316',
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_07 // IDEA_SLOT_MACHINE',
+              code: 'MOD_10 // IDEA_SLOT_MACHINE',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
               accent: '#A855F7',
               onPress: () => setIdeaMachineOpen(true)
             },
             {
-              code: 'MOD_08 // HALL_OF_FAME & APP',
+              code: 'MOD_11 // HALL_OF_FAME & APP',
               title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
               accent: '#EC4899',
@@ -1854,6 +1940,307 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                   </View>
                 );
               })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* 8-BIT CHIPTUNE BGM SEQUENCER MODAL */}
+      <Modal visible={bgmStudioOpen} animationType="fade" transparent onRequestClose={() => setBgmStudioOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 12 }}>
+          <View style={{ width: '100%', maxWidth: 760, height: '88%', backgroundColor: '#11131C', borderWidth: 2, borderColor: '#14B8A6', borderRadius: 6, overflow: 'hidden' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
+              <Text style={{ color: '#00E5FF', fontWeight: '900', fontSize: 13.5, fontFamily: 'monospace' }}>
+                🎵 MOD_05 // 8-BIT CHIPTUNE BGM SEQUENCER (루프 브금 작곡기)
+              </Text>
+              <TouchableOpacity onPress={() => setBgmStudioOpen(false)} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X CLOSE]</Text>
+              </TouchableOpacity>
+            </View>
+            {Platform.OS === 'web' ? (
+              React.createElement('iframe', {
+                src: '/bgm-studio.html',
+                style: { width: '100%', height: '100%', border: 'none', backgroundColor: '#11131C' },
+              })
+            ) : (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+                <Text style={{ color: '#FFF' }}>웹 브라우저에서 칩튠 브금 작곡기가 실행됩니다.</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* STEAM / STORE CAPSULE SIMULATOR & LAUNCH READINESS MODAL */}
+      <Modal visible={steamSimOpen} animationType="fade" transparent onRequestClose={() => setSteamSimOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, maxHeight: '90%', backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: '#6366F1', borderRadius: 6, padding: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#818CF8', fontFamily: 'monospace' }}>
+                  🛒 MOD_06 // STEAM & INDIE STORE CAPSULE SIMULATOR
+                </Text>
+                <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
+                  내 게임 배너/제목이 경쟁작 사이에서 얼마나 눈에 띄는지 비교하고 출시 준비 점수를 점검하세요.
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setSteamSimOpen(false)} style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X]</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Inputs */}
+              <View style={{ gap: 8, marginBottom: 12 }}>
+                <TextInput
+                  style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 9, color: Theme.colors.text, fontSize: 13 }}
+                  placeholder="내 게임 타이틀 입력..."
+                  placeholderTextColor="#6B7280"
+                  value={simTitle}
+                  onChangeText={setSimTitle}
+                />
+                <View style={{ flexDirection: 'row', gap: 8 }}>
+                  <TextInput
+                    style={{ flex: 2, backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 9, color: Theme.colors.text, fontSize: 12.5 }}
+                    placeholder="태그 (예: 로그라이크, 도트, 액션)"
+                    placeholderTextColor="#6B7280"
+                    value={simTags}
+                    onChangeText={setSimTags}
+                  />
+                  <TextInput
+                    style={{ flex: 1, backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 9, color: '#10B981', fontWeight: '800', fontSize: 12.5 }}
+                    placeholder="가격 (예: ₩12,500)"
+                    placeholderTextColor="#6B7280"
+                    value={simPrice}
+                    onChangeText={setSimPrice}
+                  />
+                </View>
+                <TextInput
+                  style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 9, color: Theme.colors.text, fontSize: 12.5 }}
+                  placeholder="한줄 소개 문구 (Short Description)..."
+                  placeholderTextColor="#6B7280"
+                  value={simDesc}
+                  onChangeText={setSimDesc}
+                />
+                <TextInput
+                  style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 9, color: Theme.colors.text, fontSize: 12 }}
+                  placeholder="캡슐 썸네일 이미지 URL (비워두면 기본 도트 아트워크 표시)"
+                  placeholderTextColor="#6B7280"
+                  value={simThumb}
+                  onChangeText={setSimThumb}
+                />
+              </View>
+
+              {/* Simulated Steam Store Shelf */}
+              <View style={{ backgroundColor: '#171A21', borderWidth: 2, borderColor: '#2A475E', borderRadius: 6, padding: 12, marginBottom: 14 }}>
+                <Text style={{ fontSize: 11, fontWeight: '900', color: '#66C0F4', fontFamily: 'monospace', marginBottom: 8 }}>
+                  {'> STEAM / INDIE STORE SHELF PREVIEW (경쟁작 대비 가독성 비교)'}
+                </Text>
+
+                {/* Competitor A */}
+                <View style={{ flexDirection: 'row', backgroundColor: '#16202D', padding: 8, borderRadius: 4, marginBottom: 6, opacity: 0.65, alignItems: 'center', gap: 10 }}>
+                  <View style={{ width: 84, height: 42, backgroundColor: '#314966', justifyContent: 'center', alignItems: 'center', borderRadius: 2 }}>
+                    <Text style={{ fontSize: 10, color: '#9CA3AF', fontFamily: 'monospace' }}>COMPETITOR_A</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 12.5, fontWeight: '700', color: '#C7D5E0' }}>Cyber Soul: Neon Blade</Text>
+                    <Text style={{ fontSize: 10.5, color: '#8F98A0' }}>액션, 사이버펑크, 핵앤슬래시</Text>
+                  </View>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#BEEE11' }}>₩16,500</Text>
+                </View>
+
+                {/* MY GAME CAPSULE (Highlighted) */}
+                <View style={{ flexDirection: 'row', backgroundColor: '#1B2838', borderWidth: 2, borderColor: '#66C0F4', padding: 10, borderRadius: 4, marginBottom: 6, alignItems: 'center', gap: 10 }}>
+                  {simThumb.trim() ? (
+                    <Image source={{ uri: simThumb.trim() }} style={{ width: 96, height: 54, borderRadius: 3, backgroundColor: '#000' }} resizeMode="cover" />
+                  ) : (
+                    <View style={{ width: 96, height: 54, backgroundColor: '#FF4D6D', borderRadius: 3, justifyContent: 'center', alignItems: 'center', borderWidth: 1, borderColor: '#FFD166' }}>
+                      <Text style={{ fontSize: 10, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>★ MY CAPSULE</Text>
+                    </View>
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '900', color: '#FFFFFF' }}>{simTitle || '제목 없음'}</Text>
+                    <Text numberOfLines={1} style={{ fontSize: 11, color: '#66C0F4', marginTop: 2 }}>{simTags}</Text>
+                    <Text numberOfLines={1} style={{ fontSize: 11, color: '#8F98A0', marginTop: 2 }}>{simDesc}</Text>
+                  </View>
+                  <View style={{ backgroundColor: '#4C6B22', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 3 }}>
+                    <Text style={{ fontSize: 12, fontWeight: '900', color: '#BEEE11', fontFamily: 'monospace' }}>{simPrice}</Text>
+                  </View>
+                </View>
+
+                {/* Competitor B */}
+                <View style={{ flexDirection: 'row', backgroundColor: '#16202D', padding: 8, borderRadius: 4, opacity: 0.65, alignItems: 'center', gap: 10 }}>
+                  <View style={{ width: 84, height: 42, backgroundColor: '#3B2F4A', justifyContent: 'center', alignItems: 'center', borderRadius: 2 }}>
+                    <Text style={{ fontSize: 10, color: '#9CA3AF', fontFamily: 'monospace' }}>COMPETITOR_B</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 12.5, fontWeight: '700', color: '#C7D5E0' }}>Pixel Farm Survivors</Text>
+                    <Text style={{ fontSize: 10.5, color: '#8F98A0' }}>농장 시뮬레이션, 도트, 생존</Text>
+                  </View>
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: '#C7D5E0' }}>₩9,900</Text>
+                </View>
+              </View>
+
+              {/* Launch Readiness Checklist */}
+              <View style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 6, padding: 12 }}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                  <Text style={{ fontSize: 12.5, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>
+                    {'> 스토어 출시 & 위시리스트 전환율 체크리스트'}
+                  </Text>
+                  <Text style={{ fontSize: 13, fontWeight: '900', color: '#10B981', fontFamily: 'monospace' }}>
+                    준비도: {Math.round((simChecks.length / 6) * 100)}점
+                  </Text>
+                </View>
+                {[
+                  { id: 'c1', text: '트레일러 시작 후 3초 안에 로고 대신 실제 인게임 핵심 액션 장면이 나오는가?' },
+                  { id: 'c2', text: '캡슐 썸네일 이미지를 모바일 크기(120x60px)로 축소해도 게임 제목이 선명하게 읽히는가?' },
+                  { id: 'c3', text: '상점 첫 문단에 세계관 소설 대신 [장르 + 핵심 플레이 재미]가 2줄 이내로 요약되어 있는가?' },
+                  { id: 'c4', text: '유저들이 바로 체험할 수 있는 웹 데모(Itch.io) 또는 Steam Next Fest 체험판 빌드가 있는가?' },
+                  { id: 'c5', text: '유사 인디 흥행작과 겹치는 핵심 태그(예: Roguelike Deckbuilder, Pixel Graphics) 5개를 지정했는가?' },
+                  { id: 'c6', text: '해외 유저 유입을 위한 최소한의 영어 UI / 상점 페이지 번역을 적용했는가?' },
+                ].map((chk) => {
+                  const checked = simChecks.includes(chk.id);
+                  return (
+                    <TouchableOpacity
+                      key={chk.id}
+                      onPress={() => setSimChecks(checked ? simChecks.filter(x => x !== chk.id) : [...simChecks, chk.id])}
+                      style={{ flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 6, borderBottomWidth: 1, borderBottomColor: Theme.colors.pillBg }}
+                    >
+                      <Text style={{ fontSize: 14, color: checked ? '#10B981' : Theme.colors.textLight, fontFamily: 'monospace', fontWeight: '900' }}>
+                        {checked ? '[✓]' : '[ ]'}
+                      </Text>
+                      <Text style={{ flex: 1, fontSize: 12, color: checked ? Theme.colors.text : Theme.colors.textLight }}>
+                        {chk.text}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* UNITY / GODOT 60FPS OPTIMIZER & ENGINE HOTKEYS CHEATSHEET MODAL */}
+      <Modal visible={optDoctorOpen} animationType="fade" transparent onRequestClose={() => setOptDoctorOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, maxHeight: '90%', backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: '#F59E0B', borderRadius: 6, padding: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
+              <View>
+                <Text style={{ fontSize: 15, fontWeight: '900', color: '#F59E0B', fontFamily: 'monospace' }}>
+                  ⚡ MOD_07 // 60FPS OPTIMIZATION DOCTOR & HOTKEYS
+                </Text>
+                <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
+                  인디게임 프레임 드랍(렉) 방어 체크리스트 및 Unity·Unreal·Godot 필수 단축키 치트시트
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setOptDoctorOpen(false)} style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 }}>
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X]</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+              <TouchableOpacity
+                onPress={() => setOptTab('checklist')}
+                style={{ flex: 1, backgroundColor: optTab === 'checklist' ? '#F59E0B' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '900', color: optTab === 'checklist' ? '#11131C' : Theme.colors.text, fontFamily: 'monospace' }}>
+                  [01] 60FPS 프레임 방어 진단 ({Math.round((optChecks.length / 6) * 100)}%)
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => setOptTab('hotkeys')}
+                style={{ flex: 1, backgroundColor: optTab === 'hotkeys' ? '#00E5FF' : Theme.colors.pillBg, paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
+              >
+                <Text style={{ fontSize: 12, fontWeight: '900', color: optTab === 'hotkeys' ? '#11131C' : Theme.colors.text, fontFamily: 'monospace' }}>
+                  [02] 3대 엔진 필수 단축키 사전
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {optTab === 'checklist' ? (
+                <View style={{ gap: 8 }}>
+                  {[
+                    { id: 'o1', cat: 'CPU / GC Alloc', title: 'Update() 안에서 GetComponent<T>() 또는 GameObject.Find() 호출 제거', tip: 'Awake()에서 컴포넌트를 변수에 캐싱해 두어야 매 프레임 가비지(GC)와 CPU 스파이크가 발생하지 않습니다.' },
+                    { id: 'o2', cat: 'Memory / Pool', title: '반복 생성되는 총알·몬스터·데미지 텍스트에 Object Pooling 적용', tip: 'Instantiate()와 Destroy()를 전투 중 반복 호출하면 GC.Collect 순간 멈춤(Stutter) 현상이 발생합니다.' },
+                    { id: 'o3', cat: 'GPU / DrawCall', title: '2D 스프라이트를 Sprite Atlas로 묶어 SetPass Calls(드로우콜) 압축', tip: '동일한 머티리얼/아틀라스를 공유해야 배칭(Batching)이 깨지지 않고 모바일 발열이 줄어듭니다.' },
+                    { id: 'o4', cat: 'UI / Canvas', title: '자주 변하는 텍스트(체력바/점수)와 정적 배경 UI의 Canvas 분리', tip: 'Unity UGUI는 캔버스 내 요소 하나만 바뀌어도 해당 Canvas 전체 메쉬를 리빌드합니다.' },
+                    { id: 'o5', cat: 'Physics', title: '움직이지 않는 배경 콜라이더에서 Rigidbody 제거 및 Layer Collision Matrix 정리', tip: 'Edit > Project Settings > Physics(2D)에서 불필요한 레이어 간 충돌 체크를 해제하면 물리 연산이 절반 이하로 감소합니다.' },
+                    { id: 'o6', cat: 'Ray / Camera', title: '장식용 UI Image·Text의 Raycast Target 해제 및 Camera.main 캐싱', tip: '터치 입력을 받지 않는 UI의 Raycast Target을 끄면 EventSystem 클릭 검사 속도가 크게 향상됩니다.' },
+                  ].map((item) => {
+                    const done = optChecks.includes(item.id);
+                    return (
+                      <TouchableOpacity
+                        key={item.id}
+                        onPress={() => setOptChecks(done ? optChecks.filter(x => x !== item.id) : [...optChecks, item.id])}
+                        style={{
+                          backgroundColor: Theme.colors.background,
+                          borderWidth: 1.5,
+                          borderColor: done ? '#10B981' : Theme.colors.border,
+                          borderRadius: 6,
+                          padding: 11,
+                        }}
+                      >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+                          <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#F59E0B', fontFamily: 'monospace' }}>[{item.cat}]</Text>
+                          <Text style={{ fontSize: 11, fontWeight: '900', color: done ? '#10B981' : Theme.colors.textLight, fontFamily: 'monospace' }}>
+                            {done ? '[✓ OPTIMIZED]' : '[미적용 - 클릭해 체크]'}
+                          </Text>
+                        </View>
+                        <Text style={{ fontSize: 13.5, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>{item.title}</Text>
+                        <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, lineHeight: 17 }}>💡 {item.tip}</Text>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
+              ) : (
+                <View>
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 10 }}>
+                    {(['Unity', 'Unreal', 'Godot'] as const).map((eng) => (
+                      <TouchableOpacity
+                        key={eng}
+                        onPress={() => setHotkeyEngine(eng)}
+                        style={{
+                          backgroundColor: hotkeyEngine === eng ? Theme.colors.primary : Theme.colors.pillBg,
+                          paddingHorizontal: 12,
+                          paddingVertical: 6,
+                          borderRadius: 4,
+                        }}
+                      >
+                        <Text style={{ fontSize: 12, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>{eng}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {(hotkeyEngine === 'Unity' ? [
+                    { k: 'Q / W / E / R / T', d: '손바닥 이동 / 위치(Move) / 회전(Rotate) / 크기(Scale) / 2D 렉트 툴 전환' },
+                    { k: 'V 누른 채 드래그', d: '버텍스 스냅(Vertex Snap) — 타일이나 벽 모서리를 빈틈없이 딱 맞출 때 필수!' },
+                    { k: 'Ctrl + Shift + F', d: '현재 내가 보고 있는 Scene 뷰 시점 그대로 선택한 카메라/오브젝트 정렬' },
+                    { k: 'F (오브젝트 선택 후)', d: '선택한 오브젝트로 씬 카메라 즉시 포커스 이동' },
+                    { k: 'Alt + Shift + A', d: '선택한 GameObject 활성화/비활성화(Active) 즉시 토글' },
+                    { k: 'Ctrl + P / Ctrl + Shift + P', d: '게임 플레이(Play) 시작·종료 / 일시정지(Pause)' },
+                  ] : hotkeyEngine === 'Unreal' ? [
+                    { k: 'End 키', d: '공중에 떠 있는 액터(오브젝트)를 바닥 지형에 즉시 착지(Snap to Floor)' },
+                    { k: 'G 키', d: '게임 뷰(Game View) 토글 — 기즈모와 아이콘을 숨기고 실제 인게임 화면 확인' },
+                    { k: 'Ctrl + Space', d: '콘텐츠 드로어(Content Drawer) 즉시 열기/닫기' },
+                    { k: 'Alt + P', d: '현재 뷰포트에서 즉시 플레이(PIE) 시작' },
+                    { k: ' 블루프린트 B + 좌클릭', d: 'Branch(if 분기문) 노드 1초 생성 (D+클릭: Delay, S+클릭: Sequence)' },
+                  ] : [
+                    { k: 'F5 / F6', d: '메인 프로젝트 실행(F5) / 현재 열려 있는 씬만 단독 실행(F6)' },
+                    { k: 'Ctrl + A', d: '현재 노드의 하위 자식 노드 추가(Add Child Node)' },
+                    { k: 'Ctrl + Shift + O', d: '빠른 씬 열기(Quick Open Scene)' },
+                    { k: 'S / R / W (2D/3D 뷰)', d: '크기 조절(Scale) / 회전(Rotate) / 이동(Move) 모드 전환' },
+                    { k: 'Ctrl 드래그 (스크립트창)', d: '씬 트리의 노드를 스크립트 에디터로 Ctrl+드래그하면 @onready 변수 자동 완성!' },
+                  ]).map((hk, idx) => (
+                    <View key={idx} style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 10, marginBottom: 8, flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                      <View style={{ backgroundColor: '#FFD166', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 4, minWidth: 110, alignItems: 'center' }}>
+                        <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#11131C', fontFamily: 'monospace' }}>{hk.k}</Text>
+                      </View>
+                      <Text style={{ flex: 1, fontSize: 12.5, color: Theme.colors.text, fontWeight: '700' }}>{hk.d}</Text>
+                    </View>
+                  ))}
+                </View>
+              )}
             </ScrollView>
           </View>
         </View>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DEVGROUND // 8-BIT CHIPTUNE BGM SEQUENCER</title>
+  <style>
+    @font-face {
+      font-family: 'DungGeunMo';
+      src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    }
+    * { box-sizing: border-box; user-select: none; }
+    body {
+      margin: 0;
+      padding: 12px;
+      background: #11131C;
+      color: #F3F4F6;
+      font-family: 'DungGeunMo', 'Courier New', monospace;
+    }
+    .sequencer-wrap {
+      max-width: 740px;
+      margin: 0 auto;
+      background: #1A1D2B;
+      border: 2px solid #3A415E;
+      border-radius: 6px;
+      padding: 14px;
+      box-shadow: 4px 4px 0px #07080D;
+    }
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #3A415E;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 16px;
+      font-weight: 900;
+      color: #00E5FF;
+    }
+    .badge {
+      font-size: 11px;
+      background: #FFD166;
+      color: #11131C;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 4px;
+    }
+    .controls-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    button {
+      font-family: 'DungGeunMo', monospace;
+      font-size: 12px;
+      background: #252A3E;
+      color: #F3F4F6;
+      border: 1.5px solid #3A415E;
+      border-radius: 4px;
+      padding: 7px 11px;
+      cursor: pointer;
+    }
+    button:hover { border-color: #00E5FF; }
+    button.play-btn {
+      background: #10B981;
+      color: #11131C;
+      border-color: #10B981;
+      font-weight: 900;
+    }
+    button.stop-btn {
+      background: #FF4D6D;
+      color: #FFF;
+      border-color: #FF4D6D;
+      font-weight: 900;
+    }
+    button.gold-btn {
+      background: #FFD166;
+      color: #11131C;
+      border-color: #FFD166;
+      font-weight: 900;
+    }
+    .track-section {
+      margin-bottom: 12px;
+      background: #11131C;
+      border: 1.5px solid #3A415E;
+      border-radius: 6px;
+      padding: 10px;
+      overflow-x: auto;
+    }
+    .track-title {
+      font-size: 11.5px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .grid-row {
+      display: grid;
+      grid-template-columns: 46px repeat(16, minmax(24px, 1fr));
+      gap: 3px;
+      margin-bottom: 3px;
+      align-items: center;
+    }
+    .note-label {
+      font-size: 10.5px;
+      color: #9CA3AF;
+      text-align: right;
+      padding-right: 6px;
+    }
+    .cell {
+      height: 22px;
+      background: #1E2235;
+      border: 1px solid #2E344E;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .cell:nth-child(4n+2) {
+      border-left: 2px solid #4B5563;
+    }
+    .cell.active-lead { background: #FF4D6D; border-color: #FF8FA3; }
+    .cell.active-bass { background: #00E5FF; border-color: #80F2FF; }
+    .cell.active-drum { background: #FFD166; border-color: #FFE599; }
+    .cell.playing-col {
+      outline: 2px solid #FFFFFF;
+      z-index: 2;
+    }
+    .status-msg {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #10B981;
+      min-height: 18px;
+    }
+  </style>
+</head>
+<body>
+  <div class="sequencer-wrap">
+    <div class="top-bar">
+      <span class="title">🎵 8-BIT CHIPTUNE BGM SEQUENCER // 칩튠 브금 작곡기</span>
+      <span class="badge">ROYALTY-FREE LOOP .WAV</span>
+    </div>
+
+    <div class="controls-row">
+      <button id="btnPlay" class="play-btn" onclick="togglePlay()">▶ PLAY LOOP</button>
+      <button onclick="loadPreset('boss')">🔥 보스전 프리셋</button>
+      <button onclick="loadPreset('town')">🏰 평화로운 마을</button>
+      <button onclick="loadPreset('cyber')">🚀 아케이드 러너</button>
+      <button onclick="loadPreset('random')">🎲 랜덤 자동작곡</button>
+      <button onclick="clearAll()">🗑️ 초기화</button>
+    </div>
+
+    <div class="controls-row" style="justify-content: space-between; background:#11131C; padding:8px 12px; border-radius:4px; border:1px solid #3A415E;">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="font-size:12px; color:#FFD166;">TEMPO (BPM): <strong id="bpmVal">130</strong></span>
+        <input type="range" id="bpmSlider" min="80" max="180" value="130" oninput="updateBpm(this.value)" />
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="gold-btn" onclick="exportLoopWav()">💾 무한루프 브금(.WAV) 다운로드</button>
+      </div>
+    </div>
+
+    <!-- Track 1: Lead Melody -->
+    <div class="track-section">
+      <div class="track-title" style="color:#FF4D6D;">
+        <span>TRACK 01 // LEAD MELODY (SQUARE WAVE)</span>
+        <span>칸을 클릭해 멜로디를 찍으세요</span>
+      </div>
+      <div id="leadGrid"></div>
+    </div>
+
+    <!-- Track 2: Bassline -->
+    <div class="track-section">
+      <div class="track-title" style="color:#00E5FF;">
+        <span>TRACK 02 // 8-BIT BASSLINE (TRIANGLE WAVE)</span>
+        <span>저음 베이스 루프</span>
+      </div>
+      <div id="bassGrid"></div>
+    </div>
+
+    <!-- Track 3: Drums -->
+    <div class="track-section">
+      <div class="track-title" style="color:#FFD166;">
+        <span>TRACK 03 // CHIPTUNE PERCUSSION (NOISE & KICK)</span>
+        <span>드럼 비트</span>
+      </div>
+      <div id="drumGrid"></div>
+    </div>
+
+    <div class="status-msg" id="statusMsg">✨ 프리셋 버튼을 누르거나 격자를 클릭해 나만의 인디게임 배경음악(BGM)을 만들어보세요!</div>
+  </div>
+
+  <script>
+    const STEPS = 16;
+    const LEAD_NOTES = [
+      { name: 'C5', freq: 523.25 },
+      { name: 'A4', freq: 440.00 },
+      { name: 'G4', freq: 392.00 },
+      { name: 'F4', freq: 349.23 },
+      { name: 'E4', freq: 329.63 },
+      { name: 'D4', freq: 293.66 },
+      { name: 'C4', freq: 261.63 }
+    ];
+    const BASS_NOTES = [
+      { name: 'C3', freq: 130.81 },
+      { name: 'A2', freq: 110.00 },
+      { name: 'G2', freq: 98.00 },
+      { name: 'F2', freq: 87.31 }
+    ];
+    const DRUM_TYPES = [
+      { name: 'HAT', type: 'hat' },
+      { name: 'SNR', type: 'snare' },
+      { name: 'KICK', type: 'kick' }
+    ];
+
+    let leadState = Array.from({ length: LEAD_NOTES.length }, () => Array(STEPS).fill(false));
+    let bassState = Array.from({ length: BASS_NOTES.length }, () => Array(STEPS).fill(false));
+    let drumState = Array.from({ length: DRUM_TYPES.length }, () => Array(STEPS).fill(false));
+
+    let bpm = 130;
+    let isPlaying = false;
+    let currentStep = 0;
+    let timerId = null;
+    let audioCtx = null;
+
+    function getAudioCtx() {
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+      }
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      return audioCtx;
+    }
+
+    function buildGrids() {
+      const build = (containerId, rows, stateArr, activeClass, onToggle) => {
+        const wrap = document.getElementById(containerId);
+        wrap.innerHTML = '';
+        rows.forEach((r, rIdx) => {
+          const rowEl = document.createElement('div');
+          rowEl.className = 'grid-row';
+          const lbl = document.createElement('div');
+          lbl.className = 'note-label';
+          lbl.textContent = r.name;
+          rowEl.appendChild(lbl);
+
+          for (let s = 0; s < STEPS; s++) {
+            const c = document.createElement('div');
+            c.className = 'cell' + (stateArr[rIdx][s] ? ' ' + activeClass : '') + (isPlaying && currentStep === s ? ' playing-col' : '');
+            c.dataset.step = s;
+            c.onclick = () => {
+              onToggle(rIdx, s);
+              buildGrids();
+            };
+            rowEl.appendChild(c);
+          }
+          wrap.appendChild(rowEl);
+        });
+      };
+
+      build('leadGrid', LEAD_NOTES, leadState, 'active-lead', (r, s) => {
+        const next = !leadState[r][s];
+        for (let i = 0; i < LEAD_NOTES.length; i++) leadState[i][s] = false;
+        leadState[r][s] = next;
+        if (next) playTone(LEAD_NOTES[r].freq, 'square', 0.12, 0.12);
+      });
+
+      build('bassGrid', BASS_NOTES, bassState, 'active-bass', (r, s) => {
+        const next = !bassState[r][s];
+        for (let i = 0; i < BASS_NOTES.length; i++) bassState[i][s] = false;
+        bassState[r][s] = next;
+        if (next) playTone(BASS_NOTES[r].freq, 'triangle', 0.16, 0.2);
+      });
+
+      build('drumGrid', DRUM_TYPES, drumState, 'active-drum', (r, s) => {
+        drumState[r][s] = !drumState[r][s];
+        if (drumState[r][s]) playDrum(DRUM_TYPES[r].type);
+      });
+    }
+
+    function playTone(freq, type, duration, gainVal) {
+      const ctx = getAudioCtx();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, ctx.currentTime);
+      gain.gain.setValueAtTime(gainVal, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + duration);
+    }
+
+    function playDrum(type) {
+      const ctx = getAudioCtx();
+      if (type === 'kick') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(140, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(35, ctx.currentTime + 0.11);
+        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.12);
+      } else {
+        const bufSize = ctx.sampleRate * (type === 'snare' ? 0.1 : 0.04);
+        const buf = ctx.createBuffer(1, bufSize, ctx.sampleRate);
+        const data = buf.getChannelData(0);
+        for (let i = 0; i < bufSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = ctx.createBufferSource();
+        noise.buffer = buf;
+        const gain = ctx.createGain();
+        gain.gain.setValueAtTime(type === 'snare' ? 0.18 : 0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + (type === 'snare' ? 0.1 : 0.04));
+        noise.connect(gain);
+        gain.connect(ctx.destination);
+        noise.start();
+      }
+    }
+
+    function stepTick() {
+      const stepDur = (60 / bpm) / 4;
+      for (let r = 0; r < LEAD_NOTES.length; r++) {
+        if (leadState[r][currentStep]) playTone(LEAD_NOTES[r].freq, 'square', stepDur * 0.9, 0.11);
+      }
+      for (let r = 0; r < BASS_NOTES.length; r++) {
+        if (bassState[r][currentStep]) playTone(BASS_NOTES[r].freq, 'triangle', stepDur * 0.95, 0.2);
+      }
+      for (let r = 0; r < DRUM_TYPES.length; r++) {
+        if (drumState[r][currentStep]) playDrum(DRUM_TYPES[r].type);
+      }
+      buildGrids();
+      currentStep = (currentStep + 1) % STEPS;
+    }
+
+    function togglePlay() {
+      const btn = document.getElementById('btnPlay');
+      if (isPlaying) {
+        isPlaying = false;
+        clearInterval(timerId);
+        btn.textContent = '▶ PLAY LOOP';
+        btn.className = 'play-btn';
+        buildGrids();
+      } else {
+        getAudioCtx();
+        isPlaying = true;
+        currentStep = 0;
+        btn.textContent = '⏹ STOP';
+        btn.className = 'stop-btn';
+        stepTick();
+        timerId = setInterval(stepTick, ((60 / bpm) / 4) * 1000);
+      }
+    }
+
+    function updateBpm(val) {
+      bpm = Number(val);
+      document.getElementById('bpmVal').textContent = val;
+      if (isPlaying) {
+        clearInterval(timerId);
+        timerId = setInterval(stepTick, ((60 / bpm) / 4) * 1000);
+      }
+    }
+
+    function clearAll() {
+      leadState = Array.from({ length: LEAD_NOTES.length }, () => Array(STEPS).fill(false));
+      bassState = Array.from({ length: BASS_NOTES.length }, () => Array(STEPS).fill(false));
+      drumState = Array.from({ length: DRUM_TYPES.length }, () => Array(STEPS).fill(false));
+      buildGrids();
+    }
+
+    function loadPreset(type) {
+      clearAll();
+      if (type === 'boss') {
+        updateBpm(155);
+        document.getElementById('bpmSlider').value = 155;
+        const leadMap = [1, 4, 1, 2, 1, 4, 5, 4, 1, 4, 1, 0, 2, 3, 4, 5];
+        leadMap.forEach((r, s) => { leadState[r][s] = true; });
+        [0,2,4,6,8,10,12,14].forEach((s, idx) => { bassState[idx % 4][s] = true; });
+        for (let s = 0; s < STEPS; s++) {
+          if (s % 2 === 0) drumState[2][s] = true;
+          if (s % 4 === 2) drumState[1][s] = true;
+          drumState[0][s] = true;
+        }
+      } else if (type === 'town') {
+        updateBpm(105);
+        document.getElementById('bpmSlider').value = 105;
+        const leadMap = [6, -1, 4, -1, 2, -1, 4, -1, 3, -1, 4, -1, 6, -1, -1, -1];
+        leadMap.forEach((r, s) => { if (r >= 0) leadState[r][s] = true; });
+        [0, 4, 8, 12].forEach((s, i) => { bassState[i % 4][s] = true; });
+        [0, 8].forEach(s => { drumState[2][s] = true; });
+        [4, 12].forEach(s => { drumState[0][s] = true; });
+      } else if (type === 'cyber') {
+        updateBpm(138);
+        document.getElementById('bpmSlider').value = 138;
+        const leadMap = [0, -1, 2, 0, -1, 4, 2, -1, 1, -1, 3, 1, -1, 4, 6, -1];
+        leadMap.forEach((r, s) => { if (r >= 0) leadState[r][s] = true; });
+        for (let s = 0; s < STEPS; s += 2) bassState[(s / 2) % 4][s] = true;
+        [0, 4, 8, 12].forEach(s => { drumState[2][s] = true; });
+        [2, 6, 10, 14].forEach(s => { drumState[0][s] = true; });
+        [4, 12].forEach(s => { drumState[1][s] = true; });
+      } else if (type === 'random') {
+        for (let s = 0; s < STEPS; s++) {
+          if (Math.random() > 0.25) leadState[Math.floor(Math.random() * LEAD_NOTES.length)][s] = true;
+          if (s % 2 === 0) bassState[Math.floor(Math.random() * BASS_NOTES.length)][s] = true;
+          if (s % 4 === 0) drumState[2][s] = true;
+          if (s % 4 === 2) drumState[1][s] = true;
+          if (Math.random() > 0.4) drumState[0][s] = true;
+        }
+      }
+      buildGrids();
+      document.getElementById('statusMsg').textContent = '🎵 [' + type.toUpperCase() + '] 칩튠 브금 패턴이 로드되었습니다! ▶ PLAY LOOP를 눌러 들어보세요.';
+    }
+
+    function exportLoopWav() {
+      const sampleRate = 44100;
+      const stepSec = (60 / bpm) / 4;
+      const loops = 2; // Export 2 bars seamless loop
+      const totalSec = stepSec * STEPS * loops;
+      const numSamples = Math.floor(sampleRate * totalSec);
+      const buffer = new Float32Array(numSamples);
+
+      for (let l = 0; l < loops; l++) {
+        for (let s = 0; s < STEPS; s++) {
+          const startSample = Math.floor((l * STEPS + s) * stepSec * sampleRate);
+          const stepSamples = Math.floor(stepSec * sampleRate);
+
+          let leadFreq = 0;
+          for (let r = 0; r < LEAD_NOTES.length; r++) if (leadState[r][s]) leadFreq = LEAD_NOTES[r].freq;
+          let bassFreq = 0;
+          for (let r = 0; r < BASS_NOTES.length; r++) if (bassState[r][s]) bassFreq = BASS_NOTES[r].freq;
+          const hasKick = drumState[2][s];
+          const hasSnare = drumState[1][s];
+          const hasHat = drumState[0][s];
+
+          for (let i = 0; i < stepSamples && (startSample + i) < numSamples; i++) {
+            const t = i / sampleRate;
+            const env = Math.max(0, 1 - t / stepSec);
+            let sample = 0;
+            if (leadFreq > 0) {
+              sample += (Math.sin(2 * Math.PI * leadFreq * t) >= 0 ? 0.18 : -0.18) * env;
+            }
+            if (bassFreq > 0) {
+              sample += (2 / Math.PI) * Math.asin(Math.sin(2 * Math.PI * bassFreq * t)) * 0.25 * env;
+            }
+            if (hasKick && t < 0.11) {
+              const kf = 130 * Math.exp(-t * 14);
+              sample += Math.sin(2 * Math.PI * kf * t) * 0.35 * (1 - t / 0.11);
+            }
+            if (hasSnare && t < 0.09) {
+              sample += (Math.random() * 2 - 1) * 0.2 * (1 - t / 0.09);
+            }
+            if (hasHat && t < 0.035) {
+              sample += (Math.random() * 2 - 1) * 0.09 * (1 - t / 0.035);
+            }
+            buffer[startSample + i] = Math.max(-1, Math.min(1, sample));
+          }
+        }
+      }
+
+      const wavBytes = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(wavBytes);
+      const writeStr = (off, str) => { for (let i = 0; i < str.length; i++) view.setUint8(off + i, str.charCodeAt(i)); };
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + numSamples * 2, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, numSamples * 2, true);
+      for (let i = 0; i < numSamples; i++) {
+        view.setInt16(44 + i * 2, buffer[i] * 32767, true);
+      }
+
+      const blob = new Blob([wavBytes], { type: 'audio/wav' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `devground-chiptune-bgm-${bpm}bpm.wav`;
+      a.click();
+      document.getElementById('statusMsg').textContent = '✅ 상업용 무료 8비트 브금(.WAV) 파일이 다운로드되었습니다!';
+    }
+
+    loadPreset('cyber');
+  </script>
+</body>
+</html>

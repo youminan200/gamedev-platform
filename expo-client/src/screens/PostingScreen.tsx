@@ -10,7 +10,7 @@ interface Props {
   onPostSuccess: () => void;
 }
 
-const PRESET_TAGS = ['쇼케이스', '데모버전', '팀원모집', 'Unity', 'Unreal', 'Godot', 'C#', 'Graphics', 'Release'];
+const PRESET_TAGS = ['게임잼', '쇼케이스', '데모버전', '팀원모집', 'Unity', 'Unreal', 'Godot', 'C#', 'Graphics', 'Release'];
 
 export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSuccess }) => {
   const [title, setTitle] = useState('');
