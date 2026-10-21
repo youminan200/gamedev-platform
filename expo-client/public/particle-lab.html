@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>2D 파티클 · 타격 이펙트 시뮬레이터</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #0B0D14;
+      color: #F8FAFC;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, monospace;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #131724;
+      border-bottom: 2px solid #262C40;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .preset-group {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    button {
+      background: #1E2436;
+      color: #E2E8F0;
+      border: 1.5px solid #38415E;
+      border-radius: 4px;
+      padding: 6px 10px;
+      font-size: 12px;
+      font-weight: 800;
+      font-family: monospace;
+      cursor: pointer;
+      transition: all 0.12s;
+    }
+    button:hover { border-color: #00E5FF; color: #FFF; }
+    button.active {
+      background: #00E5FF;
+      color: #0B0D14;
+      border-color: #FFF;
+    }
+    .btn-copy {
+      background: #10B981;
+      color: #090D16;
+      border-color: #6EE7B7;
+    }
+    .main-area {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .canvas-wrap {
+      flex: 1;
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #161B2E 0%, #090B11 100%);
+      cursor: crosshair;
+      overflow: hidden;
+    }
+    canvas {
+      border: 2px solid #2D354D;
+      border-radius: 6px;
+      background: #0B0D14;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.65);
+    }
+    .hint-overlay {
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      background: rgba(15, 18, 28, 0.85);
+      border: 1px solid #2D354D;
+      padding: 6px 10px;
+      border-radius: 4px;
+      font-size: 11.5px;
+      font-family: monospace;
+      color: #94A3B8;
+      pointer-events: none;
+    }
+    .side-panel {
+      width: 290px;
+      background: #131724;
+      border-left: 2px solid #262C40;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+    }
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .control-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-family: monospace;
+      color: #CBD5E1;
+      font-weight: 700;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #00E5FF;
+      cursor: pointer;
+    }
+    .code-box {
+      background: #080A10;
+      border: 1px solid #262C40;
+      border-radius: 4px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 10.5px;
+      color: #67E8F9;
+      white-space: pre-wrap;
+      line-height: 1.45;
+      max-height: 170px;
+      overflow-y: auto;
+    }
+    .toast {
+      position: fixed;
+      bottom: 14px;
+      right: 14px;
+      background: #10B981;
+      color: #0B0D14;
+      font-weight: 900;
+      font-family: monospace;
+      padding: 8px 14px;
+      border-radius: 4px;
+      font-size: 12px;
+      display: none;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
+    @media (max-width: 720px) {
+      .main-area { flex-direction: column; }
+      .side-panel { width: 100%; height: 250px; border-left: none; border-top: 2px solid #262C40; }
+    }
+  </style>
+</head>
+<body>
+  <div class="top-bar">
+    <div class="preset-group">
+      <button id="pre-hit" class="active" onclick="applyPreset('hit')">⚔️ 피격 크리티컬 스파크</button>
+      <button id="pre-explosion" onclick="applyPreset('explosion')">💣 도트 폭발 & 쉐이크</button>
+      <button id="pre-levelup" onclick="applyPreset('levelup')">✨ 레벨업 황금 오라</button>
+      <button id="pre-portal" onclick="applyPreset('portal')">🌀 다크 던전 포털</button>
+      <button id="pre-blood" onclick="applyPreset('blood')">🩸 슬래시 블러드</button>
+    </div>
+    <div style="display:flex; gap:6px;">
+      <button onclick="triggerCenter()">🔥 중앙 발사 (SPACE)</button>
+      <button class="btn-copy" onclick="copyUnityCode()">📋 Unity C# 파티클 코드 복사</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+    <div class="canvas-wrap" id="canvasWrap">
+      <div class="hint-overlay">🖱️ 캔버스 아무 곳이나 클릭/드래그하면 타격 파티클과 카메라 흔들림(Juice)이 재생됩니다!</div>
+      <canvas id="fxCanvas" width="540" height="400"></canvas>
+    </div>
+
+    <div class="side-panel">
+      <div style="font-size:12.5px; font-weight:900; color:#00E5FF; font-family:monospace;">🎛️ 파티클 물리 파라미터</div>
+
+      <div class="control-row">
+        <div class="control-label"><span>입자 개수 (Count)</span><span id="valCount">36개</span></div>
+        <input id="rngCount" type="range" min="8" max="120" value="36" oninput="updateParams()" />
+      </div>
+
+      <div class="control-row">
+        <div class="control-label"><span>초기 폭발 속도 (Speed)</span><span id="valSpeed">7.5</span></div>
+        <input id="rngSpeed" type="range" min="1" max="18" step="0.5" value="7.5" oninput="updateParams()" />
+      </div>
+
+      <div class="control-row">
+        <div class="control-label"><span>중력 가속도 (Gravity)</span><span id="valGravity">0.18</span></div>
+        <input id="rngGravity" type="range" min="-0.3" max="0.6" step="0.02" value="0.18" oninput="updateParams()" />
+      </div>
+
+      <div class="control-row">
+        <div class="control-label"><span>도트 입자 크기 (Size)</span><span id="valSize">6px</span></div>
+        <input id="rngSize" type="range" min="2" max="16" step="1" value="6" oninput="updateParams()" />
+      </div>
+
+      <div class="control-row">
+        <div class="control-label"><span>화면 흔들림 (Camera Shake)</span><span id="valShake">8</span></div>
+        <input id="rngShake" type="range" min="0" max="22" step="1" value="8" oninput="updateParams()" />
+      </div>
+
+      <div style="font-size:11.5px; font-weight:900; color:#FBBF24; font-family:monospace; margin-top:4px;">📦 Unity C# 스크립트 미리보기</div>
+      <div class="code-box" id="codePreview"></div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✅ Unity C# 파티클 & 카메라 쉐이크 코드가 복사되었습니다!</div>
+
+  <script>
+    const canvas = document.getElementById('fxCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let currentPreset = 'hit';
+    let params = {
+      count: 36,
+      speed: 7.5,
+      gravity: 0.18,
+      size: 6,
+      shake: 8,
+      colors: ['#FFF1E8', '#FFEC27', '#FFA300', '#FF004D']
+    };
+
+    const PRESETS = {
+      hit: { count: 36, speed: 8.5, gravity: 0.18, size: 6, shake: 8, colors: ['#FFFFFF', '#FFEC27', '#FFA300', '#FF2A85'] },
+      explosion: { count: 75, speed: 11.0, gravity: 0.12, size: 9, shake: 16, colors: ['#FFF1E8', '#FFEC27', '#FF7700', '#E11D48', '#475569'] },
+      levelup: { count: 55, speed: 5.5, gravity: -0.14, size: 5, shake: 3, colors: ['#FEF08A', '#FACC15', '#38BDF8', '#FFFFFF'] },
+      portal: { count: 60, speed: 4.0, gravity: -0.04, size: 7, shake: 2, colors: ['#C084FC', '#9333EA', '#00E5FF', '#3B0764'] },
+      blood: { count: 42, speed: 9.0, gravity: 0.35, size: 6, shake: 10, colors: ['#FCA5A5', '#EF4444', '#B91C1C', '#7F1D1D'] }
+    };
+
+    let particles = [];
+    let shakeTime = 0;
+    let shakePower = 0;
+    let dummyScale = 1;
+    let dummyFlash = 0;
+
+    function applyPreset(key) {
+      currentPreset = key;
+      document.querySelectorAll('.preset-group button').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById('pre-' + key);
+      if (btn) btn.classList.add('active');
+
+      const p = PRESETS[key];
+      params = { ...p };
+      document.getElementById('rngCount').value = p.count;
+      document.getElementById('rngSpeed').value = p.speed;
+      document.getElementById('rngGravity').value = p.gravity;
+      document.getElementById('rngSize').value = p.size;
+      document.getElementById('rngShake').value = p.shake;
+      updateParams();
+      triggerCenter();
+    }
+
+    function updateParams() {
+      params.count = parseInt(document.getElementById('rngCount').value, 10);
+      params.speed = parseFloat(document.getElementById('rngSpeed').value);
+      params.gravity = parseFloat(document.getElementById('rngGravity').value);
+      params.size = parseInt(document.getElementById('rngSize').value, 10);
+      params.shake = parseInt(document.getElementById('rngShake').value, 10);
+
+      document.getElementById('valCount').textContent = params.count + '개';
+      document.getElementById('valSpeed').textContent = params.speed;
+      document.getElementById('valGravity').textContent = params.gravity;
+      document.getElementById('valSize').textContent = params.size + 'px';
+      document.getElementById('valShake').textContent = params.shake;
+
+      document.getElementById('codePreview').textContent = generateCSharpCode();
+    }
+
+    function spawnBurst(x, y) {
+      for (let i = 0; i < params.count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const spd = (0.25 + Math.random() * 0.85) * params.speed;
+        particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * spd,
+          vy: Math.sin(angle) * spd,
+          size: params.size * (0.7 + Math.random() * 0.6),
+          color: params.colors[Math.floor(Math.random() * params.colors.length)],
+          alpha: 1,
+          decay: 0.015 + Math.random() * 0.022
+        });
+      }
+      shakePower = params.shake;
+      shakeTime = 12;
+      dummyScale = 1.28;
+      dummyFlash = 1.0;
+    }
+
+    function triggerCenter() {
+      spawnBurst(canvas.width / 2, canvas.height / 2);
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+      spawnBurst(x, y);
+    });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        triggerCenter();
+      }
+    });
+
+    function generateCSharpCode() {
+      return [
+        '// Unity 2D 타격 파티클 & 카메라 흔들림 프리셋 (' + currentPreset.toUpperCase() + ')',
+        'using UnityEngine;',
+        'public class HitJuiceController : MonoBehaviour {',
+        '    public ParticleSystem hitParticle;',
+        '    public void PlayHitFX(Vector3 pos) {',
+        '        var main = hitParticle.main;',
+        '        main.startSpeed = ' + params.speed.toFixed(1) + 'f;',
+        '        main.gravityModifier = ' + params.gravity.toFixed(2) + 'f;',
+        '        main.startSize = ' + (params.size / 16).toFixed(2) + 'f;',
+        '        hitParticle.transform.position = pos;',
+        '        hitParticle.Emit(' + params.count + ');',
+        '        // Camera Shake Intensity: ' + params.shake,
+        '    }',
+        '}'
+      ].join('\n');
+    }
+
+    function copyUnityCode() {
+      const code = generateCSharpCode();
+      if (navigator.clipboard) navigator.clipboard.writeText(code);
+      const t = document.getElementById('toast');
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 2400);
+    }
+
+    function loop() {
+      ctx.save();
+      ctx.fillStyle = '#0B0D14';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      if (shakeTime > 0) {
+        const dx = (Math.random() - 0.5) * shakePower * 2;
+        const dy = (Math.random() - 0.5) * shakePower * 2;
+        ctx.translate(dx, dy);
+        shakeTime--;
+        shakePower *= 0.88;
+      }
+
+      // 그리드 배경
+      ctx.strokeStyle = '#161C2E';
+      ctx.lineWidth = 1;
+      for (let x = 0; x < canvas.width; x += 32) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (let y = 0; y < canvas.height; y += 32) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+
+      // 중앙 샌드백 몬스터 더미
+      dummyScale += (1 - dummyScale) * 0.18;
+      dummyFlash = Math.max(0, dummyFlash - 0.1);
+      const cx = canvas.width / 2;
+      const cy = canvas.height / 2;
+      const boxSize = 44 * dummyScale;
+
+      ctx.fillStyle = dummyFlash > 0.2 ? '#FFFFFF' : '#26314E';
+      ctx.strokeStyle = '#00E5FF';
+      ctx.lineWidth = 2;
+      ctx.fillRect(cx - boxSize / 2, cy - boxSize / 2, boxSize, boxSize);
+      ctx.strokeRect(cx - boxSize / 2, cy - boxSize / 2, boxSize, boxSize);
+
+      // 몬스터 눈
+      ctx.fillStyle = dummyFlash > 0.2 ? '#FF004D' : '#00E5FF';
+      ctx.fillRect(cx - 12, cy - 6, 7, 7);
+      ctx.fillRect(cx + 5, cy - 6, 7, 7);
+
+      // 파티클 업데이트
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += params.gravity;
+        p.vx *= 0.98;
+        p.alpha -= p.decay;
+
+        if (p.alpha <= 0) {
+          particles.splice(i, 1);
+          continue;
+        }
+
+        ctx.globalAlpha = Math.max(0, p.alpha);
+        ctx.fillStyle = p.color;
+        const s = Math.max(2, Math.round(p.size * p.alpha));
+        ctx.fillRect(Math.round(p.x - s / 2), Math.round(p.y - s / 2), s, s);
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+      requestAnimationFrame(loop);
+    }
+
+    updateParams();
+    triggerCenter();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>

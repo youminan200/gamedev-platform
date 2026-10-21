@@ -249,6 +249,24 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [selectedPaletteIdx, setSelectedPaletteIdx] = useState(0);
   const [copiedColorMsg, setCopiedColorMsg] = useState('');
 
+  const [dialogueEditorOpen, setDialogueEditorOpen] = useState(false);
+  const [dlgSpeaker, setDlgSpeaker] = useState('대장장이 고르곤');
+  const [dlgEmotion, setDlgEmotion] = useState('🔥 열정');
+  const [dlgLine, setDlgLine] = useState('심연의 던전에서 드디어 고대 운석을 구해왔군! 이 광석이라면 마왕의 결계를 깰 전설의 검을 벼려낼 수 있다네.');
+  const [dlgChoice1, setDlgChoice1] = useState('검을 바로 제작해 주세요 (-500G)');
+  const [dlgChoice2, setDlgChoice2] = useState('아직 재료가 더 필요합니다');
+  const [dlgCopied, setDlgCopied] = useState(false);
+
+  const [particleLabOpen, setParticleLabOpen] = useState(false);
+
+  const [achieveGenOpen, setAchieveGenOpen] = useState(false);
+  const [achGenre, setAchGenre] = useState<'roguelike' | 'platformer' | 'tycoon'>('roguelike');
+  const [achCopied, setAchCopied] = useState(false);
+
+  const [inputMapOpen, setInputMapOpen] = useState(false);
+  const [inputGenre, setInputGenre] = useState<'action2d' | 'roguelike' | 'sim'>('action2d');
+  const [inputCopied, setInputCopied] = useState(false);
+
   const [csharpVendingOpen, setCsharpVendingOpen] = useState(false);
   const [selectedScriptKey, setSelectedScriptKey] = useState<string>('platformer2d');
   const [scriptSpeed, setScriptSpeed] = useState<string>('8');
@@ -947,21 +965,49 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               onPress: () => setPaletteDexOpen(true)
             },
             {
-              code: 'MOD_14 // ARCADE_CABINET',
+              code: 'MOD_14 // DIALOGUE_TREE_EDITOR',
+              title: 'NPC 대사창 & 선택지 분기 에디터 (JSON & C# 타이핑 스크립트)',
+              desc: '화자 이름·감정 아이콘·선택지 분기를 실시간 RPG 대화창으로 미리보고 JSON 데이터 및 C# 타이핑 코루틴으로 추출합니다.',
+              accent: '#EAB308',
+              onPress: () => setDialogueEditorOpen(true)
+            },
+            {
+              code: 'MOD_15 // PARTICLE_FX_LAB',
+              title: '2D 파티클 · 타격 이펙트 & 카메라 흔들림(Juice) 시뮬레이터',
+              desc: '피격 스파크·도트 폭발·레벨업 오라·던전 포털을 캔버스에서 클릭해 실험하고 Unity ParticleSystem C# 코드를 복사합니다.',
+              accent: '#FB923C',
+              onPress: () => setParticleLabOpen(true)
+            },
+            {
+              code: 'MOD_16 // STEAM_ACHIEVEMENT_GEN',
+              title: '스팀 도전과제(Achievements) 기획 & Steamworks C# 생성기',
+              desc: '장르별 필수 도전과제(첫 처치·보스·히든 기믹·플래티넘)와 도트 트로피 배지를 생성하고 SteamUserStats 연동 코드를 추출합니다.',
+              accent: '#8B5CF6',
+              onPress: () => setAchieveGenOpen(true)
+            },
+            {
+              code: 'MOD_17 // INPUT_MAPPING_BUILDER',
+              title: 'PC 키보드 & Xbox/PS/Switch 게임패드 조작키 매핑 시트 생성기',
+              desc: '장르별 표준 조작키(이동·점프·대시·상호작용)를 4대 컨트롤러 규격 표로 시각화하고 스팀 스토어 안내문과 C# 입력 코드를 생성합니다.',
+              accent: '#14B8A6',
+              onPress: () => setInputMapOpen(true)
+            },
+            {
+              code: 'MOD_18 // ARCADE_CABINET',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
               accent: '#38BDF8',
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_15 // PARTY_RECRUIT',
+              code: 'MOD_19 // PARTY_RECRUIT',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
               accent: '#F97316',
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_12 // IDEA_SLOT_MACHINE',
+              code: 'MOD_20 // IDEA_SLOT_MACHINE',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
               accent: '#A855F7',
@@ -3160,6 +3206,412 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                     >
                       <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
                         [📋 현재 팔레트 전체 색상 리스트 한 번에 복사하기]
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_14: NPC 대사창 & 선택지 분기 트리 에디터 모달 */}
+      <Modal visible={dialogueEditorOpen} transparent animationType="fade" onRequestClose={() => setDialogueEditorOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EAB308', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#FACC15', fontFamily: 'monospace' }}>
+                💬 MOD_14 // NPC 대사창 & 선택지 분기 에디터
+              </Text>
+              <TouchableOpacity onPress={() => setDialogueEditorOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* 실시간 레트로 RPG 대화창 프리뷰 */}
+              <View style={{ backgroundColor: '#0A0D16', borderWidth: 2, borderColor: '#FACC15', borderRadius: 6, padding: 14, marginBottom: 12 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <View style={{ width: 46, height: 46, backgroundColor: '#1E2436', borderWidth: 2, borderColor: '#FACC15', borderRadius: 6, justifyContent: 'center', alignItems: 'center' }}>
+                    <Text style={{ fontSize: 22 }}>{dlgEmotion.split(' ')[0]}</Text>
+                  </View>
+                  <View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#FACC15', fontFamily: 'monospace' }}>{dlgSpeaker}</Text>
+                      <Text style={{ fontSize: 10.5, color: '#11131C', backgroundColor: '#FACC15', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 3, fontWeight: '900', fontFamily: 'monospace' }}>
+                        {dlgEmotion}
+                      </Text>
+                    </View>
+                    <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace' }}>NPC_DIALOGUE_NODE #01</Text>
+                  </View>
+                </View>
+                <Text style={{ fontSize: 13, color: '#FFF', lineHeight: 20, marginBottom: 12, fontWeight: '700' }}>
+                  "{dlgLine}"
+                </Text>
+                <View style={{ gap: 6 }}>
+                  <View style={{ backgroundColor: '#161C2E', borderWidth: 1, borderColor: '#00E5FF', paddingVertical: 7, paddingHorizontal: 10, borderRadius: 4 }}>
+                    <Text style={{ fontSize: 11.5, color: '#00E5FF', fontWeight: '800', fontFamily: 'monospace' }}>▶ [선택지 1] {dlgChoice1}</Text>
+                  </View>
+                  <View style={{ backgroundColor: '#161C2E', borderWidth: 1, borderColor: '#64748B', paddingVertical: 7, paddingHorizontal: 10, borderRadius: 4 }}>
+                    <Text style={{ fontSize: 11.5, color: '#CBD5E1', fontWeight: '800', fontFamily: 'monospace' }}>▷ [선택지 2] {dlgChoice2}</Text>
+                  </View>
+                </View>
+              </View>
+
+              {/* 감정 선택 칩 */}
+              <View style={{ flexDirection: 'row', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                {['🔥 열정', '😊 기본', '😡 분노', '😱 놀람', '😎 여유', '😢 슬픔'].map((emo) => (
+                  <TouchableOpacity
+                    key={emo}
+                    onPress={() => { setDlgEmotion(emo); setDlgCopied(false); }}
+                    style={{
+                      paddingHorizontal: 10,
+                      paddingVertical: 5,
+                      borderRadius: 4,
+                      backgroundColor: dlgEmotion === emo ? '#FACC15' : Theme.colors.pillBg,
+                      borderWidth: 1,
+                      borderColor: dlgEmotion === emo ? '#FFF' : Theme.colors.border
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '900', color: dlgEmotion === emo ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>{emo}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 8 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, color: Theme.colors.textLight, marginBottom: 4, fontFamily: 'monospace' }}>화자 이름 (Speaker)</Text>
+                  <TextInput
+                    style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 12, fontFamily: 'monospace' }}
+                    value={dlgSpeaker}
+                    onChangeText={(t) => { setDlgSpeaker(t); setDlgCopied(false); }}
+                  />
+                </View>
+              </View>
+
+              <Text style={{ fontSize: 11, color: Theme.colors.textLight, marginBottom: 4, fontFamily: 'monospace' }}>대사 본문 (Dialogue Text)</Text>
+              <TextInput
+                style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 12, minHeight: 64, marginBottom: 8 }}
+                value={dlgLine}
+                onChangeText={(t) => { setDlgLine(t); setDlgCopied(false); }}
+                multiline
+              />
+
+              <View style={{ flexDirection: 'row', gap: 8, marginBottom: 10 }}>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, color: '#00E5FF', marginBottom: 4, fontFamily: 'monospace' }}>선택지 1 (긍정/수락 분기)</Text>
+                  <TextInput
+                    style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 11.5 }}
+                    value={dlgChoice1}
+                    onChangeText={(t) => { setDlgChoice1(t); setDlgCopied(false); }}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontSize: 11, color: '#94A3B8', marginBottom: 4, fontFamily: 'monospace' }}>선택지 2 (보류/거절 분기)</Text>
+                  <TextInput
+                    style={{ backgroundColor: Theme.colors.background, borderWidth: 1.5, borderColor: Theme.colors.border, borderRadius: 4, padding: 8, color: '#FFF', fontSize: 11.5 }}
+                    value={dlgChoice2}
+                    onChangeText={(t) => { setDlgChoice2(t); setDlgCopied(false); }}
+                  />
+                </View>
+              </View>
+
+              {(() => {
+                const exportBundle = [
+                  '// 1. 대화 노드 JSON 데이터',
+                  JSON.stringify({
+                    nodeId: 'NPC_001',
+                    speaker: dlgSpeaker,
+                    emotion: dlgEmotion,
+                    line: dlgLine,
+                    choices: [
+                      { text: dlgChoice1, nextNode: 'NODE_ACCEPT' },
+                      { text: dlgChoice2, nextNode: 'NODE_CANCEL' }
+                    ]
+                  }, null, 2),
+                  '',
+                  '// 2. Unity C# 타자기(Typewriter) 대사 출력 코루틴',
+                  'public IEnumerator PlayTypewriter(TMPro.TMP_Text label, string fullText, float charDelay = 0.03f) {',
+                  '    label.text = "";',
+                  '    foreach (char c in fullText) {',
+                  '        label.text += c;',
+                  '        yield return new WaitForSeconds(charDelay);',
+                  '    }',
+                  '}'
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#FDE047', fontFamily: 'monospace', lineHeight: 16 }}>{exportBundle}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(exportBundle); } catch {} setDlgCopied(true); }}
+                      style={{ backgroundColor: dlgCopied ? '#10B981' : '#EAB308', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {dlgCopied ? '[✅ 대사 JSON + Unity 타자기 스크립트가 복사되었습니다!]' : '[📋 대사 JSON & Unity C# 타이핑 스크립트 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_15: 2D 파티클 · 타격 이펙트 시뮬레이터 모달 */}
+      <Modal visible={particleLabOpen} transparent animationType="fade" onRequestClose={() => setParticleLabOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 12 }}>
+          <View style={{ maxWidth: 960, width: '100%', height: '90%', maxHeight: 720, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 0, overflow: 'hidden', borderColor: '#FB923C', borderWidth: 2 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#11131C', paddingHorizontal: 16, paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#2D3446' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                <Text style={{ fontSize: 16 }}>💥</Text>
+                <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#FDBA74', fontFamily: 'monospace' }}>
+                  MOD_15 // 2D 파티클 · 타격 이펙트 & 카메라 흔들림(Juice) 시뮬레이터
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => setParticleLabOpen(false)}
+                style={{ backgroundColor: '#FF2A85', paddingHorizontal: 12, paddingVertical: 5, borderRadius: 4 }}
+              >
+                <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            {Platform.OS === 'web' ? (
+              <iframe
+                src="/particle-lab.html"
+                style={{ width: '100%', height: '100%', border: 'none', backgroundColor: '#0B0D14' } as any}
+                title="2D Particle FX Simulator"
+              />
+            ) : (
+              <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 24 }}>
+                <Text style={{ color: '#FFF', fontSize: 14 }}>웹 브라우저 환경에서 2D 파티클 시뮬레이터를 사용할 수 있습니다.</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_16: 스팀 도전과제(Achievements) 기획 & 도트 배지 생성기 모달 */}
+      <Modal visible={achieveGenOpen} transparent animationType="fade" onRequestClose={() => setAchieveGenOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#8B5CF6', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#C4B5FD', fontFamily: 'monospace' }}>
+                🏆 MOD_16 // 스팀 도전과제(Achievements) 기획 & Steamworks C# 생성기
+              </Text>
+              <TouchableOpacity onPress={() => setAchieveGenOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+                {[
+                  { key: 'roguelike', label: '🗡️ 로그라이크 / 던전 액션' },
+                  { key: 'platformer', label: '🏃 2D 플랫포머 / 메트로배니아' },
+                  { key: 'tycoon', label: '🏪 시뮬레이션 / 농장 타이쿤' }
+                ].map((tab) => (
+                  <TouchableOpacity
+                    key={tab.key}
+                    onPress={() => { setAchGenre(tab.key as any); setAchCopied(false); }}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 8,
+                      borderRadius: 4,
+                      backgroundColor: achGenre === tab.key ? '#8B5CF6' : Theme.colors.pillBg,
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: achGenre === tab.key ? '#FFF' : Theme.colors.border
+                    }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>{tab.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {(() => {
+                const sets: Record<string, Array<{ id: string; icon: string; title: string; desc: string; rarity: string; hidden?: boolean }>> = {
+                  roguelike: [
+                    { id: 'ACH_FIRST_STEP', icon: '🗡️', title: '던전 첫걸음', desc: '첫 번째 스테이지의 몬스터를 처치하세요.', rarity: '달성률 88%' },
+                    { id: 'ACH_NO_HIT_BOSS', icon: '🛡️', title: '무상처 학살자', desc: '피격을 단 한 번도 받지 않고 1챕터 보스를 처치하세요.', rarity: '달성률 6.4%' },
+                    { id: 'ACH_MIMIC_TRAP', icon: '📦', title: '상자가 아니었어?!', desc: '[히든] 보물상자로 위장한 미믹에게 처음으로 물렸습니다.', rarity: '달성률 42%', hidden: true },
+                    { id: 'ACH_TRUE_ENDING', icon: '👑', title: '심연의 지배자', desc: '모든 고대 유물을 모으고 진 엔딩을 클리어하세요.', rarity: '달성률 3.1%' }
+                  ],
+                  platformer: [
+                    { id: 'ACH_DOUBLE_JUMP', icon: '🪶', title: '바람을 가르는 도약', desc: '이단 점프와 벽 타기 능력을 해금하세요.', rarity: '달성률 91%' },
+                    { id: 'ACH_SPEEDRUN_30M', icon: '⏱️', title: '빛보다 빠르게', desc: '30분 이내에 최종 스테이지를 돌파하세요.', rarity: '달성률 4.8%' },
+                    { id: 'ACH_SECRET_ROOM', icon: '🧱', title: '수상한 벽면', desc: '[히든] 가짜 벽 뒤에 숨겨진 개발자의 비밀 방을 발견하세요.', rarity: '달성률 19%', hidden: true },
+                    { id: 'ACH_ALL_BERRIES', icon: '🍓', title: '완벽주의 수집가', desc: '월드 내 모든 황금 아이템을 100% 수집하세요.', rarity: '달성률 2.5%' }
+                  ],
+                  tycoon: [
+                    { id: 'ACH_FIRST_SALE', icon: '🪙', title: '첫 매상 개시!', desc: '상점에서 첫 손님에게 아이템을 판매하세요.', rarity: '달성률 95%' },
+                    { id: 'ACH_MILLIONAIRE', icon: '💎', title: '왕국 최고의 거상', desc: '누적 골드 1,000,000G를 달성하세요.', rarity: '달성률 11.2%' },
+                    { id: 'ACH_ANGRY_GUEST', icon: '💢', title: '손님은 왕이다', desc: '[히든] 바가지 요금을 씌우다 손님이 화내며 퇴장했습니다.', rarity: '달성률 34%', hidden: true },
+                    { id: 'ACH_5STAR_SHOP', icon: '🌟', title: '전설의 5성급 공방', desc: '가게 평점 만점을 달성하고 왕실 인증서를 받으세요.', rarity: '달성률 5.0%' }
+                  ]
+                };
+                const list = sets[achGenre] || sets.roguelike;
+                const steamCode = [
+                  '// [Steamworks.NET (Unity C#) 도전과제 해금 헬퍼 스크립트]',
+                  'using UnityEngine;',
+                  '// using Steamworks;',
+                  'public static class AchievementManager {',
+                  ...list.map(a => `    public const string ${a.id} = "${a.id}"; // ${a.title}`),
+                  '',
+                  '    public static void Unlock(string apiKey) {',
+                  '        Debug.Log($"[Steam Achievement Unlocked] {apiKey}");',
+                  '        // if (SteamManager.Initialized) {',
+                  '        //     SteamUserStats.SetAchievement(apiKey);',
+                  '        //     SteamUserStats.StoreStats();',
+                  '        // }',
+                  '    }',
+                  '}'
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ gap: 8, marginBottom: 12 }}>
+                      {list.map((a) => (
+                        <View key={a.id} style={{ flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: '#11131C', padding: 10, borderRadius: 6, borderWidth: 1, borderColor: a.hidden ? '#F59E0B' : '#2D3446' }}>
+                          <View style={{ width: 42, height: 42, backgroundColor: '#1E1B4B', borderRadius: 6, borderWidth: 2, borderColor: '#A78BFA', justifyContent: 'center', alignItems: 'center' }}>
+                            <Text style={{ fontSize: 20 }}>{a.icon}</Text>
+                          </View>
+                          <View style={{ flex: 1 }}>
+                            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                              <Text style={{ fontSize: 13, fontWeight: '900', color: '#FFF' }}>{a.title}</Text>
+                              <Text style={{ fontSize: 10, color: '#A78BFA', fontFamily: 'monospace' }}>{a.id}</Text>
+                            </View>
+                            <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>{a.desc}</Text>
+                          </View>
+                          <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#FACC15', fontFamily: 'monospace' }}>{a.rarity}</Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#DDD6FE', fontFamily: 'monospace', lineHeight: 16 }}>{steamCode}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(steamCode); } catch {} setAchCopied(true); }}
+                      style={{ backgroundColor: achCopied ? '#10B981' : '#8B5CF6', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {achCopied ? '[✅ 도전과제 기획표 & Steamworks C# 코드가 복사되었습니다!]' : '[📋 도전과제 상수 & Steamworks C# 연동 코드 복사하기]'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                );
+              })()}
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+
+      {/* MOD_17: PC 키보드 & 게임패드(Gamepad) 매핑 시트 생성기 모달 */}
+      <Modal visible={inputMapOpen} transparent animationType="fade" onRequestClose={() => setInputMapOpen(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 14 }}>
+          <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#14B8A6', borderWidth: 2, maxHeight: '90%' }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <Text style={{ fontSize: 15, fontWeight: '900', color: '#2DD4BF', fontFamily: 'monospace' }}>
+                ⌨️ MOD_17 // PC 키보드 & Xbox/PS/Switch 게임패드 매핑 시트 생성기
+              </Text>
+              <TouchableOpacity onPress={() => setInputMapOpen(false)}>
+                <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: 6, marginBottom: 12 }}>
+                {[
+                  { key: 'action2d', label: '⚔️ 2D 플랫포머 (산나비/할로우나이트식)' },
+                  { key: 'roguelike', label: '🏹 쿼터뷰 액션 (하데스/엔터더건전식)' },
+                  { key: 'sim', label: '🌾 힐링/타이쿤 (스타듀밸리식)' }
+                ].map((g) => (
+                  <TouchableOpacity
+                    key={g.key}
+                    onPress={() => { setInputGenre(g.key as any); setInputCopied(false); }}
+                    style={{
+                      flex: 1,
+                      paddingVertical: 8,
+                      borderRadius: 4,
+                      backgroundColor: inputGenre === g.key ? '#14B8A6' : Theme.colors.pillBg,
+                      alignItems: 'center',
+                      borderWidth: 1,
+                      borderColor: inputGenre === g.key ? '#FFF' : Theme.colors.border
+                    }}
+                  >
+                    <Text style={{ fontSize: 10.5, fontWeight: '900', color: inputGenre === g.key ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>{g.label}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+
+              {(() => {
+                const mappings: Record<string, Array<{ action: string; pc: string; xbox: string; ps: string; sw: string }>> = {
+                  action2d: [
+                    { action: '캐릭터 이동', pc: 'WASD / 방향키', xbox: 'L-Stick / D-Pad', ps: 'L-Stick / 방향키', sw: 'L-Stick' },
+                    { action: '점프 / 이단점프', pc: 'Space / Z', xbox: 'A 버튼', ps: '✕ (크로스)', sw: 'B 버튼' },
+                    { action: '기본 공격', pc: '좌클릭 / X', xbox: 'X 버튼', ps: '□ (스퀘어)', sw: 'Y 버튼' },
+                    { action: '대시 / 회피기', pc: 'Left Shift / C', xbox: 'RT / B 버튼', ps: 'R2 / ○', sw: 'ZR / A' },
+                    { action: 'NPC 상호작용', pc: 'E / F 키', xbox: 'Y 버튼', ps: '△ (트라이앵글)', sw: 'X 버튼' },
+                    { action: '일시정지 / 메뉴', pc: 'ESC / Tab', xbox: 'Menu 버튼', ps: 'Options', sw: '+ 버튼' }
+                  ],
+                  roguelike: [
+                    { action: '8방향 이동', pc: 'W, A, S, D', xbox: 'L-Stick', ps: 'L-Stick', sw: 'L-Stick' },
+                    { action: '조준 (Aim)', pc: '마우스 커서', xbox: 'R-Stick', ps: 'R-Stick', sw: 'R-Stick' },
+                    { action: '주무기 발사', pc: '마우스 좌클릭', xbox: 'RT (오른쪽 트리거)', ps: 'R2', sw: 'ZR' },
+                    { action: '무적 구르기(대시)', pc: 'Space / 우클릭', xbox: 'A / LT', ps: '✕ / L2', sw: 'B / ZL' },
+                    { action: '궁극기 / 액티브', pc: 'Q / R 키', xbox: 'RB / Y 버튼', ps: 'R1 / △', sw: 'R / X' },
+                    { action: '인벤토리 / 지도', pc: 'Tab / M', xbox: 'View 버튼', ps: 'Touchpad', sw: '- 버튼' }
+                  ],
+                  sim: [
+                    { action: '캐릭터 이동', pc: 'W, A, S, D', xbox: 'L-Stick', ps: 'L-Stick', sw: 'L-Stick' },
+                    { action: '도구 사용 (괭이/물뿌리개)', pc: '좌클릭 / C', xbox: 'X 버튼', ps: '□ (스퀘어)', sw: 'Y 버튼' },
+                    { action: '수확 / 대화하기', pc: '우클릭 / X', xbox: 'A 버튼', ps: '✕ (크로스)', sw: 'B 버튼' },
+                    { action: '퀵슬롯 변경', pc: '마우스 휠 / 1~9', xbox: 'LB / RB', ps: 'L1 / R1', sw: 'L / R' },
+                    { action: '가방 / 제작창', pc: 'E / I 키', xbox: 'B / Y 버튼', ps: '○ / △', sw: 'A / X' }
+                  ]
+                };
+                const rows = mappings[inputGenre] || mappings.action2d;
+                const mdTable = [
+                  '### 🎮 컨트롤러 및 키보드 조작 가이드 (Input Mapping)',
+                  '| 동작 (Action) | PC 키보드/마우스 | Xbox 패드 | PlayStation | Switch Pro |',
+                  '| :--- | :--- | :--- | :--- | :--- |',
+                  ...rows.map(r => `| **${r.action}** | \`${r.pc}\` | ${r.xbox} | ${r.ps} | ${r.sw} |`)
+                ].join('\n');
+
+                return (
+                  <View>
+                    <View style={{ backgroundColor: '#11131C', borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', overflow: 'hidden', marginBottom: 12 }}>
+                      <View style={{ flexDirection: 'row', backgroundColor: '#1E2436', paddingVertical: 8, paddingHorizontal: 10 }}>
+                        <Text style={{ flex: 1.2, fontSize: 11, fontWeight: '900', color: '#2DD4BF', fontFamily: 'monospace' }}>동작</Text>
+                        <Text style={{ flex: 1.3, fontSize: 11, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>PC 키보드</Text>
+                        <Text style={{ flex: 1, fontSize: 11, fontWeight: '900', color: '#A3E635', fontFamily: 'monospace' }}>Xbox</Text>
+                        <Text style={{ flex: 1, fontSize: 11, fontWeight: '900', color: '#60A5FA', fontFamily: 'monospace' }}>PS5</Text>
+                        <Text style={{ flex: 1, fontSize: 11, fontWeight: '900', color: '#F87171', fontFamily: 'monospace' }}>Switch</Text>
+                      </View>
+                      {rows.map((r, i) => (
+                        <View key={r.action} style={{ flexDirection: 'row', paddingVertical: 8, paddingHorizontal: 10, borderTopWidth: 1, borderTopColor: '#1E2436', backgroundColor: i % 2 === 0 ? '#0D1017' : '#111520' }}>
+                          <Text style={{ flex: 1.2, fontSize: 11.5, fontWeight: '800', color: '#FFF' }}>{r.action}</Text>
+                          <Text style={{ flex: 1.3, fontSize: 11, color: '#FDE047', fontFamily: 'monospace' }}>{r.pc}</Text>
+                          <Text style={{ flex: 1, fontSize: 11, color: '#CBD5E1', fontFamily: 'monospace' }}>{r.xbox}</Text>
+                          <Text style={{ flex: 1, fontSize: 11, color: '#CBD5E1', fontFamily: 'monospace' }}>{r.ps}</Text>
+                          <Text style={{ flex: 1, fontSize: 11, color: '#CBD5E1', fontFamily: 'monospace' }}>{r.sw}</Text>
+                        </View>
+                      ))}
+                    </View>
+
+                    <View style={{ backgroundColor: '#090B10', padding: 12, borderRadius: 6, borderWidth: 1, borderColor: '#2D3446', marginBottom: 10 }}>
+                      <Text style={{ fontSize: 11, color: '#5EEAD4', fontFamily: 'monospace', lineHeight: 16 }}>{mdTable}</Text>
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => { try { navigator?.clipboard?.writeText(mdTable); } catch {} setInputCopied(true); }}
+                      style={{ backgroundColor: inputCopied ? '#10B981' : '#14B8A6', paddingVertical: 12, borderRadius: 4, alignItems: 'center' }}
+                    >
+                      <Text style={{ color: '#11131C', fontWeight: '900', fontSize: 12.5, fontFamily: 'monospace' }}>
+                        {inputCopied ? '[✅ PC & 콘솔 패드 조작키 안내 표가 복사되었습니다!]' : '[📋 스팀/개발일지용 조작키 매핑 마크다운 표 복사하기]'}
                       </Text>
                     </TouchableOpacity>
                   </View>
