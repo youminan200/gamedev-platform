@@ -83,6 +83,11 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
           <Text style={styles.avatarText}>{username.charAt(0).toUpperCase()}</Text>
         </View>
         <Text style={styles.usernameText}>{username}</Text>
+        <View style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 999, marginTop: 4 }}>
+          <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>
+            {(profile?.stats.total_likes || 0) >= 20 ? '👑 마스터 크리에이터' : (profile?.stats.total_likes || 0) >= 10 ? '⚡ 인디 장인' : '🌱 새싹 개발자'}
+          </Text>
+        </View>
         <Text style={styles.subText}>
           🎮 {profile?.user.engine || 'Unity'} Developer • Joined {profile?.user.created_at ? new Date(profile.user.created_at).toLocaleDateString() : 'Recently'}
         </Text>

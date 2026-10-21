@@ -253,7 +253,23 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
       ) : null}
       {renderFormattedContent(devlog.content, styles.body)}
       <View style={styles.divider} />
-      <Text style={styles.commentsTitle}>💬 Comments ({devlog.comments?.length || 0})</Text>
+            <Text style={styles.commentsTitle}>💬 Comments ({devlog.comments?.length || 0})</Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 10 }}>
+        {[
+          '🔥 타격감/연출이 정말 기대돼요!',
+          '💡 최적화 팁 공유 감사합니다!',
+          '🎨 아트 스타일이 너무 매력적이에요!',
+          '👏 데모 나오면 꼭 플레이해볼게요!'
+        ].map((preset) => (
+          <TouchableOpacity
+            key={preset}
+            onPress={() => setComment(preset)}
+            style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 12 }}
+          >
+            <Text style={{ fontSize: 12, fontWeight: '700', color: Theme.colors.primary }}>{preset}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
     </View>
   );
 

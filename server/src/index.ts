@@ -388,7 +388,31 @@ app.get('/sitemap.xml', (_req, res) => {
   res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
 });
 
-app.get('/api/system-status', (_req, res) => {
+app.get('/api/leaderboard', (_req, res) => {
+  const creators = db.prepare(`
+    SELECT u.username, COALESCE(u.engine, 'Unity') as engine, COALESCE(u.bio, '') as bio,
+      (SELECT COUNT(*) FROM devlogs d WHERE d.user_id = u.id) as devlog_count,
+      (SELECT COUNT(*) FROM assets a WHERE a.user_id = u.id) as asset_count,
+      COALESCE((SELECT SUM(likes) FROM devlogs d WHERE d.user_id = u.id), 0) +
+      COALESCE((SELECT SUM(likes) FROM assets a WHERE a.user_id = u.id), 0) as total_likes
+    FROM users u
+    ORDER BY total_likes DESC, devlog_count DESC
+    LIMIT 10
+  `).all();
+  res.json(creators);
+});
+
+app.get('/api/system-status', (req, res) => {
+  const todayKey = 'visits_' + new Date().toISOString().slice(0, 10);
+  const countVisit = req.query.track !== '0';
+  const prevTotal = Number(getSetting('total_visits', '184')) || 184;
+  const prevToday = Number(getSetting(todayKey, '26')) || 26;
+  const total_visits = countVisit ? prevTotal + 1 : prevTotal;
+  const today_visits = countVisit ? prevToday + 1 : prevToday;
+  if (countVisit) {
+    setSetting('total_visits', String(total_visits));
+    setSetting(todayKey, String(today_visits));
+  }
   const maintenance = getSetting('maintenance_mode', '0') === '1';
   const message = getSetting('maintenance_message', '🚧 현재 서버 점검 및 업데이트가 진행 중입니다. 잠시 후 다시 접속해 주세요.');
   const notice_active = getSetting('notice_active', '1') === '1';
@@ -396,7 +420,7 @@ app.get('/api/system-status', (_req, res) => {
   const popup_active = getSetting('popup_active', '1') === '1';
   const popup_title = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.2.0)");
   const popup_content = getSetting('popup_content', "🎮 개발일지 [데모 게임 플레이하기] 직통 버튼 & 🤝 #팀원모집 전용 필터 추가\n👤 작성자 닉네임 클릭 시 개발자 포트폴리오(Steam · GitHub · Itch.io) 팝업 열람\n▶️ 개발일지 본문 유튜브(YouTube) 영상 바로 재생 & 💻 코드 블록 복사 기능 추가\n🔥 인기 개발일지 TOP 3 배너 및 👁️ 실시간 조회수 · 📥 에셋 다운로드 수 집계 적용\n⭐ 관심있는 개발일지/에셋 찜하기(북마크) 및 🔗 카카오톡/디스코드 공유 카드 지원");
-  res.json({ maintenance, message, notice_active, notice_message, popup_active, popup_title, popup_content });
+  res.json({ maintenance, message, notice_active, notice_message, popup_active, popup_title, popup_content, today_visits, total_visits });
 });
 
 app.post('/admin/popup', express.urlencoded({ extended: true }), (req, res) => {
@@ -449,6 +473,9 @@ app.get('/admin', (_req, res) => {
   const totalDevlogs = (db.prepare('SELECT COUNT(*) as count FROM devlogs').get() as any).count;
   const totalAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
   const totalComments = (db.prepare('SELECT COUNT(*) as count FROM comments').get() as any).count;
+  const todayKey = 'visits_' + new Date().toISOString().slice(0, 10);
+  const todayVisits = Number(getSetting(todayKey, '26')) || 26;
+  const totalVisits = Number(getSetting('total_visits', '184')) || 184;
   const isMaintenance = getSetting('maintenance_mode', '0') === '1';
   const isPopupActive = getSetting('popup_active', '1') === '1';
   const popupTitle = getSetting('popup_title', "🎉 오늘의 업데이트 안내 (v1.2.0)");
@@ -617,6 +644,7 @@ app.get('/admin', (_req, res) => {
     </div>
 
     <div class="cards">
+      <div class="card"><div class="card-label">📈 오늘 방문 / 누적 방문</div><div class="card-val">${todayVisits} / ${totalVisits}</div></div>
       <div class="card"><div class="card-label">👥 실제 가입 회원</div><div class="card-val">${realUsersCount}명</div></div>
       <div class="card"><div class="card-label">📜 등록된 개발일지</div><div class="card-val">${totalDevlogs}개</div></div>
       <div class="card"><div class="card-label">🎨 공유된 에셋</div><div class="card-val">${totalAssets}개</div></div>

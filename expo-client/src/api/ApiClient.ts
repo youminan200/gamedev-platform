@@ -370,6 +370,12 @@ export const ApiClient = {
     if (!response.ok) throw new Error('Failed to update profile');
   },
 
+  getLeaderboard: async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/leaderboard`);
+    if (!response.ok) return [];
+    return await response.json();
+  },
+
   getUserProfile: async (username: string): Promise<any> => {
     const response = await fetch(`${BASE_URL}/users/${username}`, { headers: ApiClient.getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch user profile');

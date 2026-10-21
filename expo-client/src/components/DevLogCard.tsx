@@ -16,6 +16,14 @@ interface DevLogCardProps {
   onAuthorClick?: (author: string) => void;
 }
 
+
+const getCreatorBadge = (likes?: number): string => {
+  const n = likes || 0;
+  if (n >= 20) return '👑 마스터';
+  if (n >= 10) return '⚡ 인디장인';
+  return '🌱 새싹';
+};
+
 export const DevLogCard: React.FC<DevLogCardProps> = ({
   devLog,
   onClick,
@@ -70,7 +78,7 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
               }}
             >
               <Text style={[styles.metaText, { color: Theme.colors.primary, fontWeight: '700' }]}>
-                👤 {devLog.author} • {formatRelativeTime(devLog.created_at)}
+                👤 {devLog.author} [{getCreatorBadge(devLog.likes)}] • {formatRelativeTime(devLog.created_at)}
               </Text>
             </TouchableOpacity>
             <View style={styles.statsBadgesRow}>

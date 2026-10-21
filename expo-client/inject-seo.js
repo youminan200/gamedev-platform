@@ -5,6 +5,9 @@ const htmlPath = path.join(__dirname, 'dist', 'index.html');
 if (fs.existsSync(htmlPath)) {
   let html = fs.readFileSync(htmlPath, 'utf8');
   const seoTags = `
+  <meta name="application-name" content="DevGround" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <meta name="keywords" content="DevGround, gamedev platform, 게임 개발자 커뮤니티, 인디 게임 개발, 개발일지, DevLog, 게임 에셋 공유, Unity, Unreal Engine, Godot" />
   <meta name="robots" content="index, follow, max-image-preview:large" />
   <meta property="og:type" content="website" />
@@ -34,6 +37,7 @@ if (fs.existsSync(htmlPath)) {
   if (!html.includes('og:title')) {
     html = html.replace('</head>', `${seoTags}\n</head>`);
     html = html.replace('<html lang="en">', '<html lang="ko">');
+    html = html.replace('<title>DevGround - 게임 개발자 커뮤니티</title>', '<title>DevGround - 게임 개발자 커뮤니티 & 에셋 허브 (GameDev Platform)</title>');
     html = html.replace(
       /<noscript>[\s\S]*?<\/noscript>/,
       `<noscript>

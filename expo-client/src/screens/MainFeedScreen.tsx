@@ -28,6 +28,26 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [authorModalVisible, setAuthorModalVisible] = useState(false);
   const [authorModalProfile, setAuthorModalProfile] = useState<any>(null);
   const [authorModalLoading, setAuthorModalLoading] = useState(false);
+  const [leaderboardVisible, setLeaderboardVisible] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 26, total: 184 });
+
+  useEffect(() => {
+    fetch('https://gamedev-platform.onrender.com/api/system-status?track=0')
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.today_visits) setVisitStats({ today: d.today_visits, total: d.total_visits });
+      })
+      .catch(() => {});
+  }, []);
+
+  const handleOpenLeaderboard = async () => {
+    setLeaderboardVisible(true);
+    try {
+      const list = await ApiClient.getLeaderboard();
+      setLeaderboard(list);
+    } catch {}
+  };
 
   const handleOpenAuthorModal = async (targetUsername: string) => {
     setAuthorModalVisible(true);
@@ -155,7 +175,20 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const renderHeader = () => (
     <View style={styles.headerContainer}>
       <View style={[styles.titleRow, { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }]}>
-        <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
+        <View>
+          <Text style={styles.headerTitle}>📜 DevLogs Hub</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 }}>
+            <Text style={{ fontSize: 11, fontWeight: '700', color: Theme.colors.textLight }}>
+              👁️ 오늘 {visitStats.today}명 • 누적 {visitStats.total}명 방문
+            </Text>
+            <TouchableOpacity
+              onPress={handleOpenLeaderboard}
+              style={{ backgroundColor: '#FEF3C7', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8 }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: '#D97706' }}>🏆 개발자 랭킹</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           {username ? (
             <TouchableOpacity
@@ -464,6 +497,54 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                 ))}
               </>
             )}
+          </View>
+        </View>
+      </Modal>
+
+      <Modal visible={leaderboardVisible} animationType="fade" transparent onRequestClose={() => setLeaderboardVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+          <View style={{ width: '100%', maxWidth: 440, backgroundColor: Theme.colors.background, borderRadius: 20, padding: 22 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <Text style={{ fontSize: 18, fontWeight: '800', color: Theme.colors.text }}>🏆 인디 크리에이터 명예의 전당</Text>
+              <TouchableOpacity onPress={() => setLeaderboardVisible(false)}>
+                <Text style={{ fontSize: 16, fontWeight: '800', color: Theme.colors.textLight }}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            <ScrollView style={{ maxHeight: 320 }}>
+              {leaderboard.map((c, i) => (
+                <TouchableOpacity
+                  key={c.username}
+                  onPress={() => {
+                    setLeaderboardVisible(false);
+                    handleOpenAuthorModal(c.username);
+                  }}
+                  style={{
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    paddingVertical: 10,
+                    paddingHorizontal: 12,
+                    marginBottom: 8,
+                    borderRadius: 12,
+                    backgroundColor: Theme.colors.pillBg,
+                  }}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontSize: 14, fontWeight: '800', color: Theme.colors.text }}>
+                      {i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : `#${i + 1} `}
+                      {c.username}{' '}
+                      <Text style={{ fontSize: 11, color: '#D97706' }}>
+                        {c.total_likes >= 40 ? '[👑 마스터]' : c.total_likes >= 15 ? '[⚡ 인디장인]' : '[🌱 새싹]'}
+                      </Text>
+                    </Text>
+                    <Text style={{ fontSize: 11, color: Theme.colors.textLight, marginTop: 2 }}>
+                      🎮 {c.engine} • 개발일지 {c.devlog_count}개 • 에셋 {c.asset_count}개
+                    </Text>
+                  </View>
+                  <Text style={{ fontSize: 13, fontWeight: '800', color: Theme.colors.primary }}>❤️ {c.total_likes}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
         </View>
       </Modal>
