@@ -303,6 +303,75 @@ const initializeSeedData = () => {
         'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
       );
     }
+
+    const currentDevlogs = (db.prepare('SELECT COUNT(*) as count FROM devlogs').get() as any).count;
+    if (currentDevlogs < 8) {
+      const u1 = ensureUser('PixelKnight', 'pixel@devground.io');
+      const u2 = ensureUser('ShaderWizard', 'shader@devground.io');
+      const u3 = ensureUser('IndieSoundLab', 'sound@devground.io');
+      const u4 = ensureUser('GodotCrafter', 'godot@devground.io');
+      const insD = db.prepare('INSERT INTO devlogs (user_id, title, content, likes, tags, image_url) VALUES (?, ?, ?, ?, ?, ?)');
+      insD.run(
+        u1,
+        '[필독 가이드] 인디게임 스팀(Steam) 상점 페이지 오픈 & 위시리스트 1,000개 달성 실전 전략',
+        '1인 개발자 및 소규모 인디팀이 스팀(Steam) 출시 전 반드시 챙겨야 할 체크리스트입니다.\n\n1. 캡슐 이미지(Header Capsule) 가독성 극대화\n2. 상점 설명란 최상단에 5초 이내 전투/핵심 루프 GIF 배치\n3. Steam Next Fest 참가 전 Itch.io 및 DevGround 웹데모 홍보관으로 초기 테스터 피드백 확보하기!',
+        38,
+        JSON.stringify(['쇼케이스', 'IndieDev', 'Release', 'Steam']),
+        'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80'
+      );
+      insD.run(
+        u2,
+        'Unity 6 오브젝트 풀링(Object Pooling) & 모바일 발열·가비지 컬렉션(GC) 완벽 최적화',
+        '탄막 슈팅이나 뱀서라이크(Vampire Survivors류) 게임에서 수백 개의 투사체와 몬스터를 생성할 때 Instantiate/Destroy 대신 UnityEngine.Pool.ObjectPool을 활용해 프레임 드랍을 0으로 만든 실전 최적화 과정입니다.\n\nAsset Hub의 Code 탭에 전체 C# 스크립트도 무료 공유해 두었습니다!',
+        29,
+        JSON.stringify(['Unity', 'C#', 'Optimization', 'Tip']),
+        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
+      );
+      insD.run(
+        u2,
+        'Unreal Engine 5 루멘(Lumen) & 나나이트(Nanite) 인디게임 60FPS 방어 세팅 가이드',
+        '언리얼 엔진 5로 3D 인디게임을 개발할 때 중저사양 그래픽카드(GTX 1660 / RTX 3050급)에서도 평균 60FPS를 유지하기 위한 TSR 업스케일링 및 루멘 글로벌 일루미네이션 품질 타협 옵션을 정리했습니다.',
+        27,
+        JSON.stringify(['Unreal', 'Graphics', 'Optimization']),
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80'
+      );
+      insD.run(
+        u4,
+        'Godot 4.3 멀티플레이어 동기화(MultiplayerSynchronizer)로 2인 협동 인디게임 만들기',
+        '복잡한 네트워크 서버 코딩 없이 Godot 4 내장 ENetMultiplayerPeer와 MultiplayerSpawner, MultiplayerSynchronizer 노드만으로 스팀 P2P 멀티플레이를 구현한 개발일지입니다.',
+        33,
+        JSON.stringify(['Godot', 'Multiplayer', 'Tutorial']),
+        'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80'
+      );
+    }
+
+    const currentAssets = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
+    if (currentAssets < 8) {
+      const u1 = ensureUser('PixelKnight', 'pixel@devground.io');
+      const u2 = ensureUser('ShaderWizard', 'shader@devground.io');
+      const insA = db.prepare('INSERT INTO assets (user_id, title, description, category, file_url, tags, likes, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
+      insA.run(
+        u1,
+        '2D 도트 보스 몬스터 & 검기/폭발 픽셀 이펙트 스프라이트 시트 (PNG)',
+        '액션 플랫포머와 로그라이크에 바로 적용 가능한 64x64 보스 몬스터 대기/공격/피격 애니메이션 및 타격 이펙트 시트입니다. CC0 무료 라이선스.',
+        '2D',
+        'https://gamedev-platform-expo-client.vercel.app',
+        JSON.stringify(['2D', 'PixelArt', 'Boss', 'VFX']),
+        34,
+        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80'
+      );
+      insA.run(
+        u2,
+        'Unity 범용 오브젝트 풀 매니저 & 사운드 매니저 싱글톤 C# 스크립트',
+        '총알, 데미지 텍스트, 파티클 이펙트를 GC 할당 없이 재사용하는 제네릭 ObjectPoolManager.cs 스크립트입니다.',
+        'Code',
+        'https://gamedev-platform-expo-client.vercel.app',
+        JSON.stringify(['Code', 'Unity', 'C#', 'Optimization']),
+        46,
+        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
+      );
+    }
+
   } catch (err) {
     console.error('Seed data initialization error:', err);
   }
@@ -545,6 +614,7 @@ app.post('/api/teams', (req, res) => {
     String(contact_url || 'https://discord.com').trim(),
     String(description || '').trim()
   );
+  pingIndexNow().catch(() => {});
   const rows = db.prepare('SELECT * FROM team_posts ORDER BY id DESC LIMIT 30').all();
   res.status(201).json(rows);
 });
@@ -619,6 +689,7 @@ app.post('/api/showcases', (req, res) => {
     thumbnail_url ? String(thumbnail_url).trim() : 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80',
     String(description || '').trim()
   );
+  pingIndexNow().catch(() => {});
   const rows = db.prepare('SELECT * FROM game_showcases ORDER BY id DESC LIMIT 30').all();
   res.status(201).json(rows);
 });
@@ -675,12 +746,17 @@ app.get('/rss.xml', (_req, res) => {
 });
 
 app.get('/sitemap.xml', (_req, res) => {
-  const posts = db.prepare('SELECT id FROM devlogs ORDER BY id DESC LIMIT 50').all() as any[];
-  const assets = db.prepare('SELECT id FROM assets ORDER BY id DESC LIMIT 50').all() as any[];
+  const today = new Date().toISOString().slice(0, 10);
+  const posts = db.prepare('SELECT id FROM devlogs ORDER BY id DESC LIMIT 100').all() as any[];
+  const assets = db.prepare('SELECT id FROM assets ORDER BY id DESC LIMIT 100').all() as any[];
   const urls = [
-    '<url><loc>https://gamedev-platform-expo-client.vercel.app/</loc><priority>1.0</priority></url>',
-    ...posts.map(p => `<url><loc>https://gamedev-platform-expo-client.vercel.app/?devlog=${p.id}</loc><priority>0.8</priority></url>`),
-    ...assets.map(a => `<url><loc>https://gamedev-platform-expo-client.vercel.app/?asset=${a.id}</loc><priority>0.8</priority></url>`)
+    `<url><loc>https://gamedev-platform-expo-client.vercel.app/</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>`,
+    `<url><loc>https://gamedev-platform-expo-client.vercel.app/indie-game-community.html</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>`,
+    `<url><loc>https://gamedev-platform-expo-client.vercel.app/free-game-assets.html</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>`,
+    `<url><loc>https://gamedev-platform-expo-client.vercel.app/game-devlog-showcase.html</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.95</priority></url>`,
+    `<url><loc>https://gamedev-platform-expo-client.vercel.app/arcade.html</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>`,
+    ...posts.map(p => `<url><loc>https://gamedev-platform-expo-client.vercel.app/?devlog=${p.id}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>`),
+    ...assets.map(a => `<url><loc>https://gamedev-platform-expo-client.vercel.app/?asset=${a.id}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.85</priority></url>`)
   ].join('');
   res.setHeader('Content-Type', 'application/xml; charset=utf-8');
   res.send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls}</urlset>`);
