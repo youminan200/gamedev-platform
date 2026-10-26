@@ -1,4 +1,4 @@
-﻿User-agent: *
+User-agent: *
 Allow: /
 
 Sitemap: https://gamedev-platform-expo-client.vercel.app/sitemap.xml
