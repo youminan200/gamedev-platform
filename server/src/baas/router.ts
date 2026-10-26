@@ -6,6 +6,14 @@ export const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'devground_super_secret';
 const router = Router();
 
+// DB 미설정 환경에서는 500 대신 명확한 503 응답
+router.use((_req: Request, res: Response, next: NextFunction) => {
+  if (!process.env.DATABASE_URL) {
+    return res.status(503).json({ error: 'BaaS database is not configured (DATABASE_URL missing)' });
+  }
+  next();
+});
+
 const wrap = (fn: (req: any, res: Response) => Promise<any>) =>
   (req: Request, res: Response, next: NextFunction) => fn(req, res).catch(next);
 
