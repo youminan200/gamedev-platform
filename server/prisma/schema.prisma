@@ -1,0 +1,62 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// 1. 등록된 게임 기본 정보 및 BaaS API 인증 키
+model Game {
+  id          String             @id @default(uuid())
+  title       String
+  slug        String             @unique
+  developerId String
+  apiKey      String             @unique @default(uuid()) // BaaS 통신용 API 키
+  builds      Build[]
+  leaderboard LeaderboardEntry[]
+  feedbacks   PlaytestFeedback[]
+  createdAt   DateTime           @default(now())
+}
+
+// 2. 버전별 실행 파일 및 WebGL 아티팩트 관리
+model Build {
+  id          String   @id @default(uuid())
+  gameId      String
+  game        Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  version     String // 예: "0.1.2-alpha"
+  platform    String // "WebGL", "Windows", "Android"
+  artifactUrl String // Cloudflare R2 / S3 다운로드 URL
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+}
+
+// 3. 인게임 실시간 랭킹 (BaaS 리더보드)
+model LeaderboardEntry {
+  id        String   @id @default(uuid())
+  gameId    String
+  game      Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  userId    String // 플레이어 고유 ID 또는 디바이스 ID
+  username  String
+  score     Float
+  metadata  Json? // 클리어 스테이지, 캐릭터 등 추가 텔레메트리 데이터 (JSON)
+  createdAt DateTime @default(now())
+
+  @@index([gameId, score(sort: Desc)])
+}
+
+// 4. FGT 테스터 피드백 및 인게임 버그 리포트
+model PlaytestFeedback {
+  id         String   @id @default(uuid())
+  gameId     String
+  game       Game     @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  buildVer   String
+  type       String // "BUG", "SUGGESTION", "REVIEW"
+  message    String
+  screenshot String? // Base64 이미지 문자열 또는 스토리지 URL
+  deviceInfo Json // 화면 해상도, OS, GPU, 메모리 정보
+  position   Json? // 버그 발생 시점의 캐릭터 좌표 {x, y, z} 및 유니티 씬(Scene) 이름
+  createdAt  DateTime @default(now())
+}
+

@@ -6,6 +6,7 @@ import axios from 'axios';
 import cors from 'cors';
 import fs from 'fs';
 import path from 'path';
+import baasRouter from './baas/router';
 
 dotenv.config();
 
@@ -2301,6 +2302,9 @@ app.get('/api/auth/naver/callback', async (req: any, res: any) => {
     res.status(500).send('Naver authentication failed.');
   }
 });
+
+// PlayLoop 마이크로 BaaS (Prisma + PostgreSQL)
+app.use('/api/baas', baasRouter);
 
 app.listen(port as number, '0.0.0.0', () => {
   console.log(`DevGround API server running at http://0.0.0.0:${port}`);

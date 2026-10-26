@@ -6,10 +6,12 @@
   "scripts": {
     "dev": "ts-node src/index.ts",
     "sync-db": "node sync-db.js",
-    "build": "node sync-db.js && tsc",
-    "start": "node dist/index.js"
+    "build": "prisma generate && node sync-db.js && tsc",
+    "start": "node dist/index.js",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
+    "@prisma/client": "^6.19.3",
     "axios": "^1.20.0",
     "better-sqlite3": "^13.0.3",
     "cors": "^2.8.6",
@@ -25,6 +27,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/multer": "^2.3.0",
     "@types/node": "^20.12.7",
+    "prisma": "^6.19.3",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5"
   }
