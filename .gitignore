@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 
 # Environment & Secrets (보안 필수)
@@ -17,3 +17,7 @@ build/
 .vscode/
 local.properties
 .kotlin/
+
+# Python
+__pycache__/
+*.pyc

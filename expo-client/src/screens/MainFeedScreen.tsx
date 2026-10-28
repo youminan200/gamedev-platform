@@ -5,6 +5,7 @@ import { ApiClient } from '../api/ApiClient';
 import { Theme } from '../theme';
 import { DevLogCard } from '../components/DevLogCard';
 import { NeumorphView } from '../components/NeumorphView';
+import AgentStudioRoomModal from '../components/AgentStudioRoomModal';
 
 interface Props {
   onDevLogClick: (id: string) => void;
@@ -201,6 +202,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [submittingErr, setSubmittingErr] = useState(false);
 
   const [ideaMachineOpen, setIdeaMachineOpen] = useState(false);
+  const [agentStudioOpen, setAgentStudioOpen] = useState(false);
   const [pixelStudioOpen, setPixelStudioOpen] = useState(false);
   const [bgmStudioOpen, setBgmStudioOpen] = useState(false);
   const [steamSimOpen, setSteamSimOpen] = useState(false);
@@ -1275,6 +1277,14 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
               accent: '#06B6D4',
               onPress: handleInstallAppClick
+            },
+            {
+              code: 'MOD_33 // 4-AGENT_STUDIO',
+              cat: 'arcade_collab',
+              title: '🤖 자율 운영 4인 로봇 에이전트 스튜디오 (CEO·PM·Dev·QA)',
+              desc: '대표(아이디어 발제) → 과장(PRD) → 차장(코드 패치) → 부장(QA 검수) 순환형 멀티에이전트 파이프라인을 실시간 가동합니다.',
+              accent: '#6366F1',
+              onPress: () => setAgentStudioOpen(true)
             }
           ]
             .filter((mod) => {
@@ -2190,6 +2200,8 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
           </View>
         </View>
       </Modal>
+
+      <AgentStudioRoomModal visible={agentStudioOpen} onClose={() => setAgentStudioOpen(false)} />
 
       <Modal visible={ideaMachineOpen} animationType="fade" transparent onRequestClose={() => setIdeaMachineOpen(false)}>
         <View style={{ flex: 1, backgroundColor: 'rgba(15,23,42,0.75)', justifyContent: 'center', alignItems: 'center', padding: 18 }}>

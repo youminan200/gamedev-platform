@@ -10,7 +10,7 @@
 
 | 구분 | 바로가기 링크 | 설명 |
 | :--- | :--- | :--- |
-| 🌐 **공식 웹앱 (유저용)** | **[https://gamedev-platform-expo-client.vercel.app](https://gamedev-platform-expo-client.vercel.app)** | 설치·로그인 없이 즉시 개발일지, 에셋 허브, 32종 인디 개발 공방 이용 가능 |
+| 🌐 **공식 웹앱 (유저용)** | **[https://gamedev-platform-expo-client.vercel.app](https://gamedev-platform-expo-client.vercel.app)** | 설치·로그인 없이 즉시 개발일지, 에셋 허브, 33종 인디 개발 공방 이용 가능 |
 | 📊 **이용자 현황 대시보드** | **[https://gamedev-platform.onrender.com/admin](https://gamedev-platform.onrender.com/admin)** | 실시간 가입자 수, 게시글/에셋 통계 및 가입 회원 목록 표 |
 | 📈 **실시간 통계 JSON API** | **[https://gamedev-platform.onrender.com/api/stats](https://gamedev-platform.onrender.com/api/stats)** | 전체 이용자 및 콘텐츠 통계 JSON 응답 |
 | ⚡ **백엔드 상태 확인** | **[https://gamedev-platform.onrender.com/](https://gamedev-platform.onrender.com/)** | 24/7 Render 클라우드 API 서버 상태 확인 |
@@ -67,6 +67,7 @@
 | **`MOD_27`** | **뱀서라이크 · 디펜스 몬스터 웨이브 스포너 설계기** | 시간대별 스폰 물량·오브젝트 풀 크기·보스 주기 계산 및 화면 외곽 원형 스포너 C# 코드 |
 | **`MOD_28`** | **한국 심의(GRAC) & 스토어 출시 검수(QA) 체크리스트** | 스팀/모바일 빌드 반려 1위 사유 방어 및 자체등급분류/확률형 아이템 필수 점검 리포트 |
 | **`MOD_29`~`32`** | **미니오락실(`Bug Slayer`) · 팀원 모집 · 아이디어 뽑기 · 명예의 전당** | 실시간 랭킹 미니게임, 직군별 인디 팀원 구인 보드, 게임잼 주제 슬롯머신, PWA 앱 설치 |
+| **`MOD_33`** | **🤖 자율 운영 4인 로봇 에이전트 스튜디오** | 대표(보트) · 과장(피미) · 차장(데비) · 부장(쿠아) 순환형 멀티에이전트 실시간 파이프라인 |
 
 ---
 
