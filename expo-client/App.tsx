@@ -78,17 +78,14 @@ export default function App() {
 
   useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
-      document.title = 'DevGround - 인디 게임 개발자 커뮤니티 (GameDev Platform)';
+      document.title = 'DevGround · 인디 게임 개발자 커뮤니티';
       const ensureMeta = (attr: 'name' | 'property', key: string, content: string) => {
-        let el = document.querySelector(`meta[${attr}="${key}"]`) as HTMLMetaElement | null;
-        if (!el) {
-          el = document.createElement('meta');
-          el.setAttribute(attr, key);
-          document.head.appendChild(el);
-        }
+        if (document.querySelector(`meta[${attr}="${key}"]`)) return;
+        const el = document.createElement('meta');
+        el.setAttribute(attr, key);
+        document.head.appendChild(el);
         el.setAttribute('content', content);
       };
-      ensureMeta('name', 'keywords', 'DevGround, gamedev platform, 게임 개발자 커뮤니티, 인디 게임 개발, 개발일지, DevLog, 게임 에셋, Unity, Unreal Engine, Godot');
       ensureMeta('property', 'og:title', 'DevGround - 인디 게임 개발자 개발일지 & 에셋 허브');
       ensureMeta('property', 'og:description', '인디 게임 개발자들의 실시간 개발일지(DevLog) 및 2D/3D/Audio 무료 에셋 공유 플랫폼');
       ensureMeta('property', 'og:url', 'https://gamedev-platform-expo-client.vercel.app/');
@@ -101,7 +98,7 @@ export default function App() {
       const sharedAssetId = params.get('asset');
       if (sharedDevlogId) {
         setCurrentScreen({ type: 'Detail', id: sharedDevlogId });
-      } else if (sharedAssetId) {
+      } else if (sharedAssetId || params.get('view') === 'assets') {
         setPendingAssetId(sharedAssetId);
         setActiveTab('AssetHub');
         setCurrentScreen({ type: 'AssetHub' });
