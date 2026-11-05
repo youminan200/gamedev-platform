@@ -438,7 +438,7 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
     setTimeout(() => setBadgeCopied(false), 2200);
   };
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
-  const [visitStats, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
+  const [, setVisitStats] = useState<{ today: number; total: number }>({ today: 0, total: 0 });
   const [shouts, setShouts] = useState<any[]>([]);
   const [shoutText, setShoutText] = useState('');
   const [sendingShout, setSendingShout] = useState(false);
@@ -591,182 +591,66 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
   const renderHeader = () => (
     <View style={styles.headerContainer}>
-      {/* Top Indie Workshop Console Bar */}
-      <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, marginBottom: 12 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-          <View style={{ flex: 1, marginRight: 8 }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <View style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
-                <Text style={{ color: '#FFF', fontSize: 9.5, fontWeight: '900', fontFamily: 'monospace' }}>INDIE_HUB</Text>
-              </View>
-              <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>
-                ONLINE: {visitStats.today} // TOTAL: {visitStats.total}
-              </Text>
-            </View>
-            <Text numberOfLines={1} style={{ fontSize: 20, fontWeight: '900', color: Theme.colors.text, fontFamily: 'monospace', marginTop: 4, letterSpacing: 0.5 }}>
-              DEVGROUND // 도트·인디공방_
-            </Text>
+      <View style={styles.masthead}>
+        <View style={styles.mastheadTop}>
+          <View style={{ flexGrow: 1 }}>
+            <Text style={styles.wordmark}>DevGround</Text>
+            <Text style={styles.mastheadDescription}>인디 게임을 만들고, 나누고, 플레이하는 곳</Text>
           </View>
-
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <View style={styles.headerActions}>
             {username ? (
-              <TouchableOpacity
-                style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 4 }}
-                onPress={handleOpenNotifications}
-              >
-                <Text style={{ color: Theme.colors.text, fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
-                  ALRT{unreadCount > 0 ? `(${unreadCount})` : ''}
-                </Text>
+              <TouchableOpacity accessibilityRole="button" style={styles.quietAction} onPress={handleOpenNotifications}>
+                <Text style={styles.quietActionText}>알림{unreadCount > 0 ? ` ${unreadCount}` : ''}</Text>
               </TouchableOpacity>
             ) : null}
-            <TouchableOpacity
-              style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 4 }}
-              onPress={handleToggleTheme}
-            >
-              <Text style={{ color: Theme.colors.text, fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
-                {Theme.isDark ? 'LIGHT' : 'DARK'}
-              </Text>
+            <TouchableOpacity accessibilityRole="button" style={styles.quietAction} onPress={handleToggleTheme}>
+              <Text style={styles.quietActionText}>{Theme.isDark ? '라이트 모드' : '다크 모드'}</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={{ backgroundColor: copied ? '#10B981' : Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 8, paddingVertical: 6, borderRadius: 4 }}
-              onPress={handleShare}
-            >
-              <Text style={{ color: copied ? '#FFF' : Theme.colors.text, fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
-                {copied ? 'COPIED' : 'SHARE'}
-              </Text>
+            <TouchableOpacity accessibilityRole="button" style={styles.quietAction} onPress={handleShare}>
+              <Text style={styles.quietActionText}>{copied ? '복사됨' : '공유'}</Text>
             </TouchableOpacity>
             {onAuthClick && (
-              <TouchableOpacity
-                style={{
-                  backgroundColor: username ? Theme.colors.pillBg : Theme.colors.primary,
-                  borderWidth: 1.5,
-                  borderColor: Theme.colors.border,
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderRadius: 4,
-                }}
-                onPress={onAuthClick}
-              >
-                <Text numberOfLines={1} style={{ color: username ? Theme.colors.text : '#FFFFFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>
-                  {username ? `@${username.slice(0, 7)}` : 'LOGIN'}
-                </Text>
+              <TouchableOpacity accessibilityRole="button" style={styles.quietAction} onPress={onAuthClick}>
+                <Text numberOfLines={1} style={styles.quietActionText}>{username ? `@${username.slice(0, 12)}` : '로그인'}</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
-
-        {/* 3-Mode Console Switcher (Replaces stacked banners!) */}
-        <View style={{ flexDirection: 'row', gap: 6 }}>
-          <TouchableOpacity
-            onPress={() => setActiveSection('feed')}
-            style={{
-              flex: 1,
-              backgroundColor: activeSection === 'feed' ? Theme.colors.primary : Theme.colors.pillBg,
-              borderWidth: 1.5,
-              borderColor: activeSection === 'feed' ? Theme.colors.primary : Theme.colors.border,
-              paddingVertical: 8,
-              borderRadius: 4,
-              alignItems: 'center',
-            }}
-          >
-            <Text numberOfLines={1} style={{ fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace', color: activeSection === 'feed' ? '#FFF' : Theme.colors.text }}>
-              [01] 개발일지
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setActiveSection('showcase')}
-            style={{
-              flex: 1,
-              backgroundColor: activeSection === 'showcase' ? '#00E5FF' : Theme.colors.pillBg,
-              borderWidth: 1.5,
-              borderColor: activeSection === 'showcase' ? '#00E5FF' : Theme.colors.border,
-              paddingVertical: 8,
-              borderRadius: 4,
-              alignItems: 'center',
-            }}
-          >
-            <Text numberOfLines={1} style={{ fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace', color: activeSection === 'showcase' ? '#11131C' : Theme.colors.text }}>
-              [02] 웹데모·홍보관
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setActiveSection('tools')}
-            style={{
-              flex: 1,
-              backgroundColor: activeSection === 'tools' ? '#FFD166' : Theme.colors.pillBg,
-              borderWidth: 1.5,
-              borderColor: activeSection === 'tools' ? '#FFD166' : Theme.colors.border,
-              paddingVertical: 8,
-              borderRadius: 4,
-              alignItems: 'center',
-            }}
-          >
-            <Text numberOfLines={1} style={{ fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace', color: activeSection === 'tools' ? '#11131C' : Theme.colors.text }}>
-              [03] 에러사전·오락실
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.sectionTabs}>
+          {([
+            ['feed', '개발일지'],
+            ['showcase', '게임 쇼케이스'],
+            ['tools', '개발 도구'],
+          ] as const).map(([section, label]) => (
+            <TouchableOpacity key={section} accessibilityRole="button"
+              accessibilityState={{ selected: activeSection === section }}
+              onPress={() => setActiveSection(section)}
+              style={[styles.sectionTab, activeSection === section && styles.sectionTabActive]}>
+              <Text style={[styles.sectionTabText, activeSection === section && styles.sectionTabTextActive]}>{label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
       {/* SECTION 01: DEVLOGS FEED CONTROLS */}
       {activeSection === 'feed' && (
         <>
-          {/* Weekly Indie Game Jam & Dot Challenge Banner */}
-          <View
-            style={{
-              backgroundColor: Theme.colors.surface,
-              borderWidth: 2,
-              borderColor: '#FFD166',
-              borderRadius: 6,
-              padding: 11,
-              marginBottom: 10,
-              flexDirection: 'row',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              flexWrap: 'wrap',
-              gap: 8,
-            }}
-          >
-            <View style={{ flex: 1, minWidth: 200 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-                <View style={{ backgroundColor: '#FFD166', paddingHorizontal: 6, paddingVertical: 1.5, borderRadius: 3 }}>
-                  <Text style={{ fontSize: 10, fontWeight: '900', color: '#11131C', fontFamily: 'monospace' }}>
-                    🏆 WEEKLY_JAM // D-{7 - (new Date().getDay() || 7) + 1}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 11, fontWeight: '800', color: '#00E5FF', fontFamily: 'monospace' }}>
-                  주간 도트 & 프로토타입 챌린지
-                </Text>
-              </View>
-              <Text style={{ fontSize: 13, fontWeight: '900', color: Theme.colors.text }}>
-                이번 주 주제: 「던전 속 수상한 자판기」 (#게임잼 태그로 출품!)
-              </Text>
+          <View style={styles.jamFeature}>
+            <View style={{ flexGrow: 1 }}>
+              <Text style={styles.gameMeta}>이번 주 게임잼</Text>
+              <Text style={[styles.gameTitle, { marginTop: 4 }]}>던전 속 수상한 자판기</Text>
+              <Text style={styles.mastheadDescription}>개발일지에 게임잼 태그를 붙여 참여하세요.</Text>
             </View>
-            <View style={{ flexDirection: 'row', gap: 6 }}>
-              <TouchableOpacity
-                onPress={() => setSelectedTag(selectedTag === '게임잼' ? null : '게임잼')}
-                style={{
-                  backgroundColor: selectedTag === '게임잼' ? Theme.colors.primary : Theme.colors.pillBg,
-                  borderWidth: 1.5,
-                  borderColor: selectedTag === '게임잼' ? Theme.colors.primary : '#FFD166',
-                  paddingHorizontal: 10,
-                  paddingVertical: 6,
-                  borderRadius: 4,
-                }}
-              >
-                <Text style={{ fontSize: 11, fontWeight: '900', color: selectedTag === '게임잼' ? '#FFF' : '#FFD166', fontFamily: 'monospace' }}>
-                  {selectedTag === '게임잼' ? '[전체 글 보기]' : '[🔍 출품작 보기]'}
-                </Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity accessibilityRole="button"
+              onPress={() => handleTagClick('게임잼')} style={styles.quietAction}>
+              <Text style={styles.quietActionText}>{selectedTag === '게임잼' ? '전체 글 보기' : '출품작 보기 →'}</Text>
+            </TouchableOpacity>
           </View>
 
           <NeumorphView radius={6} style={styles.searchBox}>
             <TextInput
-              style={[styles.searchInput, { fontFamily: 'monospace' }]}
-              placeholder="> SEARCH_LOGS (키워드, 엔진, 태그 입력...)"
+              style={styles.searchInput}
+              placeholder="개발일지 검색"
               placeholderTextColor={Theme.colors.textLight}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -775,14 +659,14 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6, marginBottom: 10 }}>
             {[
-              { label: 'ALL_LOGS', tag: null },
-              { label: '🏆 GAME_JAM', tag: '게임잼' },
-              { label: 'UNITY', tag: 'Unity' },
-              { label: 'UNREAL', tag: 'Unreal' },
-              { label: 'GODOT', tag: 'Godot' },
-              { label: 'SHOWCASE', tag: '쇼케이스' },
-              { label: 'WEB_DEMO', tag: '데모버전' },
-              { label: 'RECRUIT', tag: '팀원모집' },
+              { label: '전체', tag: null },
+              { label: '게임잼', tag: '게임잼' },
+              { label: 'Unity', tag: 'Unity' },
+              { label: 'Unreal', tag: 'Unreal' },
+              { label: 'Godot', tag: 'Godot' },
+              { label: '쇼케이스', tag: '쇼케이스' },
+              { label: '웹 데모', tag: '데모버전' },
+              { label: '팀원 모집', tag: '팀원모집' },
             ].map((item) => {
               const active = selectedTag === item.tag;
               return (
@@ -791,15 +675,15 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
                   onPress={() => setSelectedTag(active ? null : item.tag)}
                   style={{
                     backgroundColor: active ? Theme.colors.primary : Theme.colors.surface,
-                    borderWidth: 1.5,
+                    borderWidth: 1,
                     borderColor: active ? Theme.colors.primary : Theme.colors.border,
                     paddingHorizontal: 10,
                     paddingVertical: 5,
                     borderRadius: 4,
                   }}
                 >
-                  <Text style={{ fontSize: 11, fontWeight: '900', fontFamily: 'monospace', color: active ? '#FFF' : Theme.colors.text }}>
-                    #{item.label}
+                  <Text style={{ fontSize: 12, fontWeight: '600', color: active ? '#FFF' : Theme.colors.text }}>
+                    {item.label}
                   </Text>
                 </TouchableOpacity>
               );
@@ -811,20 +695,20 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               style={[styles.sortButton, sortBy === 'latest' && styles.activeSortButton]}
               onPress={() => setSortBy('latest')}
             >
-              <Text style={[styles.sortButtonText, sortBy === 'latest' && styles.activeSortButtonText]}>[LATEST // 최신]</Text>
+              <Text style={[styles.sortButtonText, sortBy === 'latest' && styles.activeSortButtonText]}>최신순</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sortButton, sortBy === 'popular' && styles.activeSortButton]}
               onPress={() => setSortBy('popular')}
             >
-              <Text style={[styles.sortButtonText, sortBy === 'popular' && styles.activeSortButtonText]}>[HOT // 인기]</Text>
+              <Text style={[styles.sortButtonText, sortBy === 'popular' && styles.activeSortButtonText]}>인기순</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.sortButton, sortBy === 'bookmarked' && styles.activeSortButton]}
               onPress={() => setSortBy('bookmarked')}
             >
               <Text style={[styles.sortButtonText, sortBy === 'bookmarked' && styles.activeSortButtonText]}>
-                [SAVED ({bookmarkedIds.length})]
+                저장한 글 ({bookmarkedIds.length})
               </Text>
             </TouchableOpacity>
           </View>
@@ -834,83 +718,46 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
       {/* SECTION 02: INDIE GAME SHOWCASE & LIVE TERMINAL */}
       {activeSection === 'showcase' && (
         <View style={{ marginBottom: 14 }}>
-          <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 2, borderColor: Theme.colors.border, borderRadius: 6, padding: 14, marginBottom: 12 }}>
-            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
-              <View>
-                <Text style={{ fontSize: 15, fontWeight: '900', color: '#00E5FF', fontFamily: 'monospace' }}>
-                  // INDIE_GAME_SHOWCASE_ARCADE
-                </Text>
-                <Text style={{ fontSize: 12, color: Theme.colors.textLight, marginTop: 2 }}>
-                  개발 중인 인디게임 홈페이지·스팀·Itch.io 웹데모를 등록하고 사이트 안에서 바로 실행해보세요.
-                </Text>
-              </View>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
-                <TouchableOpacity
-                  onPress={handleCopyFeaturedBadge}
-                  style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 }}
-                >
-                  <Text style={{ color: Theme.colors.text, fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>
-                    {badgeCopied ? '[COPIED!]' : '[COPY_BADGE]'}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => setShowcaseModalOpen(true)}
-                  style={{ backgroundColor: Theme.colors.primary, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 4 }}
-                >
-                  <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>
-                    [+ REGISTER_GAME]
-                  </Text>
-                </TouchableOpacity>
-              </View>
+          <View style={styles.showcaseHeading}>
+            <View style={{ flexGrow: 1 }}>
+              <Text style={styles.showcaseTitle}>게임 쇼케이스</Text>
+              <Text style={styles.mastheadDescription}>인디 개발자들의 게임과 데모를 만나보세요.</Text>
             </View>
-
+            <View style={styles.headerActions}>
+              <TouchableOpacity accessibilityRole="button" onPress={handleCopyFeaturedBadge} style={styles.quietAction}>
+                <Text style={styles.quietActionText}>{badgeCopied ? '복사됨' : '배지 복사'}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity accessibilityRole="button" onPress={() => setShowcaseModalOpen(true)} style={styles.playAction}>
+                <Text style={styles.playActionText}>게임 등록</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {showcases.length === 0 && <Text style={styles.showcaseEmpty}>표시할 게임이 없습니다.</Text>}
+          <View style={styles.showcaseGrid}>
             {showcases.map((game: any) => (
-              <View
-                key={game.id}
-                style={{
-                  backgroundColor: Theme.colors.background,
-                  borderWidth: 1.5,
-                  borderColor: Theme.colors.border,
-                  borderRadius: 6,
-                  padding: 12,
-                  marginBottom: 10,
-                }}
-              >
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-                  <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>
-                    [{game.engine}] // BY @{game.developer}
-                  </Text>
-                  <Text style={{ fontSize: 11, color: Theme.colors.textLight, fontFamily: 'monospace' }}>
-                    PLAYS: {game.plays || 0}
-                  </Text>
-                </View>
-                <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>
-                  {game.title}
-                </Text>
-                <Text style={{ fontSize: 12, color: Theme.colors.textLight, marginBottom: 10 }}>
-                  {game.description || '인디게임 공식 홈페이지 및 웹데모 쇼케이스'}
-                </Text>
-                <View style={{ flexDirection: 'row', gap: 8 }}>
-                  <TouchableOpacity
-                    onPress={async () => {
-                      try {
-                        const r = await ApiClient.visitShowcase(game.id);
-                        setShowcases((prev) => prev.map((x) => (x.id === game.id ? { ...x, plays: r.plays } : x)));
-                      } catch {}
-                      setPreviewGame(game);
-                    }}
-                    style={{ flex: 1, backgroundColor: '#00E5FF', paddingVertical: 8, borderRadius: 4, alignItems: 'center' }}
-                  >
-                    <Text style={{ color: '#11131C', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>
-                      [▶ LAUNCH_IN_APP // 바로실행]
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => Linking.openURL(game.homepage_url).catch(() => {})}
-                    style={{ backgroundColor: Theme.colors.pillBg, borderWidth: 1.5, borderColor: Theme.colors.border, paddingHorizontal: 12, justifyContent: 'center', borderRadius: 4 }}
-                  >
-                    <Text style={{ color: Theme.colors.text, fontSize: 11, fontWeight: '900', fontFamily: 'monospace' }}>[↗ WEB]</Text>
-                  </TouchableOpacity>
+              <View key={game.id} style={styles.showcaseCard}>
+                {game.thumbnail_url ? (
+                  <Image source={{ uri: game.thumbnail_url }} style={styles.gameCover} resizeMode="cover" />
+                ) : null}
+                <View style={styles.gameBody}>
+                  <Text style={styles.gameTitle}>{game.title}</Text>
+                  <Text style={styles.gameMeta}>{game.developer} · {game.engine} · 방문 {game.plays || 0}회</Text>
+                  {!!game.description && <Text style={styles.gameDescription} numberOfLines={3}>{game.description}</Text>}
+                  <View style={[styles.headerActions, { marginTop: 'auto', paddingTop: 14 }]}>
+                    <TouchableOpacity accessibilityRole="button" style={styles.playAction}
+                      onPress={() => {
+                        setPreviewGame(game);
+                        ApiClient.visitShowcase(game.id).then((r) => {
+                          setShowcases((prev) => prev.map((x) => (x.id === game.id ? { ...x, plays: r.plays } : x)));
+                        }).catch(() => {});
+                      }}>
+                      <Text style={styles.playActionText}>게임 열기</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity accessibilityRole="link" style={styles.quietAction}
+                      onPress={() => Linking.openURL(game.homepage_url).catch(() => {})}>
+                      <Text style={styles.quietActionText}>홈페이지 ↗</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             ))}
@@ -5264,6 +5111,32 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
 };
 
 const styles = StyleSheet.create({
+  masthead: { marginBottom: 24 },
+  mastheadTop: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 14, paddingTop: 12, paddingBottom: 18 },
+  wordmark: { fontSize: 30, fontWeight: '800', letterSpacing: -1.2, color: Theme.colors.text },
+  mastheadDescription: { fontSize: 13, color: Theme.colors.textLight, lineHeight: 20, marginTop: 3 },
+  headerActions: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
+  quietAction: { paddingHorizontal: 9, paddingVertical: 8, borderRadius: 5 },
+  quietActionText: { fontSize: 12, fontWeight: '600', color: Theme.colors.text },
+  sectionTabs: { flexDirection: 'row', gap: 18, borderBottomWidth: 1, borderColor: Theme.colors.border },
+  sectionTab: { paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  sectionTabActive: { borderBottomColor: Theme.colors.text },
+  sectionTabText: { fontSize: 13, fontWeight: '600', color: Theme.colors.textLight },
+  sectionTabTextActive: { color: Theme.colors.text, fontWeight: '800' },
+  jamFeature: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap', gap: 12, backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, padding: 16, marginBottom: 14 },
+  showcaseHeading: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 12, marginBottom: 16 },
+  showcaseTitle: { fontSize: 23, fontWeight: '800', color: Theme.colors.text },
+  showcaseEmpty: { color: Theme.colors.textLight, paddingVertical: 22 },
+  showcaseGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 20 },
+  showcaseCard: { flexBasis: 230, flexGrow: 1, minWidth: 0, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 8, backgroundColor: Theme.colors.surface, overflow: 'hidden' },
+  gameCover: { width: '100%', aspectRatio: 16 / 9, backgroundColor: Theme.colors.pillBg },
+  gameBody: { padding: 14, flexGrow: 1 },
+  gameTitle: { fontSize: 17, fontWeight: '800', color: Theme.colors.text },
+  gameMeta: { fontSize: 12, color: Theme.colors.textLight, marginTop: 4 },
+  gameDescription: { fontSize: 13, lineHeight: 19, color: Theme.colors.textLight, marginTop: 9 },
+  playAction: { backgroundColor: Theme.colors.text, borderRadius: 5, paddingHorizontal: 12, paddingVertical: 8 },
+  playActionText: { fontSize: 12, fontWeight: '700', color: Theme.colors.background },
+
   container: {
     flex: 1,
     backgroundColor: Theme.colors.background,
