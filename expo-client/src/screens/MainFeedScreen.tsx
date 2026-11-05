@@ -32,7 +32,10 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [toolboxVisible, setToolboxVisible] = useState(false);
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
-  const [activeSection, setActiveSection] = useState<'feed' | 'showcase' | 'tools'>('feed');
+  const [activeSection, setActiveSection] = useState<'feed' | 'showcase' | 'tools'>(() =>
+    Platform.OS === 'web' && typeof window !== 'undefined'
+      && new URLSearchParams(window.location.search).get('view') === 'showcase' ? 'showcase' : 'feed'
+  );
   const [showcases, setShowcases] = useState<any[]>([]);
   const [showcaseModalOpen, setShowcaseModalOpen] = useState(false);
   const [scTitle, setScTitle] = useState('');
@@ -637,6 +640,20 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
         <>
           <View style={styles.jamFeature}>
             <View style={{ flexGrow: 1 }}>
+              <Text style={styles.gameTitle}>개발 중인 게임을 공유해 보세요</Text>
+              <Text style={styles.mastheadDescription}>작업 화면을 올리고, 피드백을 받거나 함께 만들 팀원을 찾아보세요.</Text>
+            </View>
+            <View style={styles.headerActions}>
+              <TouchableOpacity accessibilityRole="button" onPress={onPostClick} style={styles.playAction}>
+                <Text style={styles.playActionText}>개발일지 쓰기</Text>
+              </TouchableOpacity>
+              <TouchableOpacity accessibilityRole="button" onPress={handleOpenTeamBoard} style={styles.quietAction}>
+                <Text style={styles.quietActionText}>팀원 모집 보기</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          <View style={styles.jamFeature}>
+            <View style={{ flexGrow: 1 }}>
               <Text style={styles.gameMeta}>이번 주 게임잼</Text>
               <Text style={[styles.gameTitle, { marginTop: 4 }]}>던전 속 수상한 자판기</Text>
               <Text style={styles.mastheadDescription}>개발일지에 게임잼 태그를 붙여 참여하세요.</Text>
@@ -646,6 +663,21 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, us
               <Text style={styles.quietActionText}>{selectedTag === '게임잼' ? '전체 글 보기' : '출품작 보기 →'}</Text>
             </TouchableOpacity>
           </View>
+
+          {Platform.OS === 'web' && (
+            <View style={[styles.headerActions, { marginBottom: 14 }]}>
+              <Text style={styles.gameMeta}>개발 가이드</Text>
+              {[
+                ['/indie-game-community.html', '첫 개발일지'],
+                ['/free-game-assets.html', '에셋 사용법'],
+                ['/game-devlog-showcase.html', 'Unity WebGL 404 해결'],
+              ].map(([href, label]) => React.createElement('a', {
+                key: href,
+                href,
+                style: { color: Theme.colors.textLight, fontSize: 13, padding: 6 },
+              }, label))}
+            </View>
+          )}
 
           <NeumorphView radius={6} style={styles.searchBox}>
             <TextInput
