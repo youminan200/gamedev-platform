@@ -77,6 +77,13 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
                 </Text>
               </View>
             )}
+            {devLog.series_title ? (
+              <View style={{ backgroundColor: '#1E1B4B', borderWidth: 1, borderColor: '#A855F7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
+                <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: '900', color: '#E9D5FF', fontFamily: 'monospace' }}>
+                  📚 {devLog.series_title}
+                </Text>
+              </View>
+            ) : null}
           </View>
 
           {onToggleBookmark && (
@@ -154,6 +161,25 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
 
         {/* Content */}
         <View style={styles.content}>
+          {(devLog.series_title || (devLog.progress_pct && devLog.progress_pct > 0)) ? (
+            <View style={{ marginBottom: 8, backgroundColor: Theme.colors.background, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, padding: 8 }}>
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: devLog.progress_pct && devLog.progress_pct > 0 ? 5 : 0 }}>
+                <Text style={{ fontSize: 11, fontWeight: '900', color: '#A855F7', fontFamily: 'monospace' }}>
+                  {devLog.series_title ? `📚 SERIES // ${devLog.series_title}` : '📈 MILESTONE_PROGRESS'}
+                </Text>
+                {devLog.progress_pct && devLog.progress_pct > 0 ? (
+                  <Text style={{ fontSize: 11, fontWeight: '900', color: '#10B981', fontFamily: 'monospace' }}>
+                    진척도 {devLog.progress_pct}%
+                  </Text>
+                ) : null}
+              </View>
+              {devLog.progress_pct && devLog.progress_pct > 0 ? (
+                <View style={{ height: 6, backgroundColor: Theme.colors.pillBg, borderRadius: 3, overflow: 'hidden' }}>
+                  <View style={{ width: `${Math.min(100, Math.max(0, devLog.progress_pct))}%`, height: '100%', backgroundColor: '#10B981' }} />
+                </View>
+              ) : null}
+            </View>
+          ) : null}
           <Text style={[styles.title, { color: Theme.colors.text }]}>{devLog.title}</Text>
           {devLog.content ? (
             <Text numberOfLines={2} style={{ fontSize: 12.5, color: Theme.colors.textLight, marginBottom: 10, lineHeight: 18 }}>

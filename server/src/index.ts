@@ -1645,22 +1645,166 @@ app.get('/api/devlogs/:id', optionalAuthenticateToken, (req: any, res: any) => {
 });
 
 app.post('/api/devlogs', authenticateToken, (req: any, res: any) => {
-  const { title, content, tags, image_url, demo_url } = req.body;
+  const { title, content, tags, image_url, demo_url, poll_question, poll_option_a, poll_option_b, series_title, progress_pct } = req.body;
   const userId = req.user.id;
-  const stmt = db.prepare('INSERT INTO devlogs (user_id, title, content, tags, image_url) VALUES (?, ?, ?, ?, ?)');
+  const stmt = db.prepare(`
+    INSERT INTO devlogs (user_id, title, content, tags, image_url, demo_url, poll_question, poll_option_a, poll_option_b, series_title, progress_pct)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
   const tagsString = JSON.stringify(tags || []);
-  const info = stmt.run(userId, title || 'Untitled', content || '', tagsString, image_url || null);
+  const info = stmt.run(
+    userId,
+    title || 'Untitled',
+    content || '',
+    tagsString,
+    image_url || null,
+    demo_url || null,
+    poll_question || null,
+    poll_option_a || null,
+    poll_option_b || null,
+    series_title || null,
+    progress_pct != null ? Number(progress_pct) : null
+  );
   
   res.status(201).json({
     id: info.lastInsertRowid.toString(),
     title: title || 'Untitled',
     content: content || '',
     image_url: image_url || null,
+    demo_url: demo_url || null,
+    poll_question: poll_question || null,
+    poll_option_a: poll_option_a || null,
+    poll_option_b: poll_option_b || null,
+    series_title: series_title || null,
+    progress_pct: progress_pct != null ? Number(progress_pct) : null,
     author: req.user.username,
     likes: 0,
     comment_count: 0,
     tags: tags || []
   });
+});
+
+// New Endpoints for Upgrades 3, 4, 5
+try { db.exec('ALTER TABLE devlogs ADD COLUMN series_title TEXT;'); } catch {}
+try { db.exec('ALTER TABLE devlogs ADD COLUMN progress_pct INTEGER DEFAULT 0;'); } catch {}
+try {
+  db.prepare("UPDATE devlogs SET series_title = 'Shadow Dungeon 개발기', progress_pct = 75 WHERE id = 1 AND (series_title IS NULL OR series_title = '')").run();
+  db.prepare("UPDATE devlogs SET series_title = 'Cozy Pixel Valley 일지', progress_pct = 60 WHERE id = 3 AND (series_title IS NULL OR series_title = '')").run();
+} catch {}
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS showcase_qa_reviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    showcase_id INTEGER NOT NULL,
+    reviewer TEXT NOT NULL,
+    fun_score INTEGER DEFAULT 5,
+    difficulty_vote TEXT DEFAULT '적당함',
+    juice_score INTEGER DEFAULT 5,
+    comment TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS team_applications (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    team_id INTEGER NOT NULL,
+    applicant TEXT NOT NULL,
+    role TEXT NOT NULL,
+    portfolio_url TEXT,
+    message TEXT NOT NULL,
+    status TEXT DEFAULT 'PENDING',
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+
+  CREATE TABLE IF NOT EXISTS direct_messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender TEXT NOT NULL,
+    recipient TEXT NOT NULL,
+    content TEXT NOT NULL,
+    is_read INTEGER DEFAULT 0,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  );
+`);
+
+try {
+  const qaCnt = (db.prepare('SELECT COUNT(*) as c FROM showcase_qa_reviews').get() as any).c;
+  if (qaCnt === 0) {
+    const insQa = db.prepare('INSERT INTO showcase_qa_reviews (showcase_id, reviewer, fun_score, difficulty_vote, juice_score, comment) VALUES (?, ?, ?, ?, ?, ?)');
+    insQa.run(1, 'ShaderWizard', 5, '쫄깃하고 적당함', 5, '패링 타이밍과 화면 흔들림(Juice) 손맛이 아주 훌륭합니다! 보스 2페이즈 전조만 조금 더 길면 완벽할 듯!');
+    insQa.run(1, 'GodotCrafter', 5, '조금 매운맛', 4, '도트 타격 이펙트가 시원시원해요. 웹 데모인데도 60프레임 끊김 없이 돌아가네요.');
+  }
+} catch {}
+
+app.get('/api/showcases/:id/qa', (req, res) => {
+  const rows = db.prepare('SELECT * FROM showcase_qa_reviews WHERE showcase_id = ? ORDER BY id DESC LIMIT 30').all(req.params.id);
+  res.json(rows);
+});
+
+app.post('/api/showcases/:id/qa', (req, res) => {
+  const showcaseId = Number(req.params.id);
+  const { reviewer, fun_score, difficulty_vote, juice_score, comment } = req.body || {};
+  db.prepare(
+    'INSERT INTO showcase_qa_reviews (showcase_id, reviewer, fun_score, difficulty_vote, juice_score, comment) VALUES (?, ?, ?, ?, ?, ?)'
+  ).run(
+    showcaseId,
+    String(reviewer || 'IndieTester').trim(),
+    Math.min(5, Math.max(1, Number(fun_score) || 5)),
+    String(difficulty_vote || '적당함'),
+    Math.min(5, Math.max(1, Number(juice_score) || 5)),
+    String(comment || '').trim()
+  );
+  const rows = db.prepare('SELECT * FROM showcase_qa_reviews WHERE showcase_id = ? ORDER BY id DESC LIMIT 30').all(showcaseId);
+  res.status(201).json(rows);
+});
+
+app.get('/api/teams/:id/applications', (req, res) => {
+  const rows = db.prepare('SELECT * FROM team_applications WHERE team_id = ? ORDER BY id DESC').all(req.params.id);
+  res.json(rows);
+});
+
+app.post('/api/teams/:id/apply', (req, res) => {
+  const teamId = Number(req.params.id);
+  const { applicant, role, portfolio_url, message } = req.body || {};
+  if (!message) return res.status(400).json({ error: 'message required' });
+  db.prepare(
+    'INSERT INTO team_applications (team_id, applicant, role, portfolio_url, message) VALUES (?, ?, ?, ?, ?)'
+  ).run(
+    teamId,
+    String(applicant || 'Creator').trim(),
+    String(role || '개발/아트 지원').trim(),
+    String(portfolio_url || '').trim(),
+    String(message).trim()
+  );
+  const team: any = db.prepare('SELECT * FROM team_posts WHERE id = ?').get(teamId);
+  if (team && team.author) {
+    const targetUser: any = db.prepare('SELECT id FROM users WHERE username = ?').get(team.author);
+    if (targetUser) {
+      createNotification(targetUser.id, 0, 'team_apply', `🤝 ${applicant || 'Creator'}님이 [${team.project_title}] 팀 모집에 지원서를 보냈습니다!`, 'devlog', 1);
+    }
+  }
+  const rows = db.prepare('SELECT * FROM team_applications WHERE team_id = ? ORDER BY id DESC').all(teamId);
+  res.status(201).json(rows);
+});
+
+app.get('/api/messages/:username', (req, res) => {
+  const u = req.params.username;
+  const rows = db.prepare('SELECT * FROM direct_messages WHERE recipient = ? OR sender = ? ORDER BY id DESC LIMIT 40').all(u, u);
+  res.json(rows);
+});
+
+app.post('/api/messages', (req, res) => {
+  const { sender, recipient, content } = req.body || {};
+  if (!sender || !recipient || !content) return res.status(400).json({ error: 'sender, recipient, content required' });
+  db.prepare('INSERT INTO direct_messages (sender, recipient, content) VALUES (?, ?, ?)').run(
+    String(sender).trim(),
+    String(recipient).trim(),
+    String(content).trim()
+  );
+  const targetUser: any = db.prepare('SELECT id FROM users WHERE username = ?').get(recipient);
+  if (targetUser) {
+    createNotification(targetUser.id, 0, 'dm', `💌 @${sender}님으로부터 새 쪽지(DM): "${String(content).slice(0, 40)}"`, 'devlog', 1);
+  }
+  const rows = db.prepare('SELECT * FROM direct_messages WHERE recipient = ? OR sender = ? ORDER BY id DESC LIMIT 40').all(sender, sender);
+  res.status(201).json(rows);
 });
 
 app.put('/api/devlogs/:id', authenticateToken, (req: any, res: any) => {

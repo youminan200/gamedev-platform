@@ -25,6 +25,7 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
   // New Asset Modal State
   const [modalVisible, setModalVisible] = useState(false);
   const [pixelModalVisible, setPixelModalVisible] = useState(false);
+  const [remixTarget, setRemixTarget] = useState<{ url: string; title: string } | null>(null);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
   const [newImageUrl, setNewImageUrl] = useState('');
@@ -37,12 +38,36 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
   const currentUsername = ApiClient.getUsername();
 
   useEffect(() => {
+    const draft = ApiClient.consumeWorkshopAssetDraft();
+    if (draft) {
+      if (draft.title) setNewTitle(draft.title);
+      if (draft.description) setNewDescription(draft.description);
+      if (draft.category) setNewCategory(draft.category);
+      if (draft.imageUrl) setNewImageUrl(draft.imageUrl);
+      if (draft.fileUrl) setNewFileUrl(draft.fileUrl);
+      if (draft.codeSnippet) setNewCodeSnippet(draft.codeSnippet);
+      setModalVisible(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const handler = (e: MessageEvent) => {
         if (e.data && e.data.type === 'PIXEL_ART_EXPORT' && e.data.dataUrl) {
           setNewImageUrl(e.data.dataUrl);
           setNewFileUrl(e.data.dataUrl);
           setNewCategory('2D');
+          if (!newTitle.trim() && e.data.suggestedTitle) setNewTitle(e.data.suggestedTitle);
+          if (!newDescription.trim() && e.data.suggestedDesc) setNewDescription(e.data.suggestedDesc);
+          setPixelModalVisible(false);
+          setModalVisible(true);
+        } else if (e.data && e.data.type === 'WORKSHOP_EXPORT') {
+          if (e.data.title) setNewTitle(e.data.title);
+          if (e.data.description) setNewDescription(e.data.description);
+          if (e.data.category) setNewCategory(e.data.category);
+          if (e.data.imageUrl) setNewImageUrl(e.data.imageUrl);
+          if (e.data.fileUrl) setNewFileUrl(e.data.fileUrl);
+          if (e.data.codeSnippet) setNewCodeSnippet(e.data.codeSnippet);
           setPixelModalVisible(false);
           setModalVisible(true);
         }
@@ -50,14 +75,14 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
       window.addEventListener('message', handler);
       return () => window.removeEventListener('message', handler);
     }
-  }, []);
+  }, [newTitle, newDescription]);
 
   const [playingAudioId, setPlayingAudioId] = useState<string | null>(null);
   const playAudioPreview = (item: Asset) => {
     setPlayingAudioId(item.id);
     try {
       if (typeof window !== 'undefined') {
-        if (item.file_url && /\.(mp3|wav|ogg)(\?|$)/i.test(item.file_url)) {
+        if (item.file_url && (/^data:audio\//i.test(item.file_url) || /\.(mp3|wav|ogg)(\?|$)/i.test(item.file_url))) {
           const audio = new (window as any).Audio(item.file_url);
           audio.onended = () => setPlayingAudioId(null);
           audio.play();
@@ -392,6 +417,29 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
               </Text>
             </TouchableOpacity>
           )}
+          {item.category === '2D' && item.image_url && Platform.OS === 'web' && (
+            <TouchableOpacity
+              onPress={(e: any) => {
+                e?.stopPropagation?.();
+                setRemixTarget({ url: item.image_url!, title: item.title });
+                setPixelModalVisible(true);
+              }}
+              style={{
+                backgroundColor: '#1E1B4B',
+                borderWidth: 1.5,
+                borderColor: '#FFD166',
+                paddingVertical: 7,
+                paddingHorizontal: 12,
+                borderRadius: 4,
+                marginBottom: 10,
+                alignItems: 'center',
+              }}
+            >
+              <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#FFD166', fontFamily: 'monospace' }}>
+                🎨 도트 스튜디오에서 리믹스(포크)하기
+              </Text>
+            </TouchableOpacity>
+          )}
           <View style={styles.cardFooter}>
             <Text style={styles.authorText}>@{item.author} • DL {item.downloads ?? 0}</Text>
             <TouchableOpacity onPress={() => handleQuickLike(item.id)}>
@@ -489,20 +537,22 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
       />
 
       {/* Pixel Studio Modal */}
-      <Modal visible={pixelModalVisible} animationType="fade" transparent onRequestClose={() => setPixelModalVisible(false)}>
+      <Modal visible={pixelModalVisible} animationType="fade" transparent onRequestClose={() => { setPixelModalVisible(false); setRemixTarget(null); }}>
         <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.85)', justifyContent: 'center', alignItems: 'center', padding: 12 }}>
           <View style={{ width: '100%', maxWidth: 740, height: '88%', backgroundColor: '#11131C', borderWidth: 2, borderColor: '#FFD166', borderRadius: 6, overflow: 'hidden' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 10, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
               <Text style={{ color: '#FFD166', fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>
-                🎨 PIXEL_SPRITE_WORKSHOP // 도트 찍고 에셋 창고에 바로 공유
+                {remixTarget ? `🎨 PIXEL_REMIX // [${remixTarget.title}] 리믹스 작업실` : '🎨 PIXEL_SPRITE_WORKSHOP // 도트 찍고 에셋 창고에 바로 공유'}
               </Text>
-              <TouchableOpacity onPress={() => setPixelModalVisible(false)} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
+              <TouchableOpacity onPress={() => { setPixelModalVisible(false); setRemixTarget(null); }} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
                 <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X CLOSE]</Text>
               </TouchableOpacity>
             </View>
             {Platform.OS === 'web' ? (
               React.createElement('iframe', {
-                src: '/pixel-studio.html',
+                src: remixTarget
+                  ? `/pixel-studio.html?remix=${encodeURIComponent(remixTarget.url)}&title=${encodeURIComponent(remixTarget.title)}`
+                  : '/pixel-studio.html',
                 style: { width: '100%', height: '100%', border: 'none', backgroundColor: '#11131C' },
               })
             ) : null}
@@ -533,6 +583,20 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
                   {detailAsset.file_url ? (
                     <TouchableOpacity style={styles.openLinkBtn} onPress={() => handleOpenLink(detailAsset.file_url, detailAsset.id)}>
                       <Text style={styles.openLinkText}>[📥 DOWNLOAD_ASSET ({detailAsset.downloads ?? 0})]</Text>
+                    </TouchableOpacity>
+                  ) : null}
+
+                  {detailAsset.category === '2D' && detailAsset.image_url && Platform.OS === 'web' ? (
+                    <TouchableOpacity
+                      style={[styles.openLinkBtn, { backgroundColor: '#FFD166', marginTop: 8 }]}
+                      onPress={() => {
+                        const target = { url: detailAsset.image_url, title: detailAsset.title };
+                        setDetailAsset(null);
+                        setRemixTarget(target);
+                        setPixelModalVisible(true);
+                      }}
+                    >
+                      <Text style={styles.openLinkText}>[🎨 도트 스튜디오에서 리믹스(포크)하기]</Text>
                     </TouchableOpacity>
                   ) : null}
 

@@ -202,6 +202,11 @@ export default function App() {
         <MainFeedScreen 
           onDevLogClick={(id) => setCurrentScreen({ type: 'Detail', id })}
           onPostClick={handlePostClick}
+          onOpenPostingWithDraft={() => setCurrentScreen({ type: 'Posting' })}
+          onOpenAssetHub={() => {
+            setActiveTab('AssetHub');
+            setCurrentScreen({ type: 'AssetHub' });
+          }}
           username={username}
           onAssetNotificationClick={(id) => {
             setPendingAssetId(id);
@@ -248,6 +253,7 @@ export default function App() {
           id={currentScreen.id}
           onBack={() => setCurrentScreen({ type: 'MainFeed' })}
           onRequireLogin={() => setCurrentScreen({ type: 'Login' })}
+          onSelectEpisode={(episodeId) => setCurrentScreen({ type: 'Detail', id: episodeId })}
         />
       );
       break;

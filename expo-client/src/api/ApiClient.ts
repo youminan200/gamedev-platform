@@ -509,6 +509,177 @@ export const ApiClient = {
     return await response.json();
   },
 
+  // ── Upgrade 2: PlayLoop Micro-BaaS API ──
+  getBaasGames: async (): Promise<any[]> => {
+    try {
+      const endpoint = authToken ? `${BASE_URL}/baas/games/mine` : `${BASE_URL}/baas/games/demo`;
+      const response = await fetch(endpoint, { headers: ApiClient.getHeaders() });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  createBaasGame: async (title: string, slug?: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/baas/games`, {
+      method: 'POST',
+      headers: ApiClient.getHeaders(),
+      body: JSON.stringify({ title, slug }),
+    });
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({}));
+      throw new Error(err.error || 'Failed to create BaaS game');
+    }
+    return response.json();
+  },
+
+  getBaasGameLeaderboard: async (gameId: string): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/baas/games/${gameId}/leaderboard`, { headers: ApiClient.getHeaders() });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  getBaasGameFeedbacks: async (gameId: string): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/baas/games/${gameId}/feedbacks`, { headers: ApiClient.getHeaders() });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  postBaasTestScore: async (apiKey: string, username: string, score: number, stage: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/baas/leaderboard`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+      body: JSON.stringify({
+        userId: `u_${username}`,
+        username,
+        score,
+        metadata: { stage, engine: 'Unity 6' },
+      }),
+    });
+    return response.json();
+  },
+
+  postBaasTestFeedback: async (apiKey: string, type: 'BUG' | 'SUGGESTION' | 'REVIEW', message: string, buildVer = 'v0.4.0'): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/baas/feedback`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey },
+      body: JSON.stringify({
+        buildVer,
+        type,
+        message,
+        deviceInfo: 'WebGL / DevGround Live Tester',
+        position: '(12.5, 4.0, 0)',
+      }),
+    });
+    return response.json();
+  },
+
+  // ── Upgrade 3: Showcase Structured QA Reviews ──
+  getShowcaseQaReviews: async (showcaseId: number | string): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/showcases/${showcaseId}/qa`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  postShowcaseQaReview: async (showcaseId: number | string, data: { reviewer: string; fun_score: number; difficulty_vote: string; juice_score: number; comment: string }): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/showcases/${showcaseId}/qa`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // ── Upgrade 4: Team Applications & Direct Messages (DM) ──
+  getTeamApplications: async (teamId: number | string): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/teams/${teamId}/applications`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  applyToTeam: async (teamId: number | string, data: { applicant: string; role: string; portfolio_url: string; message: string }): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/teams/${teamId}/apply`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  getDirectMessages: async (username: string): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/messages/${encodeURIComponent(username)}`);
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  sendDirectMessage: async (sender: string, recipient: string, content: string): Promise<any[]> => {
+    try {
+      const response = await fetch(`${BASE_URL}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender, recipient, content }),
+      });
+      if (!response.ok) return [];
+      return await response.json();
+    } catch {
+      return [];
+    }
+  },
+
+  // Draft storage for Workshop -> AssetHub / DevLog one-click handoff
+  setWorkshopAssetDraft: (draft: { title?: string; description?: string; category?: '2D' | '3D' | 'Audio' | 'UI' | 'Code'; imageUrl?: string; fileUrl?: string; codeSnippet?: string } | null) => {
+    setStorageItem('devground_workshop_asset_draft', draft ? JSON.stringify(draft) : null);
+  },
+
+  consumeWorkshopAssetDraft: (): any | null => {
+    const raw = getStorageItem('devground_workshop_asset_draft');
+    if (!raw) return null;
+    setStorageItem('devground_workshop_asset_draft', null);
+    try { return JSON.parse(raw); } catch { return null; }
+  },
+
+  setWorkshopDevlogDraft: (draft: { title?: string; content?: string; imageUrl?: string; seriesTitle?: string; progressPct?: number; tags?: string[] } | null) => {
+    setStorageItem('devground_workshop_devlog_draft', draft ? JSON.stringify(draft) : null);
+  },
+
+  consumeWorkshopDevlogDraft: (): any | null => {
+    const raw = getStorageItem('devground_workshop_devlog_draft');
+    if (!raw) return null;
+    setStorageItem('devground_workshop_devlog_draft', null);
+    try { return JSON.parse(raw); } catch { return null; }
+  },
+
   getUserProfile: async (username: string): Promise<any> => {
     const response = await fetch(`${BASE_URL}/users/${username}`, { headers: ApiClient.getHeaders() });
     if (!response.ok) throw new Error('Failed to fetch user profile');

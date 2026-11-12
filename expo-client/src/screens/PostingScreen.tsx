@@ -20,23 +20,45 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
   const [pollQuestion, setPollQuestion] = useState('');
   const [pollOptionA, setPollOptionA] = useState('');
   const [pollOptionB, setPollOptionB] = useState('');
+  const [seriesTitle, setSeriesTitle] = useState('');
+  const [progressPct, setProgressPct] = useState<number>(0);
   const [selectedTags, setSelectedTags] = useState<string[]>(['Unity']);
   const [isPosting, setIsPosting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [pixelModalOpen, setPixelModalOpen] = useState(false);
 
   useEffect(() => {
+    const draft = ApiClient.consumeWorkshopDevlogDraft();
+    if (draft) {
+      if (draft.title) setTitle(draft.title);
+      if (draft.content) setContent(draft.content);
+      if (draft.imageUrl) setImageUrl(draft.imageUrl);
+      if (draft.seriesTitle) setSeriesTitle(draft.seriesTitle);
+      if (typeof draft.progressPct === 'number') setProgressPct(draft.progressPct);
+      if (Array.isArray(draft.tags) && draft.tags.length > 0) setSelectedTags(draft.tags);
+    }
+  }, []);
+
+  useEffect(() => {
     if (Platform.OS === 'web' && typeof window !== 'undefined') {
       const handler = (e: MessageEvent) => {
         if (e.data && e.data.type === 'PIXEL_ART_EXPORT' && e.data.dataUrl) {
           setImageUrl(e.data.dataUrl);
+          if (!title.trim() && e.data.suggestedTitle) setTitle(e.data.suggestedTitle);
+          setPixelModalOpen(false);
+        } else if (e.data && e.data.type === 'WORKSHOP_EXPORT') {
+          if (e.data.imageUrl) setImageUrl(e.data.imageUrl);
+          if (!title.trim() && e.data.title) setTitle(e.data.title);
+          if (e.data.devlogContent) {
+            setContent((prev) => (prev ? `${prev}\n\n${e.data.devlogContent}` : e.data.devlogContent));
+          }
           setPixelModalOpen(false);
         }
       };
       window.addEventListener('message', handler);
       return () => window.removeEventListener('message', handler);
     }
-  }, []);
+  }, [title]);
 
   const handlePickImage = async () => {
     try {
@@ -70,6 +92,8 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
         poll_question: pollQuestion.trim() || undefined,
         poll_option_a: pollOptionA.trim() || undefined,
         poll_option_b: pollOptionB.trim() || undefined,
+        series_title: seriesTitle.trim() || undefined,
+        progress_pct: progressPct > 0 ? progressPct : undefined,
         tags: selectedTags.length > 0 ? selectedTags : ['DevLog']
       });
       onPostSuccess();
@@ -151,6 +175,55 @@ export const PostingScreen: React.FC<Props> = ({ username, onCancel, onPostSucce
             autoCapitalize="none"
           />
         </NeumorphView>
+
+        <Text style={styles.label}>📚 연재 시리즈명 & 개발 마일스톤 진척도 (%) (선택)</Text>
+        <View style={{ flexDirection: 'row', gap: 10, marginBottom: 8, flexWrap: 'wrap' }}>
+          <NeumorphView radius={6} style={[styles.inputContainer, { flex: 1, minWidth: 210, marginBottom: 6 }]}>
+            <TextInput
+              style={styles.input}
+              value={seriesTitle}
+              onChangeText={setSeriesTitle}
+              editable={!isPosting}
+              placeholder="프로젝트/시리즈명 (예: 섀도우 던전 개발기)"
+              placeholderTextColor={Theme.colors.textLight}
+            />
+          </NeumorphView>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 6 }}>
+            {[0, 20, 40, 60, 80, 100].map((pct) => (
+              <TouchableOpacity
+                key={pct}
+                onPress={() => setProgressPct(pct)}
+                style={{
+                  backgroundColor: progressPct === pct ? '#10B981' : Theme.colors.pillBg,
+                  borderWidth: 1.5,
+                  borderColor: progressPct === pct ? '#10B981' : Theme.colors.border,
+                  paddingHorizontal: 9,
+                  paddingVertical: 8,
+                  borderRadius: 4,
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '900', color: progressPct === pct ? '#11131C' : Theme.colors.text, fontFamily: 'monospace' }}>
+                  {pct === 0 ? '미표시' : `${pct}%`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+        {progressPct > 0 && (
+          <View style={{ marginBottom: 16 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>
+              <Text style={{ fontSize: 11, color: '#10B981', fontWeight: '900', fontFamily: 'monospace' }}>
+                {seriesTitle.trim() ? `[${seriesTitle.trim()}] ` : ''}마일스톤 달성률: {progressPct}%
+              </Text>
+              <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, fontFamily: 'monospace' }}>
+                {progressPct >= 90 ? '🚀 출시 임박 (Gold Master)' : progressPct >= 60 ? '⚙️ 베타/폴리싱 단계' : '🌱 프로토타입/알파 개발 중'}
+              </Text>
+            </View>
+            <View style={{ height: 8, backgroundColor: Theme.colors.pillBg, borderRadius: 4, overflow: 'hidden', borderWidth: 1, borderColor: Theme.colors.border }}>
+              <View style={{ width: `${progressPct}%`, height: '100%', backgroundColor: '#10B981' }} />
+            </View>
+          </View>
+        )}
 
         <Text style={styles.label}>Content (본문 · 1클릭 패치노트/개발일지 양식 자동 삽입)</Text>
         <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>

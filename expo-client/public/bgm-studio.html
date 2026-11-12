@@ -160,8 +160,10 @@
         <span style="font-size:12px; color:#FFD166;">TEMPO (BPM): <strong id="bpmVal">130</strong></span>
         <input type="range" id="bpmSlider" min="80" max="180" value="130" oninput="updateBpm(this.value)" />
       </div>
-      <div style="display:flex; gap:6px;">
+      <div style="display:flex; gap:6px; flex-wrap:wrap;">
         <button class="gold-btn" onclick="exportLoopWav()">💾 무한루프 브금(.WAV) 다운로드</button>
+        <button onclick="sendBgmToParent('asset')" style="background:#00E5FF; color:#11131C; border-color:#00E5FF; font-weight:900;">🚀 에셋 허브에 출시</button>
+        <button onclick="sendBgmToParent('devlog')" style="background:#A855F7; color:#FFF; border-color:#A855F7; font-weight:900;">📝 개발일지에 첨부</button>
       </div>
     </div>
 
@@ -492,6 +494,21 @@
       a.download = `devground-chiptune-bgm-${bpm}bpm.wav`;
       a.click();
       document.getElementById('statusMsg').textContent = '✅ 상업용 무료 8비트 브금(.WAV) 파일이 다운로드되었습니다!';
+    }
+
+    function sendBgmToParent(targetMode) {
+      if (window.parent) {
+        window.parent.postMessage({
+          type: 'WORKSHOP_EXPORT',
+          target: targetMode,
+          category: 'Audio',
+          title: `8-Bit 칩튠 루프 브금 (${bpm} BPM 16-Step Chiptune Loop)`,
+          description: `8-Bit 칩튠 브금 작곡 시퀀서(MOD_05)에서 작곡한 ${bpm} BPM 상업적 무료 루프 BGM입니다.`
+        }, '*');
+      }
+      document.getElementById('statusMsg').textContent = targetMode === 'devlog'
+        ? '📝 8비트 칩튠 브금 정보가 개발일지 작성창으로 전송되었습니다!'
+        : '🚀 8비트 칩튠 브금이 에셋 허브 등록창으로 즉시 전송되었습니다!';
     }
 
     loadPreset('cyber');

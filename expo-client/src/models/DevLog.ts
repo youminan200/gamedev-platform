@@ -9,6 +9,8 @@ export interface DevLog {
   views?: number;
   demo_url?: string;
   support_url?: string;
+  series_title?: string;
+  progress_pct?: number;
   is_pinned?: number | boolean;
   poll_question?: string;
   poll_option_a?: string;

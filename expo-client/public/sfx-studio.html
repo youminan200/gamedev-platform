@@ -68,8 +68,11 @@
 
     <div class="actions">
       <button class="btn btn-primary" onclick="playAndRender()">▶️ 효과음 들어보기 (Play)</button>
-      <button class="btn btn-success" onclick="downloadWav()">📥 .WAV 효과음 파일 무료 다운로드</button>
+      <button class="btn btn-success" onclick="downloadWav()">📥 .WAV 효과음 파일 다운로드</button>
+      <button class="btn" style="background:#FFD166; color:#0f172a; border:none;" onclick="sendSfxToParent('asset')">🚀 에셋 허브에 바로 출시하기</button>
+      <button class="btn" style="background:#A855F7; color:#fff; border:none;" onclick="sendSfxToParent('devlog')">📝 개발일지에 첨부하기</button>
     </div>
+    <div id="exportStatus" style="margin-top:10px; font-size:12px; color:#10b981; font-weight:700;"></div>
   </div>
 
   <script>
@@ -189,6 +192,59 @@
       a.href = url;
       a.download = 'devground_sfx_' + Date.now().toString().slice(-4) + '.wav';
       a.click();
+    }
+
+    function getWavDataUrl() {
+      if (!lastSamples.length) synthesize();
+      const numSamples = lastSamples.length;
+      const buffer = new ArrayBuffer(44 + numSamples * 2);
+      const view = new DataView(buffer);
+      const writeStr = (off, s) => { for (let i = 0; i < s.length; i++) view.setUint8(off + i, s.charCodeAt(i)); };
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + numSamples * 2, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, 1, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * 2, true);
+      view.setUint16(32, 2, true);
+      view.setUint16(34, 16, true);
+      writeStr(36, 'data');
+      view.setUint32(40, numSamples * 2, true);
+      for (let i = 0; i < numSamples; i++) {
+        const s = Math.max(-1, Math.min(1, lastSamples[i]));
+        view.setInt16(44 + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+      return 'data:audio/wav;base64,' + btoa(binary);
+    }
+
+    function sendSfxToParent(targetMode) {
+      const wavDataUrl = getWavDataUrl();
+      const waveCanvas = document.getElementById('waveCanvas');
+      const waveImgUrl = waveCanvas.toDataURL('image/png');
+      const wType = document.getElementById('waveType').value;
+      const f0 = document.getElementById('startFreq').value;
+      const f1 = document.getElementById('endFreq').value;
+      const dur = document.getElementById('duration').value;
+      if (window.parent) {
+        window.parent.postMessage({
+          type: 'WORKSHOP_EXPORT',
+          target: targetMode,
+          category: 'Audio',
+          title: `8-Bit 레트로 효과음 (${wType.toUpperCase()} ${f0}Hz→${f1}Hz, ${dur}s)`,
+          description: `8-Bit 효과음 합성 스튜디오(MOD_04)에서 제작한 상업용 무료(.WAV) 효과음입니다. 파형: ${wType}, 길이: ${dur}초`,
+          imageUrl: waveImgUrl,
+          fileUrl: wavDataUrl
+        }, '*');
+      }
+      document.getElementById('exportStatus').innerText = targetMode === 'devlog'
+        ? '📝 효과음 파형과 오디오 데이터가 개발일지 작성창으로 전송되었습니다!'
+        : '🚀 효과음이 에셋 허브 등록창으로 즉시 전송되었습니다!';
     }
 
     synthesize();

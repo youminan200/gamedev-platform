@@ -246,7 +246,8 @@
         <div style="display:flex; flex-direction:column; gap:6px;">
           <button class="emerald" onclick="downloadSpriteSheetPNG()">🎞️ 4프레임 스프라이트 시트(.PNG)</button>
           <button class="gold" onclick="downloadPNG()">💾 현재 프레임 단일(.PNG) 저장</button>
-          <button class="cyan" onclick="sendToParent()">🚀 개발일지/에셋 창고로 즉시 전송</button>
+          <button class="cyan" onclick="sendToParent('asset')">🚀 에셋 허브에 바로 출시하기</button>
+          <button onclick="sendToParent('devlog')" style="background:#A855F7; color:#FFF; border-color:#A855F7; font-weight:900;">📝 개발일지에 첨부해서 글쓰기</button>
         </div>
         <div class="status-msg" id="statusMsg"></div>
       </div>
@@ -540,16 +541,76 @@
       setStatus('🎞️ Unity/Godot용 4프레임 가로 스프라이트 시트(.PNG)가 다운로드되었습니다!');
     }
 
-    function sendToParent() {
+    function sendToParent(targetMode = 'asset') {
       const url = getSpriteSheetDataUrl(8);
       if (window.parent) {
-        window.parent.postMessage({ type: 'PIXEL_ART_EXPORT', dataUrl: url }, '*');
+        window.parent.postMessage({
+          type: 'PIXEL_ART_EXPORT',
+          dataUrl: url,
+          target: targetMode,
+          category: '2D',
+          suggestedTitle: `16x16 4프레임 도트 스프라이트 시트 (${gridSize}x${gridSize})`,
+          suggestedDesc: '도트·스프라이트 시트 스튜디오(MOD_01)에서 직접 제작한 4프레임 애니메이션 시트입니다. 상업적/비상업적 무료 이용 가능 (CC0).'
+        }, '*');
       }
       if (navigator.clipboard) {
         navigator.clipboard.writeText(url);
       }
-      setStatus('🚀 4프레임 스프라이트 시트가 게시글/에셋 창고로 전송되었습니다!');
+      setStatus(targetMode === 'devlog'
+        ? '📝 4프레임 스프라이트 시트가 개발일지 글쓰기 창으로 전송되었습니다!'
+        : '🚀 4프레임 스프라이트 시트가 에셋 허브 등록창으로 즉시 전송되었습니다!');
     }
+
+    // 에셋 허브에서 [도트 스튜디오에서 리믹스(포크)하기]로 전달받은 이미지 로드 지원
+    window.addEventListener('message', (e) => {
+      if (e.data && e.data.type === 'LOAD_SPRITE_FOR_REMIX' && e.data.imageUrl) {
+        loadExternalImageToGrid(e.data.imageUrl, e.data.title || '리믹스 스프라이트');
+      }
+    });
+
+    function loadExternalImageToGrid(src, title) {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const temp = document.createElement('canvas');
+        temp.width = gridSize;
+        temp.height = gridSize;
+        const tctx = temp.getContext('2d');
+        tctx.drawImage(img, 0, 0, gridSize, gridSize);
+        const imgData = tctx.getImageData(0, 0, gridSize, gridSize).data;
+        const g = createEmptyGrid(gridSize);
+        for (let y = 0; y < gridSize; y++) {
+          for (let x = 0; x < gridSize; x++) {
+            const idx = (y * gridSize + x) * 4;
+            const r = imgData[idx], gr = imgData[idx + 1], b = imgData[idx + 2], a = imgData[idx + 3];
+            if (a > 40) {
+              const hex = '#' + [r, gr, b].map(v => v.toString(16).padStart(2, '0')).join('');
+              g[y][x] = hex;
+            }
+          }
+        }
+        frames[0] = g;
+        frames[1] = g.map(row => [...row]);
+        currentFrame = 0;
+        updateFrameButtons();
+        render();
+        setStatus(`🎨 [${title}] 에셋을 도트 캔버스로 불러왔습니다! 자유롭게 리믹스해보세요.`);
+      };
+      img.onerror = () => {
+        loadTemplate('slime');
+        setStatus(`🎨 [${title}] 리믹스 베이스 프리셋이 로드되었습니다! 색상을 바꿔 나만의 스프라이트를 완성하세요.`);
+      };
+      img.src = src;
+    }
+
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const remixUrl = params.get('remix');
+      const remixTitle = params.get('title');
+      if (remixUrl) {
+        setTimeout(() => loadExternalImageToGrid(remixUrl, remixTitle || '커뮤니티 에셋'), 150);
+      }
+    } catch (e) {}
 
     function setStatus(msg) {
       document.getElementById('statusMsg').textContent = msg;

@@ -104,9 +104,11 @@
       <span>⬛ <strong>WALL (0)</strong>: 벽 콜라이더 타일</span>
     </div>
 
-    <div class="toolbar" style="justify-content: space-between;">
-      <button class="cyan" onclick="copyUnityCSharp()">📋 Unity C# Tilemap 생성 스크립트 & 2차원 배열 복사</button>
+    <div class="toolbar" style="justify-content: space-between; flex-wrap: wrap;">
+      <button class="cyan" onclick="copyUnityCSharp()">📋 Unity C# Tilemap 스크립트 복사</button>
       <button onclick="downloadMapPng()">💾 던전 미니맵(.PNG) 저장</button>
+      <button class="gold" onclick="sendDungeonToParent('asset')">🚀 에셋 허브에 바로 출시</button>
+      <button onclick="sendDungeonToParent('devlog')" style="background:#A855F7; color:#FFF; border-color:#A855F7; font-weight:900;">📝 개발일지에 첨부</button>
     </div>
     <div class="status" id="statusMsg">✨ 알고리즘 버튼을 누를 때마다 새로운 던전 구조와 스폰 포인트가 절차적으로 생성됩니다!</div>
   </div>
@@ -268,6 +270,26 @@
       a.download = `devground-dungeon-${algo}.png`;
       a.click();
       document.getElementById('statusMsg').textContent = '💾 던전 미니맵 이미지(.PNG)가 다운로드되었습니다!';
+    }
+
+    function sendDungeonToParent(targetMode) {
+      const rowsStr = grid.map(r => '        { ' + r.join(', ') + ' }').join(',\n');
+      const code = `using UnityEngine;\nusing UnityEngine.Tilemaps;\n\npublic class DungeonMapLoader : MonoBehaviour\n{\n    // 0=Wall, 1=Floor, 2=StartSpawn, 3=BossRoom, 4=TreasureChest\n    public readonly int[,] mapData = new int[${H}, ${W}]\n    {\n${rowsStr}\n    };\n}`;
+      const pngUrl = canvas.toDataURL('image/png');
+      if (window.parent) {
+        window.parent.postMessage({
+          type: 'WORKSHOP_EXPORT',
+          target: targetMode,
+          category: 'Code',
+          title: `2D 절차적 던전 맵 (${algo.toUpperCase()} 알고리즘) & Unity C# 배열`,
+          description: `절차적 던전 생성기(MOD_10)에서 생성한 ${W}x${H} 타일맵 미니맵과 Unity C# 2차원 배열 스크립트입니다.`,
+          imageUrl: pngUrl,
+          codeSnippet: code
+        }, '*');
+      }
+      document.getElementById('statusMsg').textContent = targetMode === 'devlog'
+        ? '📝 던전 미니맵과 C# 배열 코드가 개발일지 작성창으로 전송되었습니다!'
+        : '🚀 던전 미니맵과 C# 코드가 에셋 허브 등록창으로 즉시 전송되었습니다!';
     }
 
     generateMap();

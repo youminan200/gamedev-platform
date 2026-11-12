@@ -12,10 +12,12 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { Theme } from '../theme';
+import { ApiClient } from '../api/ApiClient';
 
 interface AgentStudioRoomModalProps {
   visible: boolean;
   onClose: () => void;
+  onExportToDevlog?: () => void;
 }
 
 interface ChatLog {
@@ -84,7 +86,7 @@ const AGENT_CONFIGS: Record<
   },
 };
 
-export default function AgentStudioRoomModal({ visible, onClose }: AgentStudioRoomModalProps) {
+export default function AgentStudioRoomModal({ visible, onClose, onExportToDevlog }: AgentStudioRoomModalProps) {
   const { width } = useWindowDimensions();
   const isDesktop = width >= 768;
 
@@ -93,6 +95,13 @@ export default function AgentStudioRoomModal({ visible, onClose }: AgentStudioRo
   const [activeAgentId, setActiveAgentId] = useState<string | null>(null);
   const [logs, setLogs] = useState<ChatLog[]>([]);
   const [qaStatus, setQaStatus] = useState<'APPROVED' | 'REJECTED' | null>(null);
+  const [copiedGdd, setCopiedGdd] = useState(false);
+
+  const buildGddMarkdown = () => {
+    const header = `# 📋 [GDD / PRD 통합 기획서] ${topic}\n- 생성일: ${new Date().toLocaleDateString()}\n- 파이프라인 판정: ${qaStatus || 'IN_PROGRESS'}\n\n---\n\n`;
+    const body = logs.map((l) => `### 🤖 ${l.sender}\n${l.message}\n`).join('\n');
+    return header + body;
+  };
 
   const scrollViewRef = useRef<ScrollView>(null);
 
@@ -368,6 +377,43 @@ export default function AgentStudioRoomModal({ visible, onClose }: AgentStudioRo
                 </View>
               )}
             </View>
+
+            {logs.length > 0 && !isRunning && (
+              <View style={{ flexDirection: 'row', gap: 8, paddingHorizontal: 12, paddingVertical: 8, backgroundColor: '#111524', borderBottomWidth: 1, borderBottomColor: '#1E253B', flexWrap: 'wrap' }}>
+                <TouchableOpacity
+                  onPress={() => {
+                    const md = buildGddMarkdown();
+                    try { navigator?.clipboard?.writeText(md); } catch {}
+                    setCopiedGdd(true);
+                    setTimeout(() => setCopiedGdd(false), 2500);
+                  }}
+                  style={{ backgroundColor: copiedGdd ? '#10B981' : '#1E293B', borderWidth: 1.5, borderColor: '#38BDF8', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: copiedGdd ? '#11131C' : '#38BDF8', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }}>
+                    {copiedGdd ? '✅ 통합 GDD 기획서 복사 완료!' : '📋 [통합 게임 기획서(GDD) 마크다운 복사]'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => {
+                    const md = buildGddMarkdown();
+                    ApiClient.setWorkshopDevlogDraft({
+                      title: `[4-Agent 기획&검증] ${topic}`,
+                      content: md,
+                      seriesTitle: topic.slice(0, 24),
+                      progressPct: qaStatus === 'APPROVED' ? 40 : 20,
+                      tags: ['Unity', 'C#', '데모버전'],
+                    });
+                    onClose();
+                    onExportToDevlog?.();
+                  }}
+                  style={{ backgroundColor: '#FFD166', borderWidth: 1.5, borderColor: '#11131C', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 6 }}
+                >
+                  <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#11131C', fontFamily: Platform.OS === 'web' ? 'monospace' : undefined }}>
+                    📝 [개발일지 초안으로 바로 보내기]
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            )}
 
             <ScrollView
               ref={scrollViewRef}

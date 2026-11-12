@@ -1,0 +1,737 @@
+import React, { useState, useEffect } from 'react';
+import {
+  Modal,
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  ScrollView,
+  ActivityIndicator,
+  StyleSheet,
+  Platform,
+} from 'react-native';
+import { Theme } from '../theme';
+import { ApiClient } from '../api/ApiClient';
+
+interface PlayLoopBaasModalProps {
+  visible: boolean;
+  onClose: () => void;
+  username?: string | null;
+}
+
+export default function PlayLoopBaasModal({ visible, onClose, username }: PlayLoopBaasModalProps) {
+  const [games, setGames] = useState<any[]>([]);
+  const [selectedGame, setSelectedGame] = useState<any | null>(null);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard' | 'feedbacks' | 'sdk'>('overview');
+  const [sdkEngine, setSdkEngine] = useState<'unity' | 'godot'>('unity');
+  const [copiedText, setCopiedText] = useState<string | null>(null);
+
+  // Create Game Form
+  const [newGameTitle, setNewGameTitle] = useState('');
+  const [newGameEngine, setNewGameEngine] = useState<'Unity' | 'Godot' | 'Unreal'>('Unity');
+  const [newGameGenre, setNewGameGenre] = useState('Action Roguelike');
+
+  // Test Score Form
+  const [testPlayerName, setTestPlayerName] = useState(username || 'IndieTester_KR');
+  const [testScoreValue, setTestScoreValue] = useState('14200');
+  const [testStageName, setTestStageName] = useState('Stage 3 - Abyss');
+
+  // Test Feedback Form
+  const [testBugCat, setTestBugCat] = useState<'BUG' | 'BALANCE' | 'PRAISE'>('BUG');
+  const [testBugMsg, setTestBugMsg] = useState('보스전 2페이즈 레이저 패턴에서 간헐적으로 프레임이 45fps로 드랍됩니다.');
+  const [testBugStage, setTestBugStage] = useState('Stage 2 Boss');
+
+  useEffect(() => {
+    if (visible) {
+      loadGames();
+    }
+  }, [visible]);
+
+  const loadGames = async () => {
+    setLoading(true);
+    try {
+      const list = await ApiClient.getBaasGames();
+      setGames(list || []);
+      if (list && list.length > 0) {
+        const target = selectedGame ? list.find((g: any) => g.id === selectedGame.id) || list[0] : list[0];
+        await selectGameAndLoadData(target);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const selectGameAndLoadData = async (game: any) => {
+    setSelectedGame(game);
+    if (!game) return;
+    try {
+      const [lb, fb] = await Promise.all([
+        ApiClient.getBaasGameLeaderboard(game.id),
+        ApiClient.getBaasGameFeedbacks(game.id),
+      ]);
+      setLeaderboard(lb || []);
+      setFeedbacks(fb || []);
+    } catch {}
+  };
+
+  const handleCreateGame = async () => {
+    if (!newGameTitle.trim()) return;
+    setLoading(true);
+    try {
+      const created = await ApiClient.createBaasGame(
+        `[${newGameEngine}] ${newGameTitle.trim()}`,
+        newGameTitle.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-')
+      );
+      setNewGameTitle('');
+      const list = await ApiClient.getBaasGames();
+      setGames(list || []);
+      if (created && created.id) {
+        await selectGameAndLoadData(created);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendTestScore = async () => {
+    if (!selectedGame?.apiKey) return;
+    setLoading(true);
+    try {
+      await ApiClient.postBaasTestScore(
+        selectedGame.apiKey,
+        testPlayerName.trim() || 'Player1',
+        Number(testScoreValue) || 1000,
+        testStageName.trim() || 'Stage 1'
+      );
+      await selectGameAndLoadData(selectedGame);
+      setActiveTab('leaderboard');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendTestFeedback = async () => {
+    if (!selectedGame?.apiKey || !testBugMsg.trim()) return;
+    setLoading(true);
+    try {
+      const mappedType: 'BUG' | 'SUGGESTION' | 'REVIEW' =
+        testBugCat === 'BUG' ? 'BUG' : testBugCat === 'BALANCE' ? 'SUGGESTION' : 'REVIEW';
+      await ApiClient.postBaasTestFeedback(
+        selectedGame.apiKey,
+        mappedType,
+        `[${testBugStage.trim() || 'Stage 1'}] ${testBugMsg.trim()}`
+      );
+      await selectGameAndLoadData(selectedGame);
+      setActiveTab('feedbacks');
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = (text: string, label: string) => {
+    try {
+      navigator?.clipboard?.writeText(text);
+    } catch {}
+    setCopiedText(label);
+    setTimeout(() => setCopiedText(null), 2000);
+  };
+
+  const apiKey = selectedGame?.apiKey || 'pl_live_shadow_dungeon_demo_key_2026';
+  const gameTitle = selectedGame?.title || 'Shadow Dungeon: Roguelike';
+
+  const unitySdkCode = `using System;
+using System.Collections;
+using System.Text;
+using UnityEngine;
+using UnityEngine.Networking;
+
+/// <summary>
+/// [PlayLoop Micro-BaaS SDK for Unity]
+/// Game: ${gameTitle}
+/// Auto-generated by DevGround MOD_34
+/// </summary>
+public class PlayLoopClient : MonoBehaviour
+{
+    public static PlayLoopClient Instance { get; private set; }
+
+    [Header("PlayLoop BaaS Configuration")]
+    [SerializeField] private string apiBaseUrl = "http://localhost:3000/api/baas";
+    [SerializeField] private string apiKey = "${apiKey}";
+
+    private void Awake()
+    {
+        if (Instance == null) { Instance = this; DontDestroyOnLoad(gameObject); }
+        else { Destroy(gameObject); }
+    }
+
+    /// <summary>
+    /// 1클릭 실시간 리더보드 점수 전송
+    /// </summary>
+    public void SubmitScore(string playerName, int score, string stage = "Stage 1", int playTimeSec = 120)
+    {
+        StartCoroutine(PostScoreRoutine(playerName, score, stage, playTimeSec));
+    }
+
+    private IEnumerator PostScoreRoutine(string playerName, int score, string stage, int playTimeSec)
+    {
+        string json = $"{{\\"playerName\\":\\"{playerName}\\",\\"score\\":{score},\\"stage\\":\\"{stage}\\",\\"playTimeSec\\":{playTimeSec}}}";
+        using var req = new UnityWebRequest($"{apiBaseUrl}/scores", "POST");
+        req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json));
+        req.downloadHandler = new DownloadHandlerBuffer();
+        req.SetRequestHeader("Content-Type", "application/json");
+        req.SetRequestHeader("X-API-Key", apiKey);
+
+        yield return req.SendWebRequest();
+        if (req.result == UnityWebRequest.Result.Success)
+            Debug.Log($"[PlayLoop] Score Submitted! Response: {req.downloadHandler.text}");
+        else
+            Debug.LogWarning($"[PlayLoop] Score Error: {req.error}");
+    }
+
+    /// <summary>
+    /// 인게임 플레이테스트 버그/밸런스 리포트 즉시 전송 (현재 FPS 및 스테이지 자동 수집)
+    /// </summary>
+    public void SendInGameFeedback(string playerName, string category, string message, string stage = "Stage 1")
+    {
+        float currentFps = Mathf.Round(1.0f / Time.unscaledDeltaTime * 10f) / 10f;
+        StartCoroutine(PostFeedbackRoutine(playerName, category, message, stage, currentFps));
+    }
+
+    private IEnumerator PostFeedbackRoutine(string playerName, string category, string message, string stage, float fps)
+    {
+        string json = $"{{\\"playerName\\":\\"{playerName}\\",\\"category\\":\\"{category}\\",\\"message\\":\\"{message}\\",\\"stage\\":\\"{stage}\\",\\"fps\\":{fps},\\"os\\":\\"{SystemInfo.operatingSystem}\\"}}";
+        using var req = new UnityWebRequest($"{apiBaseUrl}/feedbacks", "POST");
+        req.uploadHandler = new UploadHandlerRaw(Encoding.UTF8.GetBytes(json));
+        req.downloadHandler = new DownloadHandlerBuffer();
+        req.SetRequestHeader("Content-Type", "application/json");
+        req.SetRequestHeader("X-API-Key", apiKey);
+
+        yield return req.SendWebRequest();
+        Debug.Log($"[PlayLoop] Feedback Sent ({req.responseCode})");
+    }
+}`;
+
+  const godotSdkCode = `# [PlayLoop Micro-BaaS SDK for Godot 4.x]
+# Game: ${gameTitle}
+# Auto-generated by DevGround MOD_34
+extends Node
+
+const API_BASE_URL := "http://localhost:3000/api/baas"
+const API_KEY := "${apiKey}"
+
+func submit_score(player_name: String, score: int, stage: String = "Stage 1", play_time_sec: int = 120) -> void:
+\tvar http := HTTPRequest.new()
+\tadd_child(http)
+\thttp.request_completed.connect(func(_r, code, _h, body):
+\t\tprint("[PlayLoop] Score Submitted (", code, "): ", body.get_string_from_utf8())
+\t\thttp.queue_free()
+\t)
+\tvar headers := ["Content-Type: application/json", "X-API-Key: " + API_KEY]
+\tvar payload := JSON.stringify({
+\t\t"playerName": player_name,
+\t\t"score": score,
+\t\t"stage": stage,
+\t\t"playTimeSec": play_time_sec
+\t})
+\thttp.request(API_BASE_URL + "/scores", headers, HTTPClient.METHOD_POST, payload)
+
+func send_in_game_feedback(player_name: String, category: String, message: String, stage: String = "Stage 1") -> void:
+\tvar http := HTTPRequest.new()
+\tadd_child(http)
+\thttp.request_completed.connect(func(_r, code, _h, _b):
+\t\tprint("[PlayLoop] Feedback Sent (", code, ")")
+\t\thttp.queue_free()
+\t)
+\tvar headers := ["Content-Type: application/json", "X-API-Key: " + API_KEY]
+\tvar payload := JSON.stringify({
+\t\t"playerName": player_name,
+\t\t"category": category,
+\t\t"message": message,
+\t\t"stage": stage,
+\t\t"fps": Engine.get_frames_per_second(),
+\t\t"os": OS.get_name()
+\t})
+\thttp.request(API_BASE_URL + "/feedbacks", headers, HTTPClient.METHOD_POST, payload)`;
+
+  return (
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+      <View style={styles.overlay}>
+        <View style={styles.modalCard}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View>
+              <Text style={styles.headerTitle}>
+                ☁️ MOD_34 // PLAYLOOP_MICRO_BAAS_CONSOLE
+              </Text>
+              <Text style={styles.headerSub}>
+                인디 게임 전용 1분 연동 클라우드 리더보드 · 인게임 버그리포트 수집 · Unity/Godot SDK 자동 생성기
+              </Text>
+            </View>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <Text style={styles.closeBtnText}>[X CLOSE]</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView contentContainerStyle={{ padding: 16 }}>
+            {/* Game Selector & Quick Register */}
+            <View style={styles.sectionBox}>
+              <Text style={styles.sectionLabel}>🎮 1. 등록된 내 인디 게임 프로젝트 선택 (또는 신규 발급)</Text>
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                {games.map((g) => {
+                  const isSel = selectedGame?.id === g.id;
+                  return (
+                    <TouchableOpacity
+                      key={g.id}
+                      onPress={() => selectGameAndLoadData(g)}
+                      style={[
+                        styles.gameChip,
+                        isSel && { backgroundColor: '#00E5FF', borderColor: '#11131C' },
+                      ]}
+                    >
+                      <Text style={[styles.gameChipText, isSel && { color: '#11131C', fontWeight: '900' }]}>
+                        [{g.engine}] {g.title}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+
+              {/* New Game Registration Row */}
+              <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, alignItems: 'center' }}>
+                <TextInput
+                  style={[styles.input, { flex: 1, minWidth: 180 }]}
+                  placeholder="신규 게임 프로젝트명 (예: Cyber Blade 2099)"
+                  placeholderTextColor="#64748B"
+                  value={newGameTitle}
+                  onChangeText={setNewGameTitle}
+                />
+                <View style={{ flexDirection: 'row', gap: 4 }}>
+                  {(['Unity', 'Godot', 'Unreal'] as const).map((eng) => (
+                    <TouchableOpacity
+                      key={eng}
+                      onPress={() => setNewGameEngine(eng)}
+                      style={[
+                        styles.smallPill,
+                        newGameEngine === eng && { backgroundColor: '#FFD166', borderColor: '#11131C' },
+                      ]}
+                    >
+                      <Text style={{ fontSize: 11, fontWeight: '900', color: newGameEngine === eng ? '#11131C' : '#E2E8F0', fontFamily: 'monospace' }}>
+                        {eng}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TouchableOpacity onPress={handleCreateGame} style={styles.primaryBtn}>
+                  <Text style={styles.primaryBtnText}>+ 새 게임 등록 & API Key 발급</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Selected Game API Key Banner */}
+            {selectedGame && (
+              <View style={[styles.sectionBox, { borderColor: '#FFD166', backgroundColor: '#161926' }]}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                  <View>
+                    <Text style={{ color: '#FFD166', fontSize: 12, fontWeight: '900', fontFamily: 'monospace' }}>
+                      🔑 X-API-Key ({selectedGame.title})
+                    </Text>
+                    <Text style={{ color: '#00E5FF', fontSize: 13.5, fontWeight: '900', fontFamily: 'monospace', marginTop: 4 }}>
+                      {selectedGame.apiKey}
+                    </Text>
+                  </View>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      onPress={() => copyToClipboard(selectedGame.apiKey, 'API_KEY')}
+                      style={[styles.primaryBtn, { backgroundColor: copiedText === 'API_KEY' ? '#10B981' : '#FFD166' }]}
+                    >
+                      <Text style={[styles.primaryBtnText, { color: '#11131C' }]}>
+                        {copiedText === 'API_KEY' ? '✅ KEY 복사됨!' : '📋 X-API-Key 복사'}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setActiveTab('sdk')}
+                      style={[styles.primaryBtn, { backgroundColor: '#A855F7' }]}
+                    >
+                      <Text style={[styles.primaryBtnText, { color: '#FFF' }]}>
+                        ⚡ Unity / Godot SDK 코드 받기
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            )}
+
+            {/* Sub-navigation Tabs */}
+            <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+              {[
+                { key: 'overview', label: '🧪 실시간 연동 테스트 (점수/버그 송신)' },
+                { key: 'leaderboard', label: `🏆 라이브 리더보드 (${leaderboard.length})` },
+                { key: 'feedbacks', label: `🐛 인게임 QA 리포트 (${feedbacks.length})` },
+                { key: 'sdk', label: '💻 Unity C# / Godot 4 SDK 코드 생성기' },
+              ].map((t) => {
+                const active = activeTab === t.key;
+                return (
+                  <TouchableOpacity
+                    key={t.key}
+                    onPress={() => setActiveTab(t.key as any)}
+                    style={[
+                      styles.tabBtn,
+                      active && { backgroundColor: '#FF4D6D', borderColor: '#FF4D6D' },
+                    ]}
+                  >
+                    <Text style={[styles.tabBtnText, active && { color: '#FFF' }]}>{t.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {loading && <ActivityIndicator color="#00E5FF" style={{ marginVertical: 10 }} />}
+
+            {/* TAB 1: OVERVIEW & LIVE TESTER */}
+            {activeTab === 'overview' && (
+              <View style={{ gap: 14 }}>
+                <View style={styles.sectionBox}>
+                  <Text style={styles.sectionLabel}>🚀 [테스트 1] 인게임 하이스코어 리더보드 즉시 전송 시뮬레이터</Text>
+                  <Text style={{ color: '#94A3B8', fontSize: 12, marginBottom: 10 }}>
+                    게임 클라이언트가 `POST /api/baas/scores` 엔드포인트로 점수를 전송하는 과정을 1클릭으로 테스트합니다.
+                  </Text>
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                    <TextInput
+                      style={[styles.input, { flex: 1, minWidth: 140 }]}
+                      placeholder="플레이어 닉네임"
+                      placeholderTextColor="#64748B"
+                      value={testPlayerName}
+                      onChangeText={setTestPlayerName}
+                    />
+                    <TextInput
+                      style={[styles.input, { width: 120 }]}
+                      placeholder="점수 (Score)"
+                      placeholderTextColor="#64748B"
+                      keyboardType="numeric"
+                      value={testScoreValue}
+                      onChangeText={setTestScoreValue}
+                    />
+                    <TextInput
+                      style={[styles.input, { flex: 1, minWidth: 140 }]}
+                      placeholder="도달 스테이지"
+                      placeholderTextColor="#64748B"
+                      value={testStageName}
+                      onChangeText={setTestStageName}
+                    />
+                  </View>
+                  <TouchableOpacity onPress={handleSendTestScore} style={[styles.primaryBtn, { alignSelf: 'flex-start', backgroundColor: '#10B981' }]}>
+                    <Text style={[styles.primaryBtnText, { color: '#11131C' }]}>
+                      🏆 리더보드에 테스트 점수 즉시 전송하기
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.sectionBox}>
+                  <Text style={styles.sectionLabel}>🐛 [테스트 2] 인게임 플레이테스트 텔레메트리 & 버그 제보 전송</Text>
+                  <Text style={{ color: '#94A3B8', fontSize: 12, marginBottom: 10 }}>
+                    유저가 게임 도중 F8을 눌러 버그/밸런스 피드백과 현재 FPS·스테이지 정보를 전송하는 패킷을 테스트합니다.
+                  </Text>
+                  <View style={{ flexDirection: 'row', gap: 6, marginBottom: 8 }}>
+                    {(['BUG', 'BALANCE', 'PRAISE'] as const).map((cat) => (
+                      <TouchableOpacity
+                        key={cat}
+                        onPress={() => setTestBugCat(cat)}
+                        style={[
+                          styles.smallPill,
+                          testBugCat === cat && { backgroundColor: '#00E5FF', borderColor: '#11131C' },
+                        ]}
+                      >
+                        <Text style={{ fontSize: 11, fontWeight: '900', color: testBugCat === cat ? '#11131C' : '#E2E8F0', fontFamily: 'monospace' }}>
+                          {cat === 'BUG' ? '🐛 BUG' : cat === 'BALANCE' ? '⚖️ BALANCE' : '💖 PRAISE'}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TextInput
+                    style={[styles.input, { marginBottom: 8 }]}
+                    placeholder="발생 스테이지 (예: Stage 2 Boss)"
+                    placeholderTextColor="#64748B"
+                    value={testBugStage}
+                    onChangeText={setTestBugStage}
+                  />
+                  <TextInput
+                    style={[styles.input, { height: 64, marginBottom: 10 }]}
+                    multiline
+                    placeholder="인게임 피드백 메시지..."
+                    placeholderTextColor="#64748B"
+                    value={testBugMsg}
+                    onChangeText={setTestBugMsg}
+                  />
+                  <TouchableOpacity onPress={handleSendTestFeedback} style={[styles.primaryBtn, { alignSelf: 'flex-start', backgroundColor: '#00E5FF' }]}>
+                    <Text style={[styles.primaryBtnText, { color: '#11131C' }]}>
+                      📡 인게임 버그/피드백 리포트 전송하기
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            )}
+
+            {/* TAB 2: LEADERBOARD */}
+            {activeTab === 'leaderboard' && (
+              <View style={styles.sectionBox}>
+                <Text style={styles.sectionLabel}>🏆 실시간 글로벌 리더보드 TOP 50 ({selectedGame?.title})</Text>
+                {leaderboard.length === 0 ? (
+                  <Text style={{ color: '#94A3B8', fontSize: 12 }}>아직 등록된 점수가 없습니다.</Text>
+                ) : (
+                  leaderboard.map((row: any, idx: number) => (
+                    <View key={row.id || idx} style={styles.tableRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <Text style={{ color: idx === 0 ? '#FFD166' : idx === 1 ? '#E2E8F0' : idx === 2 ? '#F97316' : '#64748B', fontWeight: '900', fontFamily: 'monospace', width: 32 }}>
+                          #{idx + 1}
+                        </Text>
+                        <View>
+                          <Text style={{ color: '#F8FAFC', fontWeight: '800', fontSize: 13 }}>
+                            {row.playerName}
+                          </Text>
+                          <Text style={{ color: '#94A3B8', fontSize: 11, fontFamily: 'monospace' }}>
+                            {row.stage || 'Stage 1'} • {row.playTimeSec || 120}s
+                          </Text>
+                        </View>
+                      </View>
+                      <Text style={{ color: '#00E5FF', fontWeight: '900', fontSize: 14, fontFamily: 'monospace' }}>
+                        {Number(row.score || 0).toLocaleString()} PTS
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+
+            {/* TAB 3: FEEDBACKS */}
+            {activeTab === 'feedbacks' && (
+              <View style={styles.sectionBox}>
+                <Text style={styles.sectionLabel}>🐛 인게임 플레이테스트 텔레메트리 & 버그 리포트 ({selectedGame?.title})</Text>
+                {feedbacks.length === 0 ? (
+                  <Text style={{ color: '#94A3B8', fontSize: 12 }}>아직 수집된 인게임 피드백이 없습니다.</Text>
+                ) : (
+                  feedbacks.map((fb: any, idx: number) => (
+                    <View key={fb.id || idx} style={[styles.tableRow, { flexDirection: 'column', alignItems: 'flex-start', gap: 4 }]}>
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                        <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
+                          <View style={{ backgroundColor: fb.category === 'BUG' ? '#EF4444' : fb.category === 'BALANCE' ? '#F59E0B' : '#10B981', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
+                            <Text style={{ color: '#FFF', fontSize: 10, fontWeight: '900', fontFamily: 'monospace' }}>
+                              {fb.category}
+                            </Text>
+                          </View>
+                          <Text style={{ color: '#FFD166', fontSize: 12, fontWeight: '800', fontFamily: 'monospace' }}>
+                            @{fb.playerName}
+                          </Text>
+                          <Text style={{ color: '#94A3B8', fontSize: 11, fontFamily: 'monospace' }}>
+                            [{fb.stage || 'Stage 1'}]
+                          </Text>
+                        </View>
+                        <Text style={{ color: '#00E5FF', fontSize: 11, fontFamily: 'monospace' }}>
+                          {fb.fps ? `${fb.fps} FPS` : '60 FPS'} • {fb.os || 'Windows'}
+                        </Text>
+                      </View>
+                      <Text style={{ color: '#E2E8F0', fontSize: 13, marginTop: 2 }}>
+                        {fb.message}
+                      </Text>
+                    </View>
+                  ))
+                )}
+              </View>
+            )}
+
+            {/* TAB 4: SDK GENERATOR */}
+            {activeTab === 'sdk' && (
+              <View style={styles.sectionBox}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, flexWrap: 'wrap', gap: 8 }}>
+                  <View style={{ flexDirection: 'row', gap: 8 }}>
+                    <TouchableOpacity
+                      onPress={() => setSdkEngine('unity')}
+                      style={[styles.smallPill, sdkEngine === 'unity' && { backgroundColor: '#00E5FF', borderColor: '#11131C' }]}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: sdkEngine === 'unity' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                        Unity C# (PlayLoopClient.cs)
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setSdkEngine('godot')}
+                      style={[styles.smallPill, sdkEngine === 'godot' && { backgroundColor: '#FFD166', borderColor: '#11131C' }]}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '900', color: sdkEngine === 'godot' ? '#11131C' : '#FFF', fontFamily: 'monospace' }}>
+                        Godot 4 GDScript (PlayLoopClient.gd)
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  <TouchableOpacity
+                    onPress={() => copyToClipboard(sdkEngine === 'unity' ? unitySdkCode : godotSdkCode, 'SDK_CODE')}
+                    style={[styles.primaryBtn, { backgroundColor: copiedText === 'SDK_CODE' ? '#10B981' : '#FF4D6D' }]}
+                  >
+                    <Text style={[styles.primaryBtnText, { color: '#FFF' }]}>
+                      {copiedText === 'SDK_CODE' ? '✅ 전체 SDK 스크립트 복사 완료!' : '📋 API Key가 포함된 전체 SDK 코드 복사'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <View style={{ backgroundColor: '#05070B', borderWidth: 1.5, borderColor: '#334155', borderRadius: 6, padding: 12 }}>
+                  <Text style={{ color: '#A5F3FC', fontSize: 11.5, fontFamily: Platform.OS === 'web' ? 'monospace' : undefined, lineHeight: 17 }}>
+                    {sdkEngine === 'unity' ? unitySdkCode : godotSdkCode}
+                  </Text>
+                </View>
+              </View>
+            )}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(5, 7, 13, 0.86)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 12,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 920,
+    maxHeight: '92%',
+    backgroundColor: '#0E111C',
+    borderWidth: 2,
+    borderColor: '#00E5FF',
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 14,
+    backgroundColor: '#161926',
+    borderBottomWidth: 2,
+    borderBottomColor: '#2A3047',
+  },
+  headerTitle: {
+    color: '#00E5FF',
+    fontSize: 15,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  headerSub: {
+    color: '#94A3B8',
+    fontSize: 11.5,
+    marginTop: 2,
+  },
+  closeBtn: {
+    backgroundColor: '#FF4D6D',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 4,
+  },
+  closeBtnText: {
+    color: '#FFF',
+    fontWeight: '900',
+    fontSize: 11,
+    fontFamily: 'monospace',
+  },
+  sectionBox: {
+    backgroundColor: '#131724',
+    borderWidth: 1.5,
+    borderColor: '#2A3047',
+    borderRadius: 6,
+    padding: 12,
+    marginBottom: 12,
+  },
+  sectionLabel: {
+    color: '#FFD166',
+    fontSize: 12.5,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+    marginBottom: 8,
+  },
+  gameChip: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1.5,
+    borderColor: '#334155',
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 4,
+  },
+  gameChipText: {
+    color: '#E2E8F0',
+    fontSize: 12,
+    fontWeight: '800',
+    fontFamily: 'monospace',
+  },
+  input: {
+    backgroundColor: '#090B10',
+    borderWidth: 1.5,
+    borderColor: '#334155',
+    borderRadius: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    color: '#F8FAFC',
+    fontSize: 12.5,
+  },
+  smallPill: {
+    backgroundColor: '#1E293B',
+    borderWidth: 1.5,
+    borderColor: '#334155',
+    paddingHorizontal: 10,
+    paddingVertical: 7,
+    borderRadius: 4,
+  },
+  primaryBtn: {
+    backgroundColor: '#00E5FF',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 4,
+    borderWidth: 1.5,
+    borderColor: '#11131C',
+  },
+  primaryBtnText: {
+    color: '#11131C',
+    fontSize: 11.5,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  tabBtn: {
+    backgroundColor: '#161926',
+    borderWidth: 1.5,
+    borderColor: '#33415E',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 4,
+  },
+  tabBtnText: {
+    color: '#CBD5E1',
+    fontSize: 11.5,
+    fontWeight: '900',
+    fontFamily: 'monospace',
+  },
+  tableRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#090B10',
+    borderWidth: 1,
+    borderColor: '#1E293B',
+    borderRadius: 4,
+    padding: 10,
+    marginBottom: 6,
+  },
+});
+

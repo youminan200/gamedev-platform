@@ -41,8 +41,14 @@ const renderFormattedContent = (raw?: string, textStyle?: any) => {
   });
 };
 
-export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) => {
+export const DetailScreen: React.FC<{
+  id: string;
+  onBack: () => void;
+  onRequireLogin?: () => void;
+  onSelectEpisode?: (episodeId: string) => void;
+}> = ({ id, onBack, onRequireLogin, onSelectEpisode }) => {
   const [devlog, setDevlog] = useState<any>(null);
+  const [seriesEpisodes, setSeriesEpisodes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [comment, setComment] = useState('');
   const [isPosting, setIsPosting] = useState(false);
@@ -251,6 +257,25 @@ export const DetailScreen: React.FC<Props> = ({ id, onBack, onRequireLogin }) =>
         >
           <Text style={[styles.editBtnText, { color: '#B45309' }]}>☕ 창작자 후원 / 스팀 찜하기 ↗</Text>
         </TouchableOpacity>
+        {(devlog.series_title || (devlog.progress_pct && devlog.progress_pct > 0)) ? (
+          <View style={{ width: '100%', backgroundColor: '#161926', borderWidth: 1.5, borderColor: '#A855F7', borderRadius: 10, padding: 12, marginTop: 6, marginBottom: 6 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: devlog.progress_pct ? 6 : 0 }}>
+              <Text style={{ fontSize: 12, fontWeight: '900', color: '#E9D5FF', fontFamily: 'monospace' }}>
+                📚 연재 시리즈: {devlog.series_title || '인디 게임 개발기'}
+              </Text>
+              {devlog.progress_pct ? (
+                <Text style={{ fontSize: 12, fontWeight: '900', color: '#10B981', fontFamily: 'monospace' }}>
+                  마일스톤 달성률 {devlog.progress_pct}%
+                </Text>
+              ) : null}
+            </View>
+            {devlog.progress_pct ? (
+              <View style={{ height: 8, backgroundColor: '#090B10', borderRadius: 4, overflow: 'hidden' }}>
+                <View style={{ width: `${Math.min(100, Math.max(0, Number(devlog.progress_pct)))}%`, height: '100%', backgroundColor: '#10B981' }} />
+              </View>
+            ) : null}
+          </View>
+        ) : null}
         <TouchableOpacity style={[styles.editBtn, { backgroundColor: '#EEF2FF' }]} onPress={handleTranslate} disabled={translating}>
           <Text style={[styles.editBtnText, { color: '#4F46E5' }]}>
             {translating ? '🌐 번역 중...' : translatedBody ? '🔄 원문 보기 (Original)' : '🌐 한↔영 원클릭 번역 (Translate)'}
