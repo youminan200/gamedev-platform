@@ -35,6 +35,21 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
   const [copiedSnippetId, setCopiedSnippetId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Wave 2 Feature 2: Sprite Sheet Live Animation Previewer & Onion Skin
+  const [animPlayingMap, setAnimPlayingMap] = useState<Record<string, boolean>>({});
+  const [animMotionMap, setAnimMotionMap] = useState<Record<string, 'IDLE' | 'RUN' | 'ATTACK'>>({});
+  const [animFps, setAnimFps] = useState<number>(8);
+  const [onionSkinMap, setOnionSkinMap] = useState<Record<string, boolean>>({});
+  const [animTick, setAnimTick] = useState<number>(0);
+
+  useEffect(() => {
+    const intervalMs = Math.max(80, Math.round(1000 / animFps));
+    const timer = setInterval(() => {
+      setAnimTick((t) => (t + 1) % 4);
+    }, intervalMs);
+    return () => clearInterval(timer);
+  }, [animFps]);
+
   const currentUsername = ApiClient.getUsername();
 
   useEffect(() => {
@@ -343,11 +358,110 @@ export const AssetFeedScreen: React.FC<Props> = ({ onRequireLogin, openAssetId, 
       <TouchableOpacity activeOpacity={0.9} style={styles.cardWrapper} onPress={() => openDetail(item)}>
         <NeumorphView radius={6} style={styles.card}>
           {item.image_url ? (
-            <Image
-              source={{ uri: item.image_url }}
-              style={styles.assetBannerImage}
-              resizeMode={item.image_url.startsWith('data:image/') ? 'contain' : 'cover'}
-            />
+            <View style={{ position: 'relative' }}>
+              <Image
+                source={{ uri: item.image_url }}
+                style={[
+                  styles.assetBannerImage,
+                  animPlayingMap[item.id] && {
+                    transform: [
+                      {
+                        translateY:
+                          (animMotionMap[item.id] || 'IDLE') === 'IDLE'
+                            ? (animTick % 2 === 0 ? -3 : 2)
+                            : (animMotionMap[item.id] || 'IDLE') === 'RUN'
+                            ? (animTick % 2 === 0 ? -6 : 0)
+                            : 0,
+                      },
+                      {
+                        translateX:
+                          (animMotionMap[item.id] || 'IDLE') === 'ATTACK'
+                            ? (animTick === 1 ? 10 : animTick === 2 ? -5 : 0)
+                            : (animMotionMap[item.id] || 'IDLE') === 'RUN'
+                            ? (animTick % 2 === 0 ? 4 : -4)
+                            : 0,
+                      },
+                      {
+                        scaleX: (animMotionMap[item.id] || 'IDLE') === 'ATTACK' && animTick === 1 ? 1.08 : 1,
+                      },
+                    ],
+                  },
+                ]}
+                resizeMode={item.image_url.startsWith('data:image/') ? 'contain' : 'cover'}
+              />
+              {/* Onion Skin Ghost Frame Overlay */}
+              {animPlayingMap[item.id] && onionSkinMap[item.id] && (
+                <Image
+                  source={{ uri: item.image_url }}
+                  style={[
+                    styles.assetBannerImage,
+                    {
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      opacity: 0.32,
+                      transform: [{ translateX: -12 }, { translateY: -4 }],
+                    },
+                  ]}
+                  resizeMode={item.image_url.startsWith('data:image/') ? 'contain' : 'cover'}
+                />
+              )}
+              {item.category === '2D' && (
+                <View style={{ backgroundColor: '#0F172A', borderBottomWidth: 1, borderBottomColor: Theme.colors.border, paddingHorizontal: 10, paddingVertical: 6, flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 6 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                    <TouchableOpacity
+                      onPress={(e: any) => {
+                        e?.stopPropagation?.();
+                        setAnimPlayingMap((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+                      }}
+                      style={{ backgroundColor: animPlayingMap[item.id] ? '#10B981' : '#334155', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}
+                    >
+                      <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
+                        {animPlayingMap[item.id] ? `⏸ FRAME ${animTick + 1}/4` : '▶ 스프라이트 모션 재생'}
+                      </Text>
+                    </TouchableOpacity>
+                    {(['IDLE', 'RUN', 'ATTACK'] as const).map((m) => {
+                      const activeM = (animMotionMap[item.id] || 'IDLE') === m;
+                      return (
+                        <TouchableOpacity
+                          key={m}
+                          onPress={(e: any) => {
+                            e?.stopPropagation?.();
+                            setAnimMotionMap((prev) => ({ ...prev, [item.id]: m }));
+                            setAnimPlayingMap((prev) => ({ ...prev, [item.id]: true }));
+                          }}
+                          style={{ backgroundColor: activeM ? '#6366F1' : '#1E293B', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}
+                        >
+                          <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#FFF', fontFamily: 'monospace' }}>{m}</Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                    <TouchableOpacity
+                      onPress={(e: any) => {
+                        e?.stopPropagation?.();
+                        setOnionSkinMap((prev) => ({ ...prev, [item.id]: !prev[item.id] }));
+                        setAnimPlayingMap((prev) => ({ ...prev, [item.id]: true }));
+                      }}
+                      style={{ backgroundColor: onionSkinMap[item.id] ? '#A855F7' : '#1E293B', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 3 }}
+                    >
+                      <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#FFF' }}>🧅 어니언스킨</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={(e: any) => {
+                        e?.stopPropagation?.();
+                        setAnimFps((f) => (f === 8 ? 12 : f === 12 ? 16 : 8));
+                      }}
+                      style={{ backgroundColor: '#1E293B', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}
+                    >
+                      <Text style={{ fontSize: 9.5, fontWeight: '800', color: '#38BDF8', fontFamily: 'monospace' }}>{animFps} FPS</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              )}
+            </View>
           ) : null}
 
           <View style={styles.cardHeader}>

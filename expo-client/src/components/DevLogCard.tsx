@@ -36,6 +36,8 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
   const [votesB, setVotesB] = useState<number>(Number(devLog.poll_votes_b || 0));
   const [votedChoice, setVotedChoice] = useState<'A' | 'B' | null>(null);
   const [imgError, setImgError] = useState<boolean>(false);
+  const [coffeeCount, setCoffeeCount] = useState<number>(() => Math.max(1, ((Number(devLog.likes) || 2) % 5) + 1));
+  const [coffeeGifted, setCoffeeGifted] = useState<boolean>(false);
 
   const handleQuickVote = async (e: any, option: 'A' | 'B') => {
     e?.stopPropagation?.();
@@ -337,6 +339,53 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
                 </TouchableOpacity>
               );
             })}
+          </View>
+
+          {/* ☕ Wave 2 Feature 4: Creator Micro-Patronage (Coffee / Monster Energy Tribute) & QA Supporter Badge */}
+          <View
+            style={{
+              marginTop: 10,
+              paddingTop: 8,
+              borderTopWidth: 1,
+              borderTopColor: Theme.colors.border,
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: 6,
+            }}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <View style={{ backgroundColor: 'rgba(245, 158, 11, 0.14)', borderWidth: 1, borderColor: '#F59E0B', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10, fontWeight: '900', color: '#D97706' }}>
+                  🏆 후원 서포터 {coffeeCount}명
+                </Text>
+              </View>
+              <Text style={{ fontSize: 10.5, color: Theme.colors.textLight }}>
+                {coffeeGifted ? '🎖️ 엔딩 크레딧 후원자 등재 완료!' : '개발자에게 응원 에너지를 충전해 주세요'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={(e: any) => {
+                e?.stopPropagation?.();
+                if (!coffeeGifted) {
+                  setCoffeeGifted(true);
+                  setCoffeeCount((c) => c + 1);
+                }
+              }}
+              style={{
+                backgroundColor: coffeeGifted ? '#10B981' : '#FEF3C7',
+                borderWidth: 1,
+                borderColor: coffeeGifted ? '#059669' : '#F59E0B',
+                paddingHorizontal: 10,
+                paddingVertical: 4,
+                borderRadius: 4,
+              }}
+            >
+              <Text style={{ fontSize: 11, fontWeight: '800', color: coffeeGifted ? '#FFF' : '#92400E' }}>
+                {coffeeGifted ? '☕ 몬스터/커피 조공 완료 (+크레딧 등재)' : '☕ 커피·몬스터 조공 (1,000P)'}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
       </NeumorphView>

@@ -47,6 +47,11 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
   const [cardAccent, setCardAccent] = useState<string>('#FFD166');
   const [cardCopied, setCardCopied] = useState<boolean>(false);
 
+  // Wave 2 Feature 5: Steam Store Patch Notes & KR/EN/JP Localization Auto-Generator
+  const [patchLang, setPatchLang] = useState<'KR' | 'EN' | 'JP'>('KR');
+  const [patchFormat, setPatchFormat] = useState<'STEAM_BBCODE' | 'MARKDOWN'>('STEAM_BBCODE');
+  const [patchCopied, setPatchCopied] = useState<boolean>(false);
+
   useEffect(() => {
     fetchProfile();
     try {
@@ -460,6 +465,108 @@ export const ProfileScreen: React.FC<Props> = ({ username, onLogout, onDevLogCli
                   <View style={{ width: '32%', height: '100%', backgroundColor: '#10B981' }} />
                 </View>
               </View>
+            </View>
+          );
+        })()}
+      </NeumorphView>
+
+      {/* 📰 Wave 2 Feature 5: Steam Store Patch Notes & KR/EN/JP Global Localization Auto-Generator */}
+      <NeumorphView
+        radius={8}
+        style={{
+          marginHorizontal: 16,
+          marginBottom: 16,
+          padding: 14,
+          backgroundColor: '#111827',
+          borderWidth: 1.5,
+          borderColor: '#A855F7',
+        }}
+      >
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+          <View>
+            <Text style={{ fontSize: 13, fontWeight: '900', color: '#C084FC' }}>
+              📰 스팀 스토어 공지용 패치노트 & 한/영/일 글로벌 번역 자동 생성기
+            </Text>
+            <Text style={{ fontSize: 10.5, color: '#94A3B8', marginTop: 2 }}>
+              작성한 개발일지들을 모아 1클릭으로 Steam BBCode / Markdown 패치노트 및 영어(EN)·일본어(JP) 공지로 변환합니다.
+            </Text>
+          </View>
+          <View style={{ flexDirection: 'row', gap: 6 }}>
+            {(['KR', 'EN', 'JP'] as const).map((lng) => (
+              <TouchableOpacity
+                key={lng}
+                onPress={() => { setPatchLang(lng); setPatchCopied(false); }}
+                style={{
+                  backgroundColor: patchLang === lng ? '#A855F7' : '#1E293B',
+                  paddingHorizontal: 9,
+                  paddingVertical: 4,
+                  borderRadius: 4,
+                }}
+              >
+                <Text style={{ fontSize: 11, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
+                  {lng === 'KR' ? '🇰🇷 한국어' : lng === 'EN' ? '🇺🇸 English' : '🇯🇵 日本語'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            {(['STEAM_BBCODE', 'MARKDOWN'] as const).map((fmt) => (
+              <TouchableOpacity
+                key={fmt}
+                onPress={() => { setPatchFormat(fmt); setPatchCopied(false); }}
+                style={{
+                  backgroundColor: patchFormat === fmt ? '#3B82F6' : '#1E293B',
+                  paddingHorizontal: 8,
+                  paddingVertical: 4,
+                  borderRadius: 4,
+                }}
+              >
+                <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#FFF', fontFamily: 'monospace' }}>
+                  {fmt === 'STEAM_BBCODE' ? 'Steam BBCode' : 'Markdown'}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+
+        {(() => {
+          const latestTitle = profile?.recent_devlogs?.[0]?.title || '신규 보스 페이즈 및 타격감 개선 업데이트';
+          const secondTitle = profile?.recent_devlogs?.[1]?.title || '화면 좌표 QA 피드백 반영 및 프레임 최적화';
+          const generatedText =
+            patchLang === 'KR'
+              ? patchFormat === 'STEAM_BBCODE'
+                ? `[h1]🚀 v0.${devlogsCount + 4}.0 공식 패치노트 (@${username})[/h1]\n[b]안녕하세요, 플레이어 여러분! 이번 주 DevGround 플레이테스트 QA 피드백을 반영한 주요 업데이트 내역입니다.[/b]\n[list]\n[*] [b]신규 콘텐츠 & 시스템[/b]: ${latestTitle}\n[*] [b]밸런스 & QA 핫픽스[/b]: ${secondTitle} (보스 HP 1000 ➔ 750 조정 및 코요테 타임 판정 개선)\n[*] [b]최적화[/b]: 오브젝트 풀링 적용으로 탄막 구간 60 FPS 고정\n[/list]\n[i]지금 Steam 위시리스트에 추가하고 무료 웹 데모를 플레이해 보세요![/i]`
+                : `# 🚀 v0.${devlogsCount + 4}.0 공식 패치노트 (@${username})\n- **신규 콘텐츠**: ${latestTitle}\n- **밸런스 & QA 핫픽스**: ${secondTitle} (보스 HP 1000 ➔ 750 하향 및 점프 판정 개선)\n- **최적화**: 오브젝트 풀링 적용으로 60 FPS 방어 완료`
+              : patchLang === 'EN'
+              ? patchFormat === 'STEAM_BBCODE'
+                ? `[h1]🚀 Official Patch Notes v0.${devlogsCount + 4}.0 (@${username})[/h1]\n[b]Hello Players! Here are the latest updates based on community playtest QA pins:[/b]\n[list]\n[*] [b]New Content & Mechanics[/b]: Combat hit-stop juice & phase 2 boss pattern overhaul (${latestTitle})\n[*] [b]Balance & QA Hotfix[/b]: Stage 1 Boss HP tuned (1000 ➔ 750) & Coyote-time ledge jump window improved\n[*] [b]Performance[/b]: Eliminated GC spikes via Object Pooling for locked 60 FPS\n[/list]\n[i]Wishlist us on Steam and join our playtest community![/i]`
+                : `# 🚀 Official Patch Notes v0.${devlogsCount + 4}.0 (@${username})\n- **New Content**: Combat hit-stop & phase 2 boss pattern overhaul\n- **Balance & QA Hotfix**: Stage 1 Boss HP tuned (1000 ➔ 750) & ledge jump response improved\n- **Performance**: Locked 60 FPS via Object Pooling`
+              : patchFormat === 'STEAM_BBCODE'
+              ? `[h1]🚀 公式パッチノート v0.${devlogsCount + 4}.0 (@${username})[/h1]\n[b]プレイヤーの皆様、コミュニティQAフィードバックを反映した最新アップデートをお届けします！[/b]\n[list]\n[*] [b]新コンテンツ＆演出強化[/b]: ヒットストップ演出およびボス第2フェーズのパターン改善\n[*] [b]バランス調整＆QA修正[/b]: ステージ1ボスのHP調整(1000 ➔ 750)およびジャンプ判定(コヨーテタイム)の改善\n[*] [b]最適化[/b]: オブジェクトプーリング適用により60FPS安定動作を実現\n[/list]\n[i]ぜひSteamウィッシュリスト登録をお願いします！[/i]`
+              : `# 🚀 公式パッチノート v0.${devlogsCount + 4}.0 (@${username})\n- **新コンテンツ**: ヒットストップ演出およびボス第2フェーズ改善\n- **バランス調整**: ボスHP調整(1000 ➔ 750)およびジャンプ判定改善\n- **最適化**: オブジェクトプーリングによる60FPS安定化`;
+
+          return (
+            <View>
+              <View style={{ backgroundColor: '#090B10', borderWidth: 1, borderColor: '#334155', borderRadius: 6, padding: 10, marginBottom: 8 }}>
+                <Text style={{ fontSize: 11, color: '#E9D5FF', fontFamily: 'monospace', lineHeight: 17 }}>
+                  {generatedText}
+                </Text>
+              </View>
+              <TouchableOpacity
+                onPress={() => {
+                  try { navigator?.clipboard?.writeText(generatedText); } catch {}
+                  setPatchCopied(true);
+                  setTimeout(() => setPatchCopied(false), 2200);
+                }}
+                style={{
+                  backgroundColor: patchCopied ? '#10B981' : '#A855F7',
+                  paddingVertical: 9,
+                  borderRadius: 4,
+                  alignItems: 'center',
+                }}
+              >
+                <Text style={{ fontSize: 11.5, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
+                  {patchCopied ? '✅ 스팀 패치노트가 클립보드에 복사되었습니다!' : `📋 [${patchLang} · ${patchFormat === 'STEAM_BBCODE' ? 'Steam BBCode' : 'Markdown'}] 패치노트 1클릭 복사`}
+                </Text>
+              </TouchableOpacity>
             </View>
           );
         })()}

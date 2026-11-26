@@ -40,13 +40,24 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, on
       && new URLSearchParams(window.location.search).get('view') === 'showcase' ? 'showcase' : 'feed'
   );
   const [jamEntries, setJamEntries] = useState([
-    { id: 'jam-1', title: '1-Bit Crypt', author: 'PixelKnight', engine: 'Godot 4', url: 'https://itch.io', votes: 14, desc: '단색 도트만으로 구현한 턴제 던전 크롤러' },
-    { id: 'jam-2', title: 'Dash & Parry', author: 'ShaderWizard', engine: 'Unity WebGL', url: 'https://itch.io', votes: 9, desc: '48시간 만에 만든 보스 러시 프로토타입' },
+    { id: 'jam-1', title: '1-Bit Crypt', author: 'PixelKnight', engine: 'Godot 4', url: 'https://itch.io', votes: 14, desc: '단색 도트만으로 구현한 턴제 던전 크롤러', funScore: 4.9, juiceScore: 4.8, artScore: 5.0, soundScore: 4.7 },
+    { id: 'jam-2', title: 'Dash & Parry', author: 'ShaderWizard', engine: 'Unity WebGL', url: 'https://itch.io', votes: 9, desc: '48시간 만에 만든 보스 러시 프로토타입', funScore: 4.8, juiceScore: 5.0, artScore: 4.6, soundScore: 4.8 },
+    { id: 'jam-3', title: 'Gravity Flip Vending', author: 'NeonSlime', engine: 'Unity 6', url: 'https://itch.io', votes: 7, desc: '중력이 거꾸로 흐르는 던전 자판기 디펜스', funScore: 4.7, juiceScore: 4.6, artScore: 4.8, soundScore: 4.5 },
   ]);
   const [votedJamIds, setVotedJamIds] = useState<string[]>([]);
   const [jamTitle, setJamTitle] = useState('');
   const [jamEngine, setJamEngine] = useState('Godot 4');
   const [jamUrl, setJamUrl] = useState('');
+  const [jamTheme, setJamTheme] = useState('1-Bit Dungeon · 단 하나의 버튼만 쓰는 중력 반전 던전');
+  const [jamSecLeft, setJamSecLeft] = useState(114852);
+  const [qaCreditPassIssued, setQaCreditPassIssued] = useState(false);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setJamSecLeft((prev) => (prev > 0 ? prev - 1 : 172800));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
   const [showcases, setShowcases] = useState<any[]>([]);
   const [showcaseModalOpen, setShowcaseModalOpen] = useState(false);
   const [scTitle, setScTitle] = useState('');
@@ -900,97 +911,145 @@ public class EnemyFollowOptimized : MonoBehaviour
         </ScrollView>
       </View>
 
-      {/* SECTION 04: MINI GAME JAM */}
-      {activeSection === 'jam' && (
-        <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}>
-          <View style={[styles.jamFeature, { borderColor: Theme.colors.border }]}>
-            <View style={{ flexGrow: 1 }}>
-              <Text style={styles.gameTitle}>주간 미니 게임잼 · 테마: 1-Bit Dungeon</Text>
-              <Text style={styles.mastheadDescription}>48시간 안에 만든 웹 빌드나 프로토타입을 출품하고 서로 투표해 보세요.</Text>
-            </View>
-          </View>
-          <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, gap: 8 }}>
-            <Text style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text }}>내 게임잼 출품작 등록</Text>
-            <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
-              <TextInput
-                placeholder="게임 제목"
-                placeholderTextColor={Theme.colors.textLight}
-                value={jamTitle}
-                onChangeText={setJamTitle}
-                style={{ flex: 1, minWidth: 140, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
-              />
-              <TextInput
-                placeholder="엔진 (예: Godot 4, Unity)"
-                placeholderTextColor={Theme.colors.textLight}
-                value={jamEngine}
-                onChangeText={setJamEngine}
-                style={{ width: 130, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
-              />
-              <TextInput
-                placeholder="웹 플레이 URL (선택)"
-                placeholderTextColor={Theme.colors.textLight}
-                value={jamUrl}
-                onChangeText={setJamUrl}
-                style={{ flex: 1, minWidth: 160, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
-              />
-              <TouchableOpacity
-                onPress={() => {
-                  if (!jamTitle.trim()) return;
-                  setJamEntries(prev => [{
-                    id: `jam-${Date.now()}`,
-                    title: jamTitle.trim(),
-                    author: username || 'IndieDev',
-                    engine: jamEngine.trim() || 'Unity',
-                    url: jamUrl.trim() || 'https://itch.io',
-                    votes: 1,
-                    desc: '방금 출품된 게임잼 프로토타입입니다.',
-                  }, ...prev]);
-                  setJamTitle('');
-                  setJamUrl('');
-                }}
-                style={[styles.playAction, { paddingHorizontal: 14 }]}
-              >
-                <Text style={styles.playActionText}>출품하기</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-          {jamEntries.map(entry => {
-            const voted = votedJamIds.includes(entry.id);
-            return (
-              <View key={entry.id} style={{ backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 6, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                <View style={{ flex: 1, gap: 4 }}>
+      {/* SECTION 04: 48-HOUR LIVE GAME JAM TIMER & VOTING ARENA */}
+      {activeSection === 'jam' && (() => {
+        const hrs = String(Math.floor(jamSecLeft / 3600)).padStart(2, '0');
+        const mins = String(Math.floor((jamSecLeft % 3600) / 60)).padStart(2, '0');
+        const secs = String(jamSecLeft % 60).padStart(2, '0');
+        const randomThemes = [
+          '1-Bit Dungeon · 단 하나의 버튼만 쓰는 중력 반전 던전',
+          '체력이 곧 화폐가 되는 자판기 로그라이크',
+          '적이 죽지 않고 아군으로 합류하는 탄막 슈팅',
+          '소리(음파)로만 지형을 탐지하는 암흑 동굴 탈출',
+          '시간이 10초마다 거꾸로 감기는 보스 러시',
+        ];
+        return (
+          <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}>
+            <View style={[styles.jamFeature, { borderColor: '#F59E0B', borderWidth: 1.5, backgroundColor: '#111827' }]}>
+              <View style={{ flexGrow: 1, gap: 6 }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8 }}>
                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-                    <Text style={{ fontSize: 15, fontWeight: '700', color: Theme.colors.text }}>{entry.title}</Text>
-                    <View style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
-                      <Text style={{ fontSize: 11, color: Theme.colors.textLight, fontWeight: '600' }}>{entry.engine}</Text>
+                    <View style={{ backgroundColor: '#F59E0B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 11, fontWeight: '900', color: '#11131C', fontFamily: 'monospace' }}>⏱️ 48H LIVE JAM</Text>
                     </View>
+                    <Text style={{ fontSize: 12, fontWeight: '900', color: '#FBBF24', fontFamily: 'monospace' }}>
+                      마감 카운트다운: {hrs}:{mins}:{secs}
+                    </Text>
                   </View>
-                  <Text style={{ fontSize: 12.5, color: Theme.colors.textLight }}>{entry.desc} · by @{entry.author}</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      const next = randomThemes[Math.floor(Math.random() * randomThemes.length)];
+                      setJamTheme(next);
+                    }}
+                    style={{ backgroundColor: '#1E293B', borderWidth: 1, borderColor: '#F59E0B', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 4 }}
+                  >
+                    <Text style={{ fontSize: 11, fontWeight: '800', color: '#FDE68A' }}>🎲 랜덤 테마 뽑기</Text>
+                  </TouchableOpacity>
                 </View>
+                <Text style={[styles.gameTitle, { color: '#FFF', marginTop: 2 }]}>이번 주 공식 테마: {jamTheme}</Text>
+                <Text style={[styles.mastheadDescription, { color: '#94A3B8' }]}>
+                  48시간 안에 만든 웹 빌드나 프로토타입을 출품하고 [참신성 · 타격감 · 아트 · 사운드] 4대 부문 실시간 아레나 투표에 참여하세요!
+                </Text>
+              </View>
+            </View>
+            <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, gap: 8 }}>
+              <Text style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text }}>🚀 내 48시간 게임잼 출품작 즉시 등록</Text>
+              <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+                <TextInput
+                  placeholder="게임 제목"
+                  placeholderTextColor={Theme.colors.textLight}
+                  value={jamTitle}
+                  onChangeText={setJamTitle}
+                  style={{ flex: 1, minWidth: 140, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
+                />
+                <TextInput
+                  placeholder="엔진 (예: Godot 4, Unity)"
+                  placeholderTextColor={Theme.colors.textLight}
+                  value={jamEngine}
+                  onChangeText={setJamEngine}
+                  style={{ width: 130, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
+                />
+                <TextInput
+                  placeholder="웹 플레이 URL (선택)"
+                  placeholderTextColor={Theme.colors.textLight}
+                  value={jamUrl}
+                  onChangeText={setJamUrl}
+                  style={{ flex: 1, minWidth: 160, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
+                />
                 <TouchableOpacity
                   onPress={() => {
-                    if (voted) return;
-                    setVotedJamIds(prev => [...prev, entry.id]);
-                    setJamEntries(prev => prev.map(item => item.id === entry.id ? { ...item, votes: item.votes + 1 } : item));
+                    if (!jamTitle.trim()) return;
+                    setJamEntries(prev => [{
+                      id: `jam-${Date.now()}`,
+                      title: jamTitle.trim(),
+                      author: username || 'IndieDev',
+                      engine: jamEngine.trim() || 'Unity',
+                      url: jamUrl.trim() || 'https://itch.io',
+                      votes: 1,
+                      desc: `[테마: ${jamTheme.split('·')[0].trim()}] 방금 출품된 48시간 게임잼 프로토타입입니다.`,
+                      funScore: 5.0,
+                      juiceScore: 4.9,
+                      artScore: 4.8,
+                      soundScore: 4.8,
+                    }, ...prev]);
+                    setJamTitle('');
+                    setJamUrl('');
                   }}
-                  style={{
-                    backgroundColor: voted ? Theme.colors.primary : Theme.colors.pillBg,
-                    borderWidth: 1,
-                    borderColor: voted ? Theme.colors.primary : Theme.colors.border,
-                    paddingHorizontal: 12,
-                    paddingVertical: 8,
-                    borderRadius: 6,
-                  }}
+                  style={[styles.playAction, { paddingHorizontal: 14, backgroundColor: '#F59E0B' }]}
                 >
-                  <Text style={{ fontSize: 12, fontWeight: '700', color: voted ? '#FFF' : Theme.colors.text }}>
-                    {voted ? `투표완료 (${entry.votes})` : `투표하기 (${entry.votes})`}
-                  </Text>
+                  <Text style={[styles.playActionText, { color: '#11131C', fontWeight: '900' }]}>⚡ 아레나 출품하기</Text>
                 </TouchableOpacity>
               </View>
-            );
-          })}
-        </View>
-      )}
+            </View>
+            {[...jamEntries].sort((a, b) => b.votes - a.votes).map((entry, idx) => {
+              const voted = votedJamIds.includes(entry.id);
+              const rankMedal = idx === 0 ? '🥇 1위' : idx === 1 ? '🥈 2위' : idx === 2 ? '🥉 3위' : `#${idx + 1}`;
+              return (
+                <View key={entry.id} style={{ backgroundColor: Theme.colors.surface, borderWidth: 1.5, borderColor: idx === 0 ? '#F59E0B' : Theme.colors.border, borderRadius: 6, padding: 14, gap: 8 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                    <View style={{ flex: 1, gap: 4 }}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <View style={{ backgroundColor: idx === 0 ? '#FEF3C7' : Theme.colors.pillBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ fontSize: 11, fontWeight: '900', color: idx === 0 ? '#B45309' : Theme.colors.text }}>{rankMedal}</Text>
+                        </View>
+                        <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text }}>{entry.title}</Text>
+                        <View style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ fontSize: 11, color: Theme.colors.textLight, fontWeight: '600' }}>{entry.engine}</Text>
+                        </View>
+                      </View>
+                      <Text style={{ fontSize: 12.5, color: Theme.colors.textLight }}>{entry.desc} · by @{entry.author}</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (voted) return;
+                        setVotedJamIds(prev => [...prev, entry.id]);
+                        setJamEntries(prev => prev.map(item => item.id === entry.id ? { ...item, votes: item.votes + 1 } : item));
+                      }}
+                      style={{
+                        backgroundColor: voted ? '#10B981' : Theme.colors.primary,
+                        paddingHorizontal: 12,
+                        paddingVertical: 8,
+                        borderRadius: 6,
+                      }}
+                    >
+                      <Text style={{ fontSize: 12, fontWeight: '800', color: '#FFF' }}>
+                        {voted ? `✅ 투표완료 (${entry.votes}표)` : `🔥 아레나 투표 (${entry.votes}표)`}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  {/* 4대 부문 실시간 평점 바 */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingTop: 6, borderTopWidth: 1, borderTopColor: Theme.colors.border }}>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#F59E0B' }}>💡 참신성 ★{(entry as any).funScore || 4.9}</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#EC4899' }}>💥 타격감 ★{(entry as any).juiceScore || 4.8}</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#6366F1' }}>🎨 도트/아트 ★{(entry as any).artScore || 4.9}</Text>
+                    <Text style={{ fontSize: 11, fontWeight: '700', color: '#10B981' }}>🎵 사운드 ★{(entry as any).soundScore || 4.7}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        );
+      })()}
 
       {/* SECTION 01: DEVLOGS FEED CONTROLS */}
       {activeSection === 'feed' && (
@@ -2157,6 +2216,7 @@ public class EnemyFollowOptimized : MonoBehaviour
                         });
                         setQaReviews(list || []);
                         setQaComment('');
+                        setQaCreditPassIssued(true);
                       } catch {} finally {
                         setSubmittingQaReview(false);
                       }
@@ -2164,9 +2224,25 @@ public class EnemyFollowOptimized : MonoBehaviour
                     style={{ backgroundColor: '#10B981', paddingHorizontal: 12, justifyContent: 'center', borderRadius: 4 }}
                   >
                     <Text style={{ color: '#11131C', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>
-                      {submittingQaReview ? '...' : '[QA 등록]'}
+                      {submittingQaReview ? '...' : '[QA 등록 & 크레딧 등재]'}
                     </Text>
                   </TouchableOpacity>
+                </View>
+                {/* Wave 2 Feature 4: Beta Tester Official QA Credit Pass Banner */}
+                <View style={{ backgroundColor: qaCreditPassIssued ? 'rgba(16, 185, 129, 0.18)' : 'rgba(245, 158, 11, 0.12)', borderWidth: 1, borderColor: qaCreditPassIssued ? '#10B981' : '#F59E0B', borderRadius: 4, padding: 8, marginBottom: 8, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 6 }}>
+                  <Text style={{ fontSize: 11, fontWeight: '800', color: qaCreditPassIssued ? '#34D399' : '#FBBF24' }}>
+                    {qaCreditPassIssued
+                      ? `🎖️ [공식 QA 테스터 패스 발급 완료] @${username || 'Playtester'}님이 정식 출시 엔딩 크레딧(Special Thanks)에 자동 등재되었습니다! (+500P 적립)`
+                      : '🎖️ 화면 좌표 QA 핀이나 피드백을 남기면 [공식 QA 테스터 패스 & 출시 엔딩 크레딧 자동 등재] 리워드가 즉시 발급됩니다!'}
+                  </Text>
+                  {!qaCreditPassIssued && (
+                    <TouchableOpacity
+                      onPress={() => setQaCreditPassIssued(true)}
+                      style={{ backgroundColor: '#F59E0B', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4 }}
+                    >
+                      <Text style={{ fontSize: 10.5, fontWeight: '900', color: '#11131C' }}>⚡ 테스터 패스 즉시 발급</Text>
+                    </TouchableOpacity>
+                  )}
                 </View>
                 {qaReviews.slice(0, 4).map((r: any, idx: number) => (
                   <View key={r.id || idx} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 4, borderTopWidth: 1, borderTopColor: '#1E293B' }}>

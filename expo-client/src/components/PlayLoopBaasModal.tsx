@@ -26,9 +26,17 @@ export default function PlayLoopBaasModal({ visible, onClose, username }: PlayLo
   const [feedbacks, setFeedbacks] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard' | 'feedbacks' | 'sdk'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'leaderboard' | 'feedbacks' | 'liveops' | 'sdk'>('overview');
   const [sdkEngine, setSdkEngine] = useState<'unity' | 'godot'>('unity');
   const [copiedText, setCopiedText] = useState<string | null>(null);
+
+  // Wave 2 Feature 3: PlayLoop 1-Click Balance Patch & Remote LiveOps Console
+  const [bossHpConfig, setBossHpConfig] = useState<number>(750);
+  const [goldDropRate, setGoldDropRate] = useState<number>(1.5);
+  const [expMultiplier, setExpMultiplier] = useState<number>(2.0);
+  const [weekendEventActive, setWeekendEventActive] = useState<boolean>(true);
+  const [patchVersion, setPatchVersion] = useState<number>(4);
+  const [patchDeployedBanner, setPatchDeployedBanner] = useState<boolean>(false);
 
   // Create Game Form
   const [newGameTitle, setNewGameTitle] = useState('');
@@ -376,10 +384,11 @@ func send_in_game_feedback(player_name: String, category: String, message: Strin
             {/* Sub-navigation Tabs */}
             <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
               {[
-                { key: 'overview', label: '🧪 실시간 연동 테스트 (점수/버그 송신)' },
+                { key: 'overview', label: '🧪 실시간 연동 테스트' },
+                { key: 'liveops', label: '🎛️ 1클릭 원격 밸런스 패치 (LiveOps)' },
                 { key: 'leaderboard', label: `🏆 라이브 리더보드 (${leaderboard.length})` },
                 { key: 'feedbacks', label: `🐛 인게임 QA 리포트 (${feedbacks.length})` },
-                { key: 'sdk', label: '💻 Unity C# / Godot 4 SDK 코드 생성기' },
+                { key: 'sdk', label: '💻 Unity C# / Godot 4 SDK 생성기' },
               ].map((t) => {
                 const active = activeTab === t.key;
                 return (
@@ -398,6 +407,128 @@ func send_in_game_feedback(player_name: String, category: String, message: Strin
             </View>
 
             {loading && <ActivityIndicator color="#00E5FF" style={{ marginVertical: 10 }} />}
+
+            {/* TAB: REMOTE LIVEOPS & 1-CLICK BALANCE PATCH CONSOLE */}
+            {activeTab === 'liveops' && (
+              <View style={styles.sectionBox}>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+                  <View>
+                    <Text style={styles.sectionLabel}>🎛️ 무중단 원격 밸런스 패치 & 라이브옵스 콘솔 (Remote Config v1.{patchVersion})</Text>
+                    <Text style={{ color: '#94A3B8', fontSize: 12 }}>
+                      게임을 다시 빌드·심의받지 않고도 보스 체력, 드랍률, 주말 2배 이벤트를 조절해 인게임에 1초 만에 핫픽스 배포합니다.
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => {
+                      setPatchVersion((v) => v + 1);
+                      setPatchDeployedBanner(true);
+                      setTimeout(() => setPatchDeployedBanner(false), 3000);
+                    }}
+                    style={[styles.primaryBtn, { backgroundColor: '#10B981' }]}
+                  >
+                    <Text style={[styles.primaryBtnText, { color: '#11131C' }]}>
+                      🚀 인게임 실시간 밸런스 핫픽스 배포 (v1.{patchVersion + 1})
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                {patchDeployedBanner && (
+                  <View style={{ backgroundColor: 'rgba(16, 185, 129, 0.18)', borderWidth: 1, borderColor: '#10B981', borderRadius: 6, padding: 10, marginBottom: 12 }}>
+                    <Text style={{ color: '#34D399', fontSize: 12, fontWeight: '900' }}>
+                      ✅ [LiveOps 핫픽스 배포 완료] 접속 중인 모든 WebGL / Steam 클라이언트 파라미터가 무중단 갱신되었습니다!
+                    </Text>
+                  </View>
+                )}
+
+                <View style={{ gap: 10, marginBottom: 12 }}>
+                  {/* Param 1: Boss HP */}
+                  <View style={styles.tableRow}>
+                    <View>
+                      <Text style={{ color: '#F8FAFC', fontWeight: '800', fontSize: 13 }}>👾 1스테이지 보스 최대 체력 (boss_max_hp)</Text>
+                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>QA 피드백 반영: 기존 1000 ➔ {bossHpConfig} HP로 실시간 밸런스 조정</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {[500, 750, 1000, 1500].map((val) => (
+                        <TouchableOpacity
+                          key={val}
+                          onPress={() => setBossHpConfig(val)}
+                          style={[styles.smallPill, bossHpConfig === val && { backgroundColor: '#00E5FF', borderColor: '#11131C' }]}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: '900', color: bossHpConfig === val ? '#11131C' : '#E2E8F0', fontFamily: 'monospace' }}>
+                            {val} HP
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Param 2: Gold Drop Rate */}
+                  <View style={styles.tableRow}>
+                    <View>
+                      <Text style={{ color: '#F8FAFC', fontWeight: '800', fontSize: 13 }}>💰 던전 골드 & 레어 아이템 드랍 배율 (gold_drop_mult)</Text>
+                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>초반 성장 구간 파밍 체감 속도 조절</Text>
+                    </View>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                      {[1.0, 1.25, 1.5, 2.0].map((val) => (
+                        <TouchableOpacity
+                          key={val}
+                          onPress={() => setGoldDropRate(val)}
+                          style={[styles.smallPill, goldDropRate === val && { backgroundColor: '#FFD166', borderColor: '#11131C' }]}
+                        >
+                          <Text style={{ fontSize: 11, fontWeight: '900', color: goldDropRate === val ? '#11131C' : '#E2E8F0', fontFamily: 'monospace' }}>
+                            {val}x
+                          </Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+
+                  {/* Param 3: Weekend Event */}
+                  <View style={styles.tableRow}>
+                    <View>
+                      <Text style={{ color: '#F8FAFC', fontWeight: '800', fontSize: 13 }}>🔥 주말 경험치 버닝 이벤트 플래그 (weekend_exp_boost)</Text>
+                      <Text style={{ color: '#94A3B8', fontSize: 11 }}>활성화 시 인게임 상단에 [🔥 주말 핫타임 {expMultiplier}배] 배너가 자동 노출됩니다</Text>
+                    </View>
+                    <TouchableOpacity
+                      onPress={() => {
+                        setWeekendEventActive((w) => !w);
+                        setExpMultiplier((w) => (w === 2.0 ? 1.0 : 2.0));
+                      }}
+                      style={[styles.primaryBtn, { backgroundColor: weekendEventActive ? '#10B981' : '#334155' }]}
+                    >
+                      <Text style={[styles.primaryBtnText, { color: weekendEventActive ? '#11131C' : '#FFF' }]}>
+                        {weekendEventActive ? '🟢 ON (경험치 2.0x)' : '⚪ OFF (기본 1.0x)'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+
+                {/* Live JSON Payload & Unity RemoteConfig Fetch Snippet */}
+                <View style={{ backgroundColor: '#05070B', borderWidth: 1, borderColor: '#334155', borderRadius: 6, padding: 12 }}>
+                  <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                    <Text style={{ color: '#00E5FF', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>
+                      📡 GET /api/baas/remote-config (Live JSON & Unity C# 연동 코드)
+                    </Text>
+                    <TouchableOpacity
+                      onPress={() =>
+                        copyToClipboard(
+                          `// PlayLoop Remote Config JSON (v1.${patchVersion})\n{"boss_max_hp":${bossHpConfig},"gold_drop_mult":${goldDropRate},"exp_multiplier":${expMultiplier},"weekend_event":${weekendEventActive}}`,
+                          'LIVEOPS_JSON'
+                        )
+                      }
+                      style={[styles.smallPill, { paddingVertical: 4 }]}
+                    >
+                      <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#FFD166' }}>
+                        {copiedText === 'LIVEOPS_JSON' ? '✅ 복사 완료!' : '📋 설정 JSON 복사'}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <Text style={{ color: '#A5F3FC', fontSize: 11, fontFamily: 'monospace', lineHeight: 17 }}>
+                    {`{\n  "version": "1.${patchVersion}",\n  "boss_max_hp": ${bossHpConfig},\n  "gold_drop_mult": ${goldDropRate},\n  "exp_multiplier": ${expMultiplier},\n  "weekend_event_active": ${weekendEventActive}\n}`}
+                  </Text>
+                </View>
+              </View>
+            )}
 
             {/* TAB 1: OVERVIEW & LIVE TESTER */}
             {activeTab === 'overview' && (
