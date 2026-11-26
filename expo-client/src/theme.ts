@@ -33,11 +33,11 @@ const DARK_COLORS = {
 const getInitialMode = (): ThemeMode => {
   try {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const saved = window.localStorage.getItem('devground_theme_mode_v2');
+      const saved = window.localStorage.getItem('devground_theme_mode_v3');
       if (saved === 'dark' || saved === 'light') return saved;
     }
   } catch {}
-  return 'dark';
+  return 'light';
 };
 
 let currentMode: ThemeMode = getInitialMode();
@@ -54,7 +54,7 @@ export const Theme = {
     currentMode = currentMode === 'light' ? 'dark' : 'light';
     try {
       if (typeof window !== 'undefined' && window.localStorage) {
-        window.localStorage.setItem('devground_theme_mode_v2', currentMode);
+        window.localStorage.setItem('devground_theme_mode_v3', currentMode);
       }
     } catch {}
     listeners.forEach((fn) => fn(currentMode));
