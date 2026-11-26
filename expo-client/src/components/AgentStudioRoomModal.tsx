@@ -258,7 +258,7 @@ export default function AgentStudioRoomModal({ visible, onClose, onExportToDevlo
               <View>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                   <Text style={[styles.headerTitle, { color: Theme.colors.text }]}>
-                    MOD_33 // 4-AGENT_STUDIO
+                    4-Agent Studio
                   </Text>
                   <View style={styles.liveBadge}>
                     <View style={styles.liveDot} />

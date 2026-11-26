@@ -273,7 +273,7 @@ func send_in_game_feedback(player_name: String, category: String, message: Strin
           <View style={styles.header}>
             <View>
               <Text style={styles.headerTitle}>
-                ☁️ MOD_34 // PLAYLOOP_MICRO_BAAS_CONSOLE
+                PlayLoop Micro BaaS 콘솔
               </Text>
               <Text style={styles.headerSub}>
                 인디 게임 전용 1분 연동 클라우드 리더보드 · 인게임 버그리포트 수집 · Unity/Godot SDK 자동 생성기

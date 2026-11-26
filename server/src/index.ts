@@ -194,7 +194,7 @@ const initializeSeedData = () => {
         '이번 주에는 보스 페이즈 전환 시 카메라 쉐이크(Camera Shake)와 히트스톱(Hit-stop) 프레임을 0.06초로 조정해 타격감을 대폭 끌어올렸습니다.\n\n특히 패링 성공 시 파티클 이펙트와 사운드 싱크를 맞추니 손맛이 훨씬 좋아졌네요! 모바일 조작감 피드백 환영합니다.',
         24,
         JSON.stringify(['Unity', 'C#', 'Action', 'Roguelike']),
-        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       const d2 = insertDevlog.run(
@@ -203,7 +203,7 @@ const initializeSeedData = () => {
         '모바일/저사양 환경에서도 프레임 드랍 없이 깔끔한 애니메이션풍 외곽선을 표현하기 위해 Post-Process 머티리얼 대신 Inverted Hull 방식과 노멀 맵 보정을 결합했습니다.\n\n드로우콜은 늘어나지만 셰이더 복잡도가 낮아져 평균 60FPS 방어에 성공했습니다!',
         19,
         JSON.stringify(['Unreal', 'Graphics', 'Shader']),
-        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       const d3 = insertDevlog.run(
@@ -212,7 +212,7 @@ const initializeSeedData = () => {
         '퇴근 후 2시간씩 반년 동안 만든 힐링 농장 시뮬레이션입니다. 타일맵 오토타일링 시스템과 계절별 날씨 변화(비, 눈, 반딧불이)까지 구현 완료했습니다.\n\n다음 주 데모 빌드 배포 전 UI 배치에 대한 의견을 듣고 싶습니다!',
         31,
         JSON.stringify(['Godot', 'PixelArt', 'Release']),
-        'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       const d4 = insertDevlog.run(
@@ -221,7 +221,7 @@ const initializeSeedData = () => {
         '1. 검 베기 소리는 금속성 마찰음 + 짧은 바람 소리(White Noise Fade)를 겹치면 묵직해집니다.\n2. UI 버튼 클릭음은 피치(Pitch)를 ±5% 랜덤화하면 반복 피로도가 확 줄어듭니다.\n3. Asset Hub에 제가 직접 만든 8비트 효과음 팩도 공유해 두었으니 자유롭게 쓰세요!',
         15,
         JSON.stringify(['Audio', 'Tip', 'IndieDev']),
-        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       const insertComment = db.prepare(
@@ -232,10 +232,10 @@ const initializeSeedData = () => {
       insertComment.run(d3.lastInsertRowid, u1, '색감이 진짜 따뜻하네요. 데모 나오면 꼭 플레이해보겠습니다!');
     } else {
       // Backfill sample thumbnails for existing seed posts if image_url is null
-      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '[DevLog #12]%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80');
-      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '언리얼 엔진 5%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80');
-      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE 'Godot 4.3%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80');
-      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '인디 게임에서 무료로%' AND (image_url IS NULL OR image_url = '')`).run('https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80');
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '[DevLog #12]%' AND (image_url IS NULL OR image_url = '')`).run('');
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '언리얼 엔진 5%' AND (image_url IS NULL OR image_url = '')`).run('');
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE 'Godot 4.3%' AND (image_url IS NULL OR image_url = '')`).run('');
+      db.prepare(`UPDATE devlogs SET image_url = ? WHERE title LIKE '인디 게임에서 무료로%' AND (image_url IS NULL OR image_url = '')`).run('');
     }
 
     const assetCount = (db.prepare('SELECT COUNT(*) as count FROM assets').get() as any).count;
@@ -257,7 +257,7 @@ const initializeSeedData = () => {
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['2D', 'PixelArt', 'Tileset']),
         28,
-        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       insertAsset.run(
@@ -268,7 +268,7 @@ const initializeSeedData = () => {
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['3D', 'LowPoly', 'RPG']),
         22,
-        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       insertAsset.run(
@@ -279,7 +279,7 @@ const initializeSeedData = () => {
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['Audio', 'BGM', 'SFX']),
         35,
-        'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       insertAsset.run(
@@ -290,7 +290,7 @@ const initializeSeedData = () => {
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['UI', 'HUD', 'Mobile']),
         17,
-        'https://images.unsplash.com/photo-1607252650355-f7fd0460ccdb?auto=format&fit=crop&w=800&q=80'
+        ''
       );
 
       insertAsset.run(
@@ -301,7 +301,7 @@ const initializeSeedData = () => {
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['Code', 'Unity', 'C#']),
         41,
-        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
+        ''
       );
     }
 
@@ -318,7 +318,7 @@ const initializeSeedData = () => {
         '1인 개발자 및 소규모 인디팀이 스팀(Steam) 출시 전 반드시 챙겨야 할 체크리스트입니다.\n\n1. 캡슐 이미지(Header Capsule) 가독성 극대화\n2. 상점 설명란 최상단에 5초 이내 전투/핵심 루프 GIF 배치\n3. Steam Next Fest 참가 전 Itch.io 및 DevGround 웹데모 홍보관으로 초기 테스터 피드백 확보하기!',
         38,
         JSON.stringify(['쇼케이스', 'IndieDev', 'Release', 'Steam']),
-        'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&w=800&q=80'
+        ''
       );
       insD.run(
         u2,
@@ -326,7 +326,7 @@ const initializeSeedData = () => {
         '탄막 슈팅이나 뱀서라이크(Vampire Survivors류) 게임에서 수백 개의 투사체와 몬스터를 생성할 때 Instantiate/Destroy 대신 UnityEngine.Pool.ObjectPool을 활용해 프레임 드랍을 0으로 만든 실전 최적화 과정입니다.\n\nAsset Hub의 Code 탭에 전체 C# 스크립트도 무료 공유해 두었습니다!',
         29,
         JSON.stringify(['Unity', 'C#', 'Optimization', 'Tip']),
-        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
+        ''
       );
       insD.run(
         u2,
@@ -334,7 +334,7 @@ const initializeSeedData = () => {
         '언리얼 엔진 5로 3D 인디게임을 개발할 때 중저사양 그래픽카드(GTX 1660 / RTX 3050급)에서도 평균 60FPS를 유지하기 위한 TSR 업스케일링 및 루멘 글로벌 일루미네이션 품질 타협 옵션을 정리했습니다.',
         27,
         JSON.stringify(['Unreal', 'Graphics', 'Optimization']),
-        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80'
+        ''
       );
       insD.run(
         u4,
@@ -342,7 +342,7 @@ const initializeSeedData = () => {
         '복잡한 네트워크 서버 코딩 없이 Godot 4 내장 ENetMultiplayerPeer와 MultiplayerSpawner, MultiplayerSynchronizer 노드만으로 스팀 P2P 멀티플레이를 구현한 개발일지입니다.',
         33,
         JSON.stringify(['Godot', 'Multiplayer', 'Tutorial']),
-        'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80'
+        ''
       );
     }
 
@@ -359,7 +359,7 @@ const initializeSeedData = () => {
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['2D', 'PixelArt', 'Boss', 'VFX']),
         34,
-        'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80'
+        ''
       );
       insA.run(
         u2,
@@ -369,7 +369,7 @@ const initializeSeedData = () => {
         'https://gamedev-platform-expo-client.vercel.app',
         JSON.stringify(['Code', 'Unity', 'C#', 'Optimization']),
         46,
-        'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&w=800&q=80'
+        ''
       );
     }
 
@@ -508,7 +508,7 @@ try {
       'PixelKnight',
       'Unity WebGL',
       'https://itch.io/games/html5',
-      'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80',
+      '',
       '설치 없이 브라우저에서 바로 즐길 수 있는 2D 도트 액션 로그라이크 데모 홈페이지입니다.'
     );
     ins.run(
@@ -516,7 +516,7 @@ try {
       'GodotCrafter',
       'Godot 4.3',
       'https://godotengine.org/showcase/',
-      'https://images.unsplash.com/photo-1511512578047-dfb367046420?auto=format&fit=crop&w=800&q=80',
+      '',
       '1인 개발 힐링 농장 시뮬레이션 공식 홈페이지 및 개발 로드맵 소개 페이지입니다.'
     );
     ins.run(
@@ -524,7 +524,7 @@ try {
       'ShaderWizard',
       'Unreal 5',
       'https://store.steampowered.com/indie',
-      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=800&q=80',
+      '',
       '카툰 렌더링 스타일리시 액션 신작 공식 스토어 및 트레일러 홈페이지입니다.'
     );
   }
@@ -882,7 +882,7 @@ app.post('/api/showcases', (req, res) => {
     String(developer || 'Indie Creator').trim(),
     String(engine || 'Unity').trim(),
     String(homepage_url).trim(),
-    thumbnail_url ? String(thumbnail_url).trim() : 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=800&q=80',
+    thumbnail_url ? String(thumbnail_url).trim() : '',
     String(description || '').trim()
   );
   pingIndexNow().catch(() => {});
