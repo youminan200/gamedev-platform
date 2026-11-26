@@ -18,9 +18,9 @@ interface DevLogCardProps {
 
 const getCreatorRank = (likes?: number): string => {
   const n = likes || 0;
-  if (n >= 20) return 'MASTER_DEV';
-  if (n >= 10) return 'INDIE_PRO';
-  return 'ROOKIE';
+  if (n >= 20) return '마스터';
+  if (n >= 10) return '인디프로';
+  return '크리에이터';
 };
 
 export const DevLogCard: React.FC<DevLogCardProps> = ({
@@ -58,28 +58,28 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
         {/* Top Cartridge Strip */}
         <View style={[styles.cartridgeHeader, { backgroundColor: Theme.colors.pillBg, borderBottomColor: Theme.colors.border }]}>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <View style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
-              <Text style={{ fontSize: 10, fontWeight: '900', color: '#FFF', fontFamily: 'monospace' }}>
-                LOG #{devLog.id}
+            <View style={{ backgroundColor: Theme.colors.primary, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+              <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#FFF' }}>
+                개발일지 #{devLog.id}
               </Text>
             </View>
             {Boolean(devLog.is_pinned) && (
-              <View style={{ backgroundColor: '#FFD166', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
-                <Text style={{ fontSize: 10, fontWeight: '900', color: '#11131C', fontFamily: 'monospace' }}>
-                  ★ FEATURED
+              <View style={{ backgroundColor: '#FFD166', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#11131C' }}>
+                  ★ 추천
                 </Text>
               </View>
             )}
             {devLog.tags?.includes('쇼케이스') && (
-              <View style={{ backgroundColor: '#00E5FF', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
-                <Text style={{ fontSize: 10, fontWeight: '900', color: '#11131C', fontFamily: 'monospace' }}>
-                  SHOWCASE
+              <View style={{ backgroundColor: '#00E5FF', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#11131C' }}>
+                  쇼케이스
                 </Text>
               </View>
             )}
             {devLog.series_title ? (
-              <View style={{ backgroundColor: '#1E1B4B', borderWidth: 1, borderColor: '#A855F7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 3 }}>
-                <Text numberOfLines={1} style={{ fontSize: 10, fontWeight: '900', color: '#E9D5FF', fontFamily: 'monospace' }}>
+              <View style={{ backgroundColor: '#1E1B4B', borderWidth: 1, borderColor: '#A855F7', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                <Text numberOfLines={1} style={{ fontSize: 10.5, fontWeight: '800', color: '#E9D5FF' }}>
                   📚 {devLog.series_title}
                 </Text>
               </View>
@@ -97,8 +97,8 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
                 { borderColor: Theme.colors.border, backgroundColor: isBookmarked ? '#FFD166' : Theme.colors.surface }
               ]}
             >
-              <Text style={{ fontSize: 10.5, fontWeight: '900', fontFamily: 'monospace', color: isBookmarked ? '#11131C' : Theme.colors.textLight }}>
-                {isBookmarked ? '[★ SAVED]' : '[☆ SAVE]'}
+              <Text style={{ fontSize: 11, fontWeight: '700', color: isBookmarked ? '#11131C' : Theme.colors.textLight }}>
+                {isBookmarked ? '★ 저장됨' : '☆ 저장'}
               </Text>
             </TouchableOpacity>
           )}
@@ -208,7 +208,7 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
 
             <View style={styles.statsBadgesRow}>
               <View style={[styles.statChip, { backgroundColor: Theme.colors.pillBg, borderColor: Theme.colors.border }]}>
-                <Text style={[styles.statChipText, { color: Theme.colors.text }]}>CMT {devLog.comment_count ?? 0}</Text>
+                <Text style={[styles.statChipText, { color: Theme.colors.text }]}>💬 {devLog.comment_count ?? 0}</Text>
               </View>
               <View style={[styles.statChip, { backgroundColor: Theme.colors.pillBg, borderColor: Theme.colors.border }]}>
                 <Text style={[styles.statChipText, { color: Theme.colors.primary }]}>♥ {devLog.likes}</Text>
@@ -233,8 +233,8 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
                 marginBottom: 10,
               }}
             >
-              <Text style={{ color: '#11131C', fontSize: 11.5, fontWeight: '900', fontFamily: 'monospace' }}>
-                ▶ PLAY_WEB_DEMO ↗
+              <Text style={{ color: '#11131C', fontSize: 11.5, fontWeight: '800' }}>
+                ▶ 웹 데모 플레이 ↗
               </Text>
             </TouchableOpacity>
           ) : null}

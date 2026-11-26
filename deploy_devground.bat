@@ -24,3 +24,4 @@ call npx expo export -p web && node inject-seo.js
 echo.
 echo ✅ https://gamedev-platform-expo-client.vercel.app/ 업데이트 배포가 완료되었습니다!
 pause
+

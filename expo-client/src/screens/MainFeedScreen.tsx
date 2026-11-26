@@ -1658,44 +1658,10 @@ public class EnemyFollowOptimized : MonoBehaviour
             </Text>
           </View>
         }
-        contentContainerStyle={[styles.listContent, { paddingBottom: 76 }]}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 24 }]}
         onRefresh={fetchLogs}
         refreshing={loading}
       />
-
-      {/* Bottom 5-Tab Navigation Bar */}
-      <View style={{
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-        height: 58,
-        backgroundColor: Theme.colors.surface,
-        borderTopWidth: 1,
-        borderTopColor: Theme.colors.border,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-around',
-        paddingHorizontal: 8,
-      }}>
-        {[
-          { key: 'feed', label: '홈', icon: '🏠', onPress: () => setActiveSection('feed') },
-          { key: 'showcase', label: '쇼케이스', icon: '🕹️', onPress: () => setActiveSection('showcase') },
-          { key: 'post', label: '작성', icon: '➕', onPress: onPostClick },
-          { key: 'jam', label: '게임잼', icon: '🏆', onPress: () => setActiveSection('jam') },
-          { key: 'tools', label: '도구', icon: '🛠️', onPress: () => setActiveSection('tools') },
-        ].map((tab) => {
-          const isActive = activeSection === tab.key;
-          return (
-            <TouchableOpacity key={tab.key} onPress={tab.onPress} style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 4, minWidth: 54 }}>
-              <Text style={{ fontSize: 18 }}>{tab.icon}</Text>
-              <Text style={{ fontSize: 10.5, fontWeight: isActive ? '700' : '500', color: isActive ? Theme.colors.primary : Theme.colors.textLight, marginTop: 2 }}>
-                {tab.label}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </View>
 
       <Modal visible={notifOpen} animationType="fade" transparent onRequestClose={() => setNotifOpen(false)}>
         <View style={styles.notifOverlay}>
