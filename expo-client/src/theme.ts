@@ -1,17 +1,17 @@
 export type ThemeMode = 'light' | 'dark';
 
-// Retro GameBoy / Playdate Paper Workshop (Light)
+// Clean Modern Social & Studio (Light)
 const LIGHT_COLORS = {
-  background: '#F4EFE6',
+  background: '#F8FAFC',
   surface: '#FFFFFF',
-  pillBg: '#E6DFD3',
-  border: '#1E2230',
-  text: '#181A24',
-  textLight: '#5A6075',
+  pillBg: '#F1F5F9',
+  border: '#E2E8F0',
+  text: '#0F172A',
+  textLight: '#64748B',
   primary: '#FA5C5C',
-  accent: '#181A24',
-  shadowDark: '#1E2230',
-  shadowLight: '#1E2230',
+  accent: '#0F172A',
+  shadowDark: '#CBD5E1',
+  shadowLight: '#FFFFFF',
   error: '#E63946'
 };
 

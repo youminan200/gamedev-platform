@@ -869,6 +869,29 @@ public class EnemyFollowOptimized : MonoBehaviour
             </TouchableOpacity>
           ))}
         </View>
+        {/* Top Circular Quick-Access Story/Tool Bar */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 14, paddingVertical: 10, gap: 14 }}
+          style={{ borderBottomWidth: 1, borderBottomColor: Theme.colors.border, backgroundColor: Theme.colors.surface }}
+        >
+          {[
+            { label: '도트공방', icon: '🎨', color: '#EEF2FF', border: '#6366F1', onPress: () => setPixelStudioOpen(true) },
+            { label: 'SFX/BGM', icon: '🎵', color: '#FDF2F8', border: '#EC4899', onPress: () => setBgmStudioOpen(true) },
+            { label: '게임잼', icon: '🏆', color: '#FEF3C7', border: '#F59E0B', onPress: () => setActiveSection('jam') },
+            { label: '쇼케이스', icon: '🕹️', color: '#ECFDF5', border: '#10B981', onPress: () => setActiveSection('showcase') },
+            { label: 'BaaS', icon: '☁️', color: '#E0F2FE', border: '#0EA5E9', onPress: () => setPlayloopBaasOpen(true) },
+            { label: '글쓰기', icon: '✏️', color: '#FFF1F2', border: '#F43F5E', onPress: onPostClick },
+          ].map((item) => (
+            <TouchableOpacity key={item.label} onPress={item.onPress} style={{ alignItems: 'center', gap: 5 }}>
+              <View style={{ width: 50, height: 50, borderRadius: 25, backgroundColor: item.color, borderWidth: 1.5, borderColor: item.border, alignItems: 'center', justifyContent: 'center' }}>
+                <Text style={{ fontSize: 20 }}>{item.icon}</Text>
+              </View>
+              <Text style={{ fontSize: 11, fontWeight: '600', color: Theme.colors.text }}>{item.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
       </View>
 
       {/* SECTION 04: MINI GAME JAM */}
@@ -1635,10 +1658,44 @@ public class EnemyFollowOptimized : MonoBehaviour
             </Text>
           </View>
         }
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: 76 }]}
         onRefresh={fetchLogs}
         refreshing={loading}
       />
+
+      {/* Bottom 5-Tab Navigation Bar */}
+      <View style={{
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 58,
+        backgroundColor: Theme.colors.surface,
+        borderTopWidth: 1,
+        borderTopColor: Theme.colors.border,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-around',
+        paddingHorizontal: 8,
+      }}>
+        {[
+          { key: 'feed', label: '홈', icon: '🏠', onPress: () => setActiveSection('feed') },
+          { key: 'showcase', label: '쇼케이스', icon: '🕹️', onPress: () => setActiveSection('showcase') },
+          { key: 'post', label: '작성', icon: '➕', onPress: onPostClick },
+          { key: 'jam', label: '게임잼', icon: '🏆', onPress: () => setActiveSection('jam') },
+          { key: 'tools', label: '도구', icon: '🛠️', onPress: () => setActiveSection('tools') },
+        ].map((tab) => {
+          const isActive = activeSection === tab.key;
+          return (
+            <TouchableOpacity key={tab.key} onPress={tab.onPress} style={{ alignItems: 'center', justifyContent: 'center', paddingVertical: 4, minWidth: 54 }}>
+              <Text style={{ fontSize: 18 }}>{tab.icon}</Text>
+              <Text style={{ fontSize: 10.5, fontWeight: isActive ? '700' : '500', color: isActive ? Theme.colors.primary : Theme.colors.textLight, marginTop: 2 }}>
+                {tab.label}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
 
       <Modal visible={notifOpen} animationType="fade" transparent onRequestClose={() => setNotifOpen(false)}>
         <View style={styles.notifOverlay}>
