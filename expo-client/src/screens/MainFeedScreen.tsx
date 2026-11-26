@@ -1183,7 +1183,7 @@ public class EnemyFollowOptimized : MonoBehaviour
 
           {[
             {
-              code: 'MOD_01 // PIXEL_SPRITE_WORKSHOP',
+              code: 'PIXEL_SPRITE_WORKSHOP',
               cat: 'art_sound',
               title: '16×16 · 32×32 웹 도트 찍기 & 4프레임 스프라이트 시트 스튜디오',
               desc: '브라우저에서 좌우대칭·어니언스킨·4프레임 애니메이션을 찍고 투명 배경 .PNG 시트로 즉시 추출합니다.',
@@ -1191,7 +1191,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setPixelStudioOpen(true)
             },
             {
-              code: 'MOD_02 // CSHARP_SCRIPT_VENDING',
+              code: 'CSHARP_SCRIPT_VENDING',
               cat: 'code_design',
               title: 'Unity / C# 필수 스크립트 자판기 (이동·점프·세이브·풀링)',
               desc: '이동속도·점프력 수치만 입력하면 2D 플랫포머, 3D 카메라, 오브젝트 풀링, JSON 세이브 C# 코드를 자동 생성합니다.',
@@ -1199,7 +1199,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setCsharpVendingOpen(true)
             },
             {
-              code: 'MOD_03 // ERR_DOCTOR',
+              code: 'ERR_DOCTOR',
               cat: 'code_design',
               title: 'Unity · Unreal · Godot 만능 에러 해결 센터 (50+ 에러 사전)',
               desc: '콘솔 에러 로그를 붙여넣으면 발생 줄 번호·한글 번역·수정 코드를 1초 만에 진단합니다. (50종 이상 필수 에러 수록)',
@@ -1207,7 +1207,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: handleOpenErrorWiki
             },
             {
-              code: 'MOD_04 // 8BIT_SFX_SYNTH',
+              code: '8BIT_SFX_SYNTH',
               cat: 'art_sound',
               title: '8-Bit 레트로 효과음(SFX) 합성 스튜디오 (.WAV 추출)',
               desc: '점프·레이저·폭발·코인 효과음을 파형으로 조절하고 상업용 무료 .WAV 오디오 파일로 즉시 추출합니다.',
@@ -1215,7 +1215,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setSfxStudioOpen(true)
             },
             {
-              code: 'MOD_05 // 8BIT_BGM_SEQUENCER',
+              code: '8BIT_BGM_SEQUENCER',
               cat: 'art_sound',
               title: '8-Bit 칩튠 브금(BGM) 작곡 시퀀서 & 루프 .WAV 추출',
               desc: '보스전·평화로운 마을·아케이드 프리셋 또는 16스텝 피아노롤로 저작권 무료 배경음악(BGM)을 작곡합니다.',
@@ -1223,7 +1223,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setBgmStudioOpen(true)
             },
             {
-              code: 'MOD_06 // STEAM_STORE_SIM',
+              code: 'STEAM_STORE_SIM',
               cat: 'launch_mkt',
               title: '스팀·스토어 캡슐 썸네일 시뮬레이터 & 출시 준비 진단기',
               desc: '내 인디게임 배너와 제목이 실제 스토어 진열대에서 얼마나 눈에 띄는지 비교하고 출시 체크리스트 점수를 진단합니다.',
@@ -1231,7 +1231,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setSteamSimOpen(true)
             },
             {
-              code: 'MOD_07 // 60FPS_OPT_DOCTOR',
+              code: '60FPS_OPT_DOCTOR',
               cat: 'code_design',
               title: 'Unity·Godot 60FPS 최적화 방어 진단기 & 엔진 단축키 사전',
               desc: 'Draw Call·GC Alloc·배칭·물리 렉 원인을 체크리스트로 점검하고 3대 게임 엔진 필수 단축키를 확인합니다.',
@@ -1239,7 +1239,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setOptDoctorOpen(true)
             },
             {
-              code: 'MOD_08 // GAME_BALANCE_CALC',
+              code: 'GAME_BALANCE_CALC',
               cat: 'code_design',
               title: '인디게임 밸런스 계산기 (데미지·경험치 곡선·가챠/드랍 확률)',
               desc: '공격/방어 공식 비교, 레벨별 요구 경험치 테이블, 아이템 드랍 천장 확률을 시뮬레이션하고 C# 수식 코드로 변환합니다.',
@@ -1247,7 +1247,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setBalanceCalcOpen(true)
             },
             {
-              code: 'MOD_09 // PATCHNOTE_BUILDER',
+              code: 'PATCHNOTE_BUILDER',
               cat: 'launch_mkt',
               title: '스팀(BBCode) · 디스코드 · 개발일지 패치노트 자동 생성기',
               desc: '신규 기능·밸런스 조정·버그 수정 내역만 적으면 스팀 공지사항 태그([h1], [list])와 마크다운 양식으로 1초 변환합니다.',
@@ -1255,7 +1255,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setPatchBuilderOpen(true)
             },
             {
-              code: 'MOD_10 // DUNGEON_MAP_GEN',
+              code: 'DUNGEON_MAP_GEN',
               cat: 'code_design',
               title: '2D 타일맵 · 절차적 던전 맵 생성기 & Unity C# 배열 추출기',
               desc: '로그라이크 방+복도(BSP), 자연동굴(Cellular), 보스 아레나를 랜덤 생성하고 미니맵 .PNG와 C# int[,] 배열로 추출합니다.',
@@ -1263,7 +1263,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setDungeonGenOpen(true)
             },
             {
-              code: 'MOD_11 // SHADER_RECIPE_BOOK',
+              code: 'SHADER_RECIPE_BOOK',
               cat: 'art_sound',
               title: 'Unity / Godot 셰이더(Shader) 시각 효과 레시피 사전',
               desc: '피격 하얀 점멸(Hit Flash), 2D 도트 외곽선(Outline), 타들어가는 디졸브, 홀로그램, 물결 셰이더 코드를 복사합니다.',
@@ -1271,7 +1271,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setShaderBookOpen(true)
             },
             {
-              code: 'MOD_12 // LOCALIZATION_SHEET',
+              code: 'LOCALIZATION_SHEET',
               cat: 'launch_mkt',
               title: '인디게임 다국어 번역 시트 생성기 (한·영·일·중 CSV/JSON)',
               desc: '자주 쓰는 게임 UI/전투/상점 문구를 한국어로 입력하면 영어·일본어·중국어(간체) 로컬라이징 테이블로 즉시 변환합니다.',
@@ -1279,7 +1279,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setLocToolOpen(true)
             },
             {
-              code: 'MOD_13 // PALETTE_DEX',
+              code: 'PALETTE_DEX',
               cat: 'art_sound',
               title: '레트로 명작 & 인디 도트 컬러 팔레트 도감 (Hex & C# Color)',
               desc: 'PICO-8, Sweetie-16, GameBoy DMG, 사이버펑크, 다크 판타지 팔레트를 클릭해 Hex 코드와 Unity Color 구조체를 복사합니다.',
@@ -1287,7 +1287,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setPaletteDexOpen(true)
             },
             {
-              code: 'MOD_14 // DIALOGUE_TREE_EDITOR',
+              code: 'DIALOGUE_TREE_EDITOR',
               cat: 'code_design',
               title: 'NPC 대사창 & 선택지 분기 에디터 (JSON & C# 타이핑 스크립트)',
               desc: '화자 이름·감정 아이콘·선택지 분기를 실시간 RPG 대화창으로 미리보고 JSON 데이터 및 C# 타이핑 코루틴으로 추출합니다.',
@@ -1295,7 +1295,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setDialogueEditorOpen(true)
             },
             {
-              code: 'MOD_15 // PARTICLE_FX_LAB',
+              code: 'PARTICLE_FX_LAB',
               cat: 'art_sound',
               title: '2D 파티클 · 타격 이펙트 & 카메라 흔들림(Juice) 시뮬레이터',
               desc: '피격 스파크·도트 폭발·레벨업 오라·던전 포털을 캔버스에서 클릭해 실험하고 Unity ParticleSystem C# 코드를 복사합니다.',
@@ -1303,7 +1303,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setParticleLabOpen(true)
             },
             {
-              code: 'MOD_16 // STEAM_ACHIEVEMENT_GEN',
+              code: 'STEAM_ACHIEVEMENT_GEN',
               cat: 'launch_mkt',
               title: '스팀 도전과제(Achievements) 기획 & Steamworks C# 생성기',
               desc: '장르별 필수 도전과제(첫 처치·보스·히든 기믹·플래티넘)와 도트 트로피 배지를 생성하고 SteamUserStats 연동 코드를 추출합니다.',
@@ -1311,7 +1311,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setAchieveGenOpen(true)
             },
             {
-              code: 'MOD_17 // INPUT_MAPPING_BUILDER',
+              code: 'INPUT_MAPPING_BUILDER',
               cat: 'code_design',
               title: 'PC 키보드 & Xbox/PS/Switch 게임패드 조작키 매핑 시트 생성기',
               desc: '장르별 표준 조작키(이동·점프·대시·상호작용)를 4대 컨트롤러 규격 표로 시각화하고 스팀 스토어 안내문과 C# 입력 코드를 생성합니다.',
@@ -1319,7 +1319,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setInputMapOpen(true)
             },
             {
-              code: 'MOD_18 // HITBOX_FRAME_EDITOR',
+              code: 'HITBOX_FRAME_EDITOR',
               cat: 'code_design',
               title: '2D 히트박스 · 피격 판정 & 60FPS 프레임 데이터 에디터',
               desc: '선딜레이(Startup)·공격 판정(Active)·후딜레이(Recovery) 프레임 바를 시각화하고 Physics2D.OverlapBoxAll C# 판정 코드를 추출합니다.',
@@ -1327,7 +1327,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setHitboxOpen(true)
             },
             {
-              code: 'MOD_19 // SAVE_ENCRYPT_BUILDER',
+              code: 'SAVE_ENCRYPT_BUILDER',
               cat: 'code_design',
               title: '인디게임 세이브 파일(JSON) 암호화 & 치트 변조 방지 생성기',
               desc: '세이브 데이터 XOR/Base64 난독화 및 SHA256 해시 무결성 검증을 시뮬레이션하고 Unity C# · Godot 4 암호화 저장 코드를 복사합니다.',
@@ -1335,7 +1335,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setSaveEncryptOpen(true)
             },
             {
-              code: 'MOD_20 // TRAILER_STORYBOARD',
+              code: 'TRAILER_STORYBOARD',
               cat: 'launch_mkt',
               title: '스팀 출시 트레일러 60초 황금 비율 콘티 & 타임코드 빌더',
               desc: '0~5초 초반 훅(Hook)부터 게임플레이·클라이맥스·스팀 위시리스트 유도까지 60초 영상 편집 타임라인과 자막 시트를 생성합니다.',
@@ -1343,7 +1343,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setTrailerOpen(true)
             },
             {
-              code: 'MOD_21 // BOSS_FSM_DESIGNER',
+              code: 'BOSS_FSM_DESIGNER',
               cat: 'code_design',
               title: '보스 패턴 & 몬스터 AI 유한상태머신(FSM) 설계기',
               desc: '대기➔추적➔전조(Telegraph)➔돌진/탄막➔2페이즈 광폭화 흐름을 다이어그램으로 설계하고 C# 코루틴 상태머신 코드를 추출합니다.',
@@ -1351,7 +1351,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setBossFsmOpen(true)
             },
             {
-              code: 'MOD_22 // ITEM_DB_BUILDER',
+              code: 'ITEM_DB_BUILDER',
               cat: 'code_design',
               title: 'RPG 아이템 · 인벤토리 & 장비 DB 생성기 (ScriptableObject & JSON)',
               desc: '등급별(일반~전설) 아이템 툴팁 카드를 실시간 미리보고 Unity ScriptableObject C# 클래스와 JSON 테이블로 변환합니다.',
@@ -1359,7 +1359,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setItemDbOpen(true)
             },
             {
-              code: 'MOD_23 // CAMERA_FEEL_LAB',
+              code: 'CAMERA_FEEL_LAB',
               cat: 'art_sound',
               title: '2D 카메라 연출 & 타격 역경직(Hitstop) 손맛 레시피 계산기',
               desc: '크리티컬 역경직(TimeScale Freeze), 카메라 줌 펀치(OrthoSize), 시선 유도 SmoothDamp 통합 C# 매니저를 생성합니다.',
@@ -1367,7 +1367,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setCamFeelOpen(true)
             },
             {
-              code: 'MOD_24 // LICENSE_CHECKER_DEX',
+              code: 'LICENSE_CHECKER_DEX',
               cat: 'launch_mkt',
               title: '인디게임 상업적 무료 폰트 · 에셋 라이선스 검증 사전 & 크레딧 생성기',
               desc: '갈무리·둥근모꼴·프리텐다드 등 인기 도트/UI 폰트와 CC0/CC-BY/OFL 상업적 이용 규정을 확인하고 크레딧 문구를 복사합니다.',
@@ -1375,7 +1375,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setLicenseDexOpen(true)
             },
             {
-              code: 'MOD_25 // PRESSKIT_MAIL_GEN',
+              code: 'PRESSKIT_MAIL_GEN',
               cat: 'launch_mkt',
               title: '스팀 출시용 프레스킷(Press Kit) & 유튜버/스트리머 리뷰키 메일 생성기',
               desc: '보도자료용 게임 팩트시트(Fact Sheet)와 인플루언서에게 스팀 리뷰키를 전달하는 한국어/영어 콜드메일 양식을 자동 작성합니다.',
@@ -1383,7 +1383,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setPresskitOpen(true)
             },
             {
-              code: 'MOD_26 // SKILL_TREE_BUILDER',
+              code: 'SKILL_TREE_BUILDER',
               cat: 'code_design',
               title: 'RPG 스킬 트리 & 로그라이크 퍽(Perk) 해금 노드 설계기',
               desc: '선행 스킬 해금 조건(Prerequisite)과 스킬 포인트 투자를 시뮬레이션하고 Unity C# 스킬 트리 매니저 & JSON을 추출합니다.',
@@ -1391,7 +1391,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setSkillTreeOpen(true)
             },
             {
-              code: 'MOD_27 // WAVE_SPAWNER_LAB',
+              code: 'WAVE_SPAWNER_LAB',
               cat: 'code_design',
               title: '뱀서라이크 · 디펜스 몬스터 웨이브(Wave) 스포너 설계기',
               desc: '시간대별(1분~20분) 몬스터 스폰 밀도·오브젝트 풀 최대치·보스 등장 주기를 계산하고 화면 외곽 원형 스포너 C# 코드를 생성합니다.',
@@ -1399,7 +1399,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setWaveSpawnerOpen(true)
             },
             {
-              code: 'MOD_28 // GRAC_QA_CHECKLIST',
+              code: 'GRAC_QA_CHECKLIST',
               cat: 'launch_mkt',
               title: '한국 게임물관리위원회(GRAC) 심의 & 스팀/모바일 스토어 출시 검수(QA) 진단기',
               desc: '스팀 빌드 반려 사유 1위 항목, 확률형 아이템/등급분류 필수 고지, 세이브 경로·해상도 대응을 출시 전 체크리스트로 점검합니다.',
@@ -1407,7 +1407,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setGracQaOpen(true)
             },
             {
-              code: 'MOD_29 // ARCADE_CABINET',
+              code: 'ARCADE_CABINET',
               cat: 'arcade_collab',
               title: '내장 미니오락실: Bug Slayer & 실시간 랭킹',
               desc: '인디 개발자 버그 피하기 HTML5 미니게임을 플레이하고 TOP 10 명예의 전당에 이름을 올리세요.',
@@ -1415,7 +1415,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: handleOpenArcade
             },
             {
-              code: 'MOD_30 // PARTY_RECRUIT',
+              code: 'PARTY_RECRUIT',
               cat: 'arcade_collab',
               title: '인디 게임 팀원 모집 & 협업 보드',
               desc: '프로그래머 · 2D 도트 아티스트 · 3D 모델러 · 사운드 디자이너 팀원을 구하고 오픈채팅/디스코드로 연결합니다.',
@@ -1423,7 +1423,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: handleOpenTeamBoard
             },
             {
-              code: 'MOD_31 // IDEA_SLOT_MACHINE',
+              code: 'IDEA_SLOT_MACHINE',
               cat: 'arcade_collab',
               title: '게임잼 & 신작 아이디어 랜덤 조합기',
               desc: '독창적인 [장르 + 핵심 기믹 + 세계관 + 제약 조건]을 무작위로 뽑아 신작 기획안을 완성합니다.',
@@ -1431,7 +1431,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setIdeaMachineOpen(true)
             },
             {
-              code: 'MOD_32 // HALL_OF_FAME & APP',
+              code: 'HALL_OF_FAME & APP',
               cat: 'arcade_collab',
               title: '크리에이터 랭킹 & 모바일·PC 앱 설치 (QR)',
               desc: '명예의 전당 개발자 순위를 확인하거나 스마트폰/PC 바탕화면에 전용 앱으로 설치합니다.',
@@ -1439,7 +1439,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: handleInstallAppClick
             },
             {
-              code: 'MOD_33 // 4-AGENT_STUDIO',
+              code: '4-AGENT_STUDIO',
               cat: 'arcade_collab',
               title: '🤖 자율 운영 4인 로봇 에이전트 스튜디오 (CEO·PM·Dev·QA)',
               desc: '대표(아이디어 발제) → 과장(PRD) → 차장(코드 패치) → 부장(QA 검수) 순환형 멀티에이전트 파이프라인을 실시간 가동합니다.',
@@ -1447,7 +1447,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               onPress: () => setAgentStudioOpen(true)
             },
             {
-              code: 'MOD_34 // PLAYLOOP_BAAS_CONSOLE',
+              code: 'PLAYLOOP_BAAS_CONSOLE',
               cat: 'code_design',
               title: '☁️ PlayLoop 인디 게임 마이크로 BaaS 콘솔 & Unity/Godot SDK 생성기',
               desc: '내 인디 게임 전용 X-API-Key를 발급받고, 1분 만에 연동되는 실시간 리더보드·인게임 버그리포트 수집 API와 C#/GDScript SDK를 생성합니다.',
@@ -2768,7 +2768,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 740, height: '88%', backgroundColor: '#11131C', borderWidth: 2, borderColor: '#FFD166', borderRadius: 6, overflow: 'hidden' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
               <Text style={{ color: '#FFD166', fontWeight: '900', fontSize: 13.5, fontFamily: 'monospace' }}>
-                🎨 MOD_01 // 16×16 · 32×32 PIXEL_SPRITE_WORKSHOP
+                🎨 16×16 · 32×32 PIXEL_SPRITE_WORKSHOP
               </Text>
               <TouchableOpacity onPress={() => setPixelStudioOpen(false)} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
                 <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X CLOSE]</Text>
@@ -2795,7 +2795,7 @@ public class EnemyFollowOptimized : MonoBehaviour
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
               <View>
                 <Text style={{ fontSize: 15, fontWeight: '900', color: '#10B981', fontFamily: 'monospace' }}>
-                  💻 MOD_02 // UNITY C# SCRIPT VENDING MACHINE
+                  💻 UNITY C# SCRIPT VENDING MACHINE
                 </Text>
                 <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
                   매번 구글링하는 필수 C# 스크립트를 수치 조절 후 1초 만에 복사하거나 .cs 파일로 받으세요.
@@ -2968,7 +2968,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 760, height: '88%', backgroundColor: '#11131C', borderWidth: 2, borderColor: '#14B8A6', borderRadius: 6, overflow: 'hidden' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 12, backgroundColor: '#1A1D2B', borderBottomWidth: 2, borderBottomColor: '#3A415E' }}>
               <Text style={{ color: '#00E5FF', fontWeight: '900', fontSize: 13.5, fontFamily: 'monospace' }}>
-                🎵 MOD_05 // 8-BIT CHIPTUNE BGM SEQUENCER (루프 브금 작곡기)
+                🎵 8-BIT CHIPTUNE BGM SEQUENCER (루프 브금 작곡기)
               </Text>
               <TouchableOpacity onPress={() => setBgmStudioOpen(false)} style={{ backgroundColor: '#FF4D6D', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 4 }}>
                 <Text style={{ color: '#FFF', fontWeight: '900', fontSize: 11, fontFamily: 'monospace' }}>[X CLOSE]</Text>
@@ -2995,7 +2995,7 @@ public class EnemyFollowOptimized : MonoBehaviour
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
               <View>
                 <Text style={{ fontSize: 15, fontWeight: '900', color: '#818CF8', fontFamily: 'monospace' }}>
-                  🛒 MOD_06 // STEAM & INDIE STORE CAPSULE SIMULATOR
+                  🛒 STEAM & INDIE STORE CAPSULE SIMULATOR
                 </Text>
                 <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
                   내 게임 배너/제목이 경쟁작 사이에서 얼마나 눈에 띄는지 비교하고 출시 준비 점수를 점검하세요.
@@ -3145,7 +3145,7 @@ public class EnemyFollowOptimized : MonoBehaviour
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
               <View>
                 <Text style={{ fontSize: 15, fontWeight: '900', color: '#F59E0B', fontFamily: 'monospace' }}>
-                  ⚡ MOD_07 // 60FPS OPTIMIZATION DOCTOR & HOTKEYS
+                  ⚡ 60FPS OPTIMIZATION DOCTOR & HOTKEYS
                 </Text>
                 <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
                   인디게임 프레임 드랍(렉) 방어 체크리스트 및 Unity·Unreal·Godot 필수 단축키 치트시트
@@ -3270,7 +3270,7 @@ public class EnemyFollowOptimized : MonoBehaviour
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
               <View>
                 <Text style={{ fontSize: 15, fontWeight: '900', color: '#F472B6', fontFamily: 'monospace' }}>
-                  ⚖️ MOD_08 // GAME_BALANCE_CALCULATOR (밸런스 & C# 수식 계산기)
+                  ⚖️ GAME_BALANCE_CALCULATOR (밸런스 & C# 수식 계산기)
                 </Text>
                 <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
                   데미지 공식·레벨업 경험치 곡선·드랍 확률을 실시간 시뮬레이션하고 Unity C# 코드로 변환합니다.
@@ -3433,7 +3433,7 @@ public class EnemyFollowOptimized : MonoBehaviour
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10, borderBottomWidth: 2, borderBottomColor: Theme.colors.border, paddingBottom: 10 }}>
               <View>
                 <Text style={{ fontSize: 15, fontWeight: '900', color: '#22C55E', fontFamily: 'monospace' }}>
-                  📋 MOD_09 // STEAM & DISCORD PATCHNOTE BUILDER
+                  📋 STEAM & DISCORD PATCHNOTE BUILDER
                 </Text>
                 <Text style={{ fontSize: 11.5, color: Theme.colors.textLight, marginTop: 2 }}>
                   업데이트 내역을 입력하면 스팀 뉴스 허브(BBCode) 및 디스코드/개발일지 마크다운으로 자동 변환합니다.
@@ -3528,7 +3528,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontSize: 16 }}>🗺️</Text>
                 <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#E9D5FF', fontFamily: 'monospace' }}>
-                  MOD_10 // 2D 타일맵 · 절차적 던전 생성기 (BSP & Cellular & Unity C# 추출)
+                  2D 타일맵 · 절차적 던전 생성기 (BSP & Cellular & Unity C# 추출)
                 </Text>
               </View>
               <TouchableOpacity
@@ -3559,7 +3559,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#06B6D4', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#22D3EE', fontFamily: 'monospace' }}>
-                ✨ MOD_11 // Unity & Godot 필수 셰이더(Shader) 레시피 사전
+                ✨ Unity & Godot 필수 셰이더(Shader) 레시피 사전
               </Text>
               <TouchableOpacity onPress={() => setShaderBookOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -3766,7 +3766,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#34D399', fontFamily: 'monospace' }}>
-                🌍 MOD_12 // 인디게임 한·영·일·중 다국어 로컬라이징 시트 생성기
+                🌍 인디게임 한·영·일·중 다국어 로컬라이징 시트 생성기
               </Text>
               <TouchableOpacity onPress={() => setLocToolOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -3903,7 +3903,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 660, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F43F5E', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#FB7185', fontFamily: 'monospace' }}>
-                🎨 MOD_13 // 레트로 명작 & 인디 도트 컬러 팔레트 도감
+                🎨 레트로 명작 & 인디 도트 컬러 팔레트 도감
               </Text>
               <TouchableOpacity onPress={() => setPaletteDexOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4040,7 +4040,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EAB308', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#FACC15', fontFamily: 'monospace' }}>
-                💬 MOD_14 // NPC 대사창 & 선택지 분기 에디터
+                💬 NPC 대사창 & 선택지 분기 에디터
               </Text>
               <TouchableOpacity onPress={() => setDialogueEditorOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4187,7 +4187,7 @@ public class EnemyFollowOptimized : MonoBehaviour
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={{ fontSize: 16 }}>💥</Text>
                 <Text style={{ fontSize: 13.5, fontWeight: '900', color: '#FDBA74', fontFamily: 'monospace' }}>
-                  MOD_15 // 2D 파티클 · 타격 이펙트 & 카메라 흔들림(Juice) 시뮬레이터
+                  2D 파티클 · 타격 이펙트 & 카메라 흔들림(Juice) 시뮬레이터
                 </Text>
               </View>
               <TouchableOpacity
@@ -4218,7 +4218,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#8B5CF6', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#C4B5FD', fontFamily: 'monospace' }}>
-                🏆 MOD_16 // 스팀 도전과제(Achievements) 기획 & Steamworks C# 생성기
+                🏆 스팀 도전과제(Achievements) 기획 & Steamworks C# 생성기
               </Text>
               <TouchableOpacity onPress={() => setAchieveGenOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4334,7 +4334,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#14B8A6', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#2DD4BF', fontFamily: 'monospace' }}>
-                ⌨️ MOD_17 // PC 키보드 & Xbox/PS/Switch 게임패드 매핑 시트 생성기
+                ⌨️ PC 키보드 & Xbox/PS/Switch 게임패드 매핑 시트 생성기
               </Text>
               <TouchableOpacity onPress={() => setInputMapOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4446,7 +4446,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EF4444', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#F87171', fontFamily: 'monospace' }}>
-                📐 MOD_18 // 2D 히트박스 · 피격 판정 & 60FPS 프레임 데이터 에디터
+                📐 2D 히트박스 · 피격 판정 & 60FPS 프레임 데이터 에디터
               </Text>
               <TouchableOpacity onPress={() => setHitboxOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4607,7 +4607,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#34D399', fontFamily: 'monospace' }}>
-                💾 MOD_19 // 세이브 파일(JSON) 암호화 & 메모장 치트 방지 생성기
+                💾 세이브 파일(JSON) 암호화 & 메모장 치트 방지 생성기
               </Text>
               <TouchableOpacity onPress={() => setSaveEncryptOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4750,7 +4750,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F59E0B', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#FBBF24', fontFamily: 'monospace' }}>
-                🎬 MOD_20 // 스팀 트레일러 60초 황금 비율 콘티 & 타임코드 빌더
+                🎬 스팀 트레일러 60초 황금 비율 콘티 & 타임코드 빌더
               </Text>
               <TouchableOpacity onPress={() => setTrailerOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4838,7 +4838,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EC4899', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#F472B6', fontFamily: 'monospace' }}>
-                👾 MOD_21 // 보스 패턴 & 몬스터 AI 유한상태머신(FSM) 설계기
+                👾 보스 패턴 & 몬스터 AI 유한상태머신(FSM) 설계기
               </Text>
               <TouchableOpacity onPress={() => setBossFsmOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -4966,7 +4966,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F59E0B', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#FBBF24', fontFamily: 'monospace' }}>
-                🎒 MOD_22 // RPG 아이템 · 인벤토리 & 장비 DB 생성기 (ScriptableObject)
+                🎒 RPG 아이템 · 인벤토리 & 장비 DB 생성기 (ScriptableObject)
               </Text>
               <TouchableOpacity onPress={() => setItemDbOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -5104,7 +5104,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#38BDF8', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#7DD3FC', fontFamily: 'monospace' }}>
-                🎥 MOD_23 // 2D 카메라 연출 & 타격 역경직(Hitstop) 손맛 레시피 계산기
+                🎥 2D 카메라 연출 & 타격 역경직(Hitstop) 손맛 레시피 계산기
               </Text>
               <TouchableOpacity onPress={() => setCamFeelOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -5201,7 +5201,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#10B981', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#34D399', fontFamily: 'monospace' }}>
-                📜 MOD_24 // 상업적 무료 폰트 · 에셋 라이선스 검증 사전 & 크레딧 생성기
+                📜 상업적 무료 폰트 · 에셋 라이선스 검증 사전 & 크레딧 생성기
               </Text>
               <TouchableOpacity onPress={() => setLicenseDexOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -5313,7 +5313,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#8B5CF6', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#C4B5FD', fontFamily: 'monospace' }}>
-                📰 MOD_25 // 스팀 프레스킷(Press Kit) & 스트리머 리뷰키 메일 생성기
+                📰 스팀 프레스킷(Press Kit) & 스트리머 리뷰키 메일 생성기
               </Text>
               <TouchableOpacity onPress={() => setPresskitOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -5428,7 +5428,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#EC4899', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#F472B6', fontFamily: 'monospace' }}>
-                🕸️ MOD_26 // RPG 스킬 트리 & 로그라이크 퍽(Perk) 노드 설계기
+                🕸️ RPG 스킬 트리 & 로그라이크 퍽(Perk) 노드 설계기
               </Text>
               <TouchableOpacity onPress={() => setSkillTreeOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -5608,7 +5608,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#F97316', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 15, fontWeight: '900', color: '#FB923C', fontFamily: 'monospace' }}>
-                🌊 MOD_27 // 뱀서라이크 · 디펜스 몬스터 웨이브(Wave) 스포너 설계기
+                🌊 뱀서라이크 · 디펜스 몬스터 웨이브(Wave) 스포너 설계기
               </Text>
               <TouchableOpacity onPress={() => setWaveSpawnerOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
@@ -5727,7 +5727,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           <View style={{ width: '100%', maxWidth: 680, backgroundColor: Theme.colors.surface, borderRadius: 6, padding: 16, borderColor: '#22C55E', borderWidth: 2, maxHeight: '90%' }}>
             <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
               <Text style={{ fontSize: 14.5, fontWeight: '900', color: '#4ADE80', fontFamily: 'monospace' }}>
-                🏛️ MOD_28 // 한국 심의(GRAC) & 스팀/모바일 스토어 출시 검수(QA) 체크리스트
+                🏛️ 한국 심의(GRAC) & 스팀/모바일 스토어 출시 검수(QA) 체크리스트
               </Text>
               <TouchableOpacity onPress={() => setGracQaOpen(false)}>
                 <Text style={{ color: Theme.colors.textLight, fontWeight: '900', fontSize: 13, fontFamily: 'monospace' }}>[X 닫기]</Text>
