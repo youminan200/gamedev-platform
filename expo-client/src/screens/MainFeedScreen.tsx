@@ -35,10 +35,18 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, on
   const [leaderboardVisible, setLeaderboardVisible] = useState(false);
   const [toolboxVisible, setToolboxVisible] = useState(false);
   const [lang, setLang] = useState<'ko' | 'en'>('ko');
-  const [activeSection, setActiveSection] = useState<'feed' | 'showcase' | 'tools'>(() =>
+  const [activeSection, setActiveSection] = useState<'feed' | 'showcase' | 'tools' | 'jam'>(() =>
     Platform.OS === 'web' && typeof window !== 'undefined'
       && new URLSearchParams(window.location.search).get('view') === 'showcase' ? 'showcase' : 'feed'
   );
+  const [jamEntries, setJamEntries] = useState([
+    { id: 'jam-1', title: '1-Bit Crypt', author: 'PixelKnight', engine: 'Godot 4', url: 'https://itch.io', votes: 14, desc: '단색 도트만으로 구현한 턴제 던전 크롤러' },
+    { id: 'jam-2', title: 'Dash & Parry', author: 'ShaderWizard', engine: 'Unity WebGL', url: 'https://itch.io', votes: 9, desc: '48시간 만에 만든 보스 러시 프로토타입' },
+  ]);
+  const [votedJamIds, setVotedJamIds] = useState<string[]>([]);
+  const [jamTitle, setJamTitle] = useState('');
+  const [jamEngine, setJamEngine] = useState('Godot 4');
+  const [jamUrl, setJamUrl] = useState('');
   const [showcases, setShowcases] = useState<any[]>([]);
   const [showcaseModalOpen, setShowcaseModalOpen] = useState(false);
   const [scTitle, setScTitle] = useState('');
@@ -850,6 +858,7 @@ public class EnemyFollowOptimized : MonoBehaviour
           {([
             ['feed', '개발일지'],
             ['showcase', '게임 쇼케이스'],
+            ['jam', '게임잼'],
             ['tools', '개발 도구'],
           ] as const).map(([section, label]) => (
             <TouchableOpacity key={section} accessibilityRole="button"
@@ -861,6 +870,98 @@ public class EnemyFollowOptimized : MonoBehaviour
           ))}
         </View>
       </View>
+
+      {/* SECTION 04: MINI GAME JAM */}
+      {activeSection === 'jam' && (
+        <View style={{ paddingHorizontal: 16, paddingVertical: 12, gap: 12 }}>
+          <View style={[styles.jamFeature, { borderColor: Theme.colors.border }]}>
+            <View style={{ flexGrow: 1 }}>
+              <Text style={styles.gameTitle}>주간 미니 게임잼 · 테마: 1-Bit Dungeon</Text>
+              <Text style={styles.mastheadDescription}>48시간 안에 만든 웹 빌드나 프로토타입을 출품하고 서로 투표해 보세요.</Text>
+            </View>
+          </View>
+          <View style={{ backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 6, padding: 12, gap: 8 }}>
+            <Text style={{ fontSize: 13, fontWeight: '700', color: Theme.colors.text }}>내 게임잼 출품작 등록</Text>
+            <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
+              <TextInput
+                placeholder="게임 제목"
+                placeholderTextColor={Theme.colors.textLight}
+                value={jamTitle}
+                onChangeText={setJamTitle}
+                style={{ flex: 1, minWidth: 140, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
+              />
+              <TextInput
+                placeholder="엔진 (예: Godot 4, Unity)"
+                placeholderTextColor={Theme.colors.textLight}
+                value={jamEngine}
+                onChangeText={setJamEngine}
+                style={{ width: 130, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
+              />
+              <TextInput
+                placeholder="웹 플레이 URL (선택)"
+                placeholderTextColor={Theme.colors.textLight}
+                value={jamUrl}
+                onChangeText={setJamUrl}
+                style={{ flex: 1, minWidth: 160, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 4, paddingHorizontal: 10, paddingVertical: 7, color: Theme.colors.text, fontSize: 13 }}
+              />
+              <TouchableOpacity
+                onPress={() => {
+                  if (!jamTitle.trim()) return;
+                  setJamEntries(prev => [{
+                    id: `jam-${Date.now()}`,
+                    title: jamTitle.trim(),
+                    author: username || 'IndieDev',
+                    engine: jamEngine.trim() || 'Unity',
+                    url: jamUrl.trim() || 'https://itch.io',
+                    votes: 1,
+                    desc: '방금 출품된 게임잼 프로토타입입니다.',
+                  }, ...prev]);
+                  setJamTitle('');
+                  setJamUrl('');
+                }}
+                style={[styles.playAction, { paddingHorizontal: 14 }]}
+              >
+                <Text style={styles.playActionText}>출품하기</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+          {jamEntries.map(entry => {
+            const voted = votedJamIds.includes(entry.id);
+            return (
+              <View key={entry.id} style={{ backgroundColor: Theme.colors.surface, borderWidth: 1, borderColor: Theme.colors.border, borderRadius: 6, padding: 14, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Text style={{ fontSize: 15, fontWeight: '700', color: Theme.colors.text }}>{entry.title}</Text>
+                    <View style={{ backgroundColor: Theme.colors.pillBg, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 4 }}>
+                      <Text style={{ fontSize: 11, color: Theme.colors.textLight, fontWeight: '600' }}>{entry.engine}</Text>
+                    </View>
+                  </View>
+                  <Text style={{ fontSize: 12.5, color: Theme.colors.textLight }}>{entry.desc} · by @{entry.author}</Text>
+                </View>
+                <TouchableOpacity
+                  onPress={() => {
+                    if (voted) return;
+                    setVotedJamIds(prev => [...prev, entry.id]);
+                    setJamEntries(prev => prev.map(item => item.id === entry.id ? { ...item, votes: item.votes + 1 } : item));
+                  }}
+                  style={{
+                    backgroundColor: voted ? Theme.colors.primary : Theme.colors.pillBg,
+                    borderWidth: 1,
+                    borderColor: voted ? Theme.colors.primary : Theme.colors.border,
+                    paddingHorizontal: 12,
+                    paddingVertical: 8,
+                    borderRadius: 6,
+                  }}
+                >
+                  <Text style={{ fontSize: 12, fontWeight: '700', color: voted ? '#FFF' : Theme.colors.text }}>
+                    {voted ? `투표완료 (${entry.votes})` : `투표하기 (${entry.votes})`}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            );
+          })}
+        </View>
+      )}
 
       {/* SECTION 01: DEVLOGS FEED CONTROLS */}
       {activeSection === 'feed' && (

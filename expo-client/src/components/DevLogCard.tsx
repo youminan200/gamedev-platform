@@ -118,10 +118,12 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
           const isUnreal = devLog.tags?.some(t => t.toLowerCase().includes('unreal'));
           const isGodot = devLog.tags?.some(t => t.toLowerCase().includes('godot'));
           const isShowcase = devLog.tags?.includes('쇼케이스') || Boolean(devLog.demo_url);
-          const bannerBg = isUnreal ? '#1E1B4B' : isGodot ? '#0C2D48' : isShowcase ? '#2E1035' : '#162032';
-          const accentColor = isUnreal ? '#A855F7' : isGodot ? '#00E5FF' : isShowcase ? '#FF4D6D' : '#FFD166';
-          const spriteIcon = isUnreal ? '⚡🤖🌌' : isGodot ? '🌱🏰✨' : isShowcase ? '🕹️⚔️🐉' : '👾🗡️🛡️';
-          const engineLabel = isUnreal ? 'UNREAL_ENGINE_5 // SHADER_BUILD' : isGodot ? 'GODOT_4 // PIXEL_NODE_TREE' : isShowcase ? 'PLAYABLE_SHOWCASE // WEB_ARCADE' : 'UNITY_ENGINE // 2D_3D_DEVLOG';
+          const bannerBg = '#141824';
+          const accentColor = isUnreal ? '#C084FC' : isGodot ? '#38BDF8' : isShowcase ? '#FB7185' : '#94A3B8';
+          const engineLabel = isUnreal ? 'Unreal 5' : isGodot ? 'Godot 4' : isShowcase ? 'Web Playable' : 'Unity';
+          const previewText = devLog.code_snippet
+            ? devLog.code_snippet.split('\n').slice(0, 2).join('\n')
+            : (devLog.content ? devLog.content.replace(/```[\s\S]*?```/g, '').trim().slice(0, 100) : devLog.title);
           return (
             <View
               style={[
@@ -137,24 +139,27 @@ export const DevLogCard: React.FC<DevLogCardProps> = ({
               ]}
             >
               <View style={{ flexDirection: 'row', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                <Text style={{ fontSize: 10.5, fontWeight: '900', color: accentColor, fontFamily: 'monospace' }}>
-                  [{engineLabel}]
-                </Text>
-                <Text style={{ fontSize: 18 }}>{spriteIcon}</Text>
-              </View>
-              <Text numberOfLines={2} style={{ fontSize: 13.5, fontWeight: '800', color: '#F8FAFC', lineHeight: 19 }}>
-                {devLog.content ? devLog.content.replace(/```[\s\S]*?```/g, '[코드 스니펫 포함]').slice(0, 90) : devLog.title}
-              </Text>
-              <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
-                <View style={{ backgroundColor: 'rgba(0,0,0,0.45)', paddingHorizontal: 7, paddingVertical: 2, borderRadius: 3, borderWidth: 1, borderColor: accentColor }}>
-                  <Text style={{ fontSize: 10, fontWeight: '900', color: accentColor, fontFamily: 'monospace' }}>
-                    ▶ CLICK_TO_OPEN_LOG
+                <View style={{ backgroundColor: 'rgba(255,255,255,0.06)', paddingHorizontal: 8, paddingVertical: 3, borderRadius: 4, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' }}>
+                  <Text style={{ fontSize: 11, fontWeight: '700', color: accentColor }}>
+                    {engineLabel}
                   </Text>
                 </View>
                 {devLog.code_snippet ? (
-                  <Text style={{ fontSize: 10, color: '#38BDF8', fontFamily: 'monospace', fontWeight: '800' }}>+ C# CODE</Text>
+                  <Text style={{ fontSize: 10.5, color: '#64748B', fontFamily: 'monospace' }}>Code Snippet</Text>
                 ) : null}
               </View>
+              <Text
+                numberOfLines={2}
+                style={{
+                  fontSize: devLog.code_snippet ? 12 : 13.5,
+                  fontWeight: devLog.code_snippet ? '500' : '600',
+                  color: devLog.code_snippet ? '#CBD5E1' : '#E2E8F0',
+                  fontFamily: devLog.code_snippet ? 'monospace' : undefined,
+                  lineHeight: 19,
+                }}
+              >
+                {previewText}
+              </Text>
             </View>
           );
         })()}
