@@ -221,13 +221,19 @@ export const MainFeedScreen: React.FC<Props> = ({ onDevLogClick, onPostClick, on
   const [pixelStudioOpen, setPixelStudioOpen] = useState(false);
   const [bgmStudioOpen, setBgmStudioOpen] = useState(false);
 
-  // Upgrade 3: Showcase QA Reviews
+  // Upgrade 3: Showcase QA Reviews & Screen Coordinate Pin Feedback
   const [qaReviews, setQaReviews] = useState<any[]>([]);
   const [qaFunRating, setQaFunRating] = useState<number>(5);
   const [qaDifficulty, setQaDifficulty] = useState<'쉬움' | '쫄깃하고 적당함' | '매운맛'>('쫄깃하고 적당함');
   const [qaJuiceRating, setQaJuiceRating] = useState<number>(5);
   const [qaComment, setQaComment] = useState('');
   const [submittingQaReview, setSubmittingQaReview] = useState(false);
+  const [pinModeActive, setPinModeActive] = useState<boolean>(false);
+  const [screenPins, setScreenPins] = useState<Array<{ id: string; x: number; y: number; label: string; author: string }>>([
+    { id: 'pin-1', x: 28, y: 34, label: '모서리 점프 코요테 타임 판정 개선 요청', author: 'PixelTester' },
+    { id: 'pin-2', x: 64, y: 55, label: '보스 2페이즈 히트스탑 연출 최고!', author: 'IndieFan' },
+  ]);
+  const [appliedPartySlots, setAppliedPartySlots] = useState<Record<string, boolean>>({});
 
   // Upgrade 4: 1-Click Team Apply & Direct Messages (DM)
   const [applyingTeamId, setApplyingTeamId] = useState<number | string | null>(null);
@@ -1963,6 +1969,21 @@ public class EnemyFollowOptimized : MonoBehaviour
               </View>
               <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
                 <TouchableOpacity
+                  onPress={() => setPinModeActive((v) => !v)}
+                  style={{
+                    backgroundColor: pinModeActive ? '#10B981' : '#1E1B4B',
+                    borderWidth: 1.5,
+                    borderColor: pinModeActive ? '#11131C' : '#A855F7',
+                    paddingHorizontal: 10,
+                    paddingVertical: 6,
+                    borderRadius: 4,
+                  }}
+                >
+                  <Text style={{ color: pinModeActive ? '#11131C' : '#E9D5FF', fontSize: 11.5, fontWeight: '900' }}>
+                    {pinModeActive ? '📍 화면 클릭해 핀 꽂는 중 (ON)' : '📍 화면 좌표 QA 핀 꽂기'}
+                  </Text>
+                </TouchableOpacity>
+                <TouchableOpacity
                   onPress={() => previewGame?.homepage_url && Linking.openURL(previewGame.homepage_url)}
                   style={{ backgroundColor: '#00E5FF', paddingHorizontal: 11, paddingVertical: 6, borderRadius: 4 }}
                 >
@@ -1976,7 +1997,7 @@ public class EnemyFollowOptimized : MonoBehaviour
                 </TouchableOpacity>
               </View>
             </View>
-            <View style={{ flex: 1, backgroundColor: '#0D0F17' }}>
+            <View style={{ flex: 1, backgroundColor: '#0D0F17', position: 'relative' }}>
               {Platform.OS === 'web' && previewGame
                 ? (() => {
                     const rawUrl = String(previewGame.homepage_url || '');
@@ -1997,6 +2018,77 @@ public class EnemyFollowOptimized : MonoBehaviour
                     });
                   })()
                 : null}
+
+              {/* 화면 좌표 QA 피드백 핀 오버레이 */}
+              {screenPins.map((pin, idx) => (
+                <View
+                  key={pin.id}
+                  style={{
+                    position: 'absolute',
+                    left: `${pin.x}%` as any,
+                    top: `${pin.y}%` as any,
+                    backgroundColor: idx % 2 === 0 ? '#EF4444' : '#6366F1',
+                    paddingHorizontal: 8,
+                    paddingVertical: 4,
+                    borderRadius: 12,
+                    borderWidth: 1.5,
+                    borderColor: '#FFFFFF',
+                    zIndex: 20,
+                  }}
+                >
+                  <Text style={{ color: '#FFF', fontSize: 10.5, fontWeight: '800' }}>
+                    📍 #{idx + 1} {pin.label} (@{pin.author})
+                  </Text>
+                </View>
+              ))}
+
+              {pinModeActive && (
+                <TouchableOpacity
+                  activeOpacity={1}
+                  onPress={(e: any) => {
+                    const ne = e?.nativeEvent;
+                    let pctX = 48;
+                    let pctY = 45;
+                    if (ne && typeof ne.offsetX === 'number') {
+                      pctX = Math.max(8, Math.min(78, Math.round((ne.offsetX / 800) * 100)));
+                      pctY = Math.max(10, Math.min(82, Math.round((ne.offsetY / 420) * 100)));
+                    }
+                    const pinText = qaComment.trim() || '이 위치 판정/연출 피드백 남깁니다!';
+                    setScreenPins((prev) => [
+                      ...prev,
+                      {
+                        id: `pin-${Date.now()}`,
+                        x: pctX,
+                        y: pctY,
+                        label: pinText,
+                        author: username || 'Playtester',
+                      },
+                    ]);
+                    setQaComment(`[📍 화면좌표 (${pctX}%, ${pctY}%) 핀] ${pinText}`);
+                    setPinModeActive(false);
+                  }}
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(16, 185, 129, 0.14)',
+                    borderWidth: 2,
+                    borderColor: '#10B981',
+                    justifyContent: 'flex-start',
+                    alignItems: 'center',
+                    paddingTop: 12,
+                    zIndex: 30,
+                  }}
+                >
+                  <View style={{ backgroundColor: '#11131C', paddingHorizontal: 14, paddingVertical: 6, borderRadius: 20, borderWidth: 1.5, borderColor: '#10B981' }}>
+                    <Text style={{ color: '#10B981', fontSize: 12, fontWeight: '900' }}>
+                      🎯 게임 화면 위 원하는 지점을 클릭하면 해당 좌표에 QA 피드백 핀이 꽂힙니다!
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              )}
             </View>
             {/* Structured Playtest QA Overlay Panel */}
             <View style={{ backgroundColor: '#161926', borderTopWidth: 2, borderTopColor: '#3A415E', padding: 12, maxHeight: 220 }}>
@@ -2178,6 +2270,50 @@ public class EnemyFollowOptimized : MonoBehaviour
                   </View>
                   <Text style={{ fontSize: 15, fontWeight: '800', color: Theme.colors.text, marginBottom: 4 }}>{t.project_title}</Text>
                   <Text style={{ fontSize: 13, color: Theme.colors.textLight, marginBottom: 10, lineHeight: 18 }}>{t.description}</Text>
+
+                  {/* RPG 파티 슬롯 스타일 팀 빌딩 현황 카드 */}
+                  <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
+                    <View style={{ flex: 1, minWidth: 135, backgroundColor: Theme.colors.surface, borderRadius: 8, padding: 8, borderWidth: 1, borderColor: '#10B981' }}>
+                      <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#10B981' }}>✅ 팀장 · 코어 개발 (1/1)</Text>
+                      <Text style={{ fontSize: 11.5, fontWeight: '700', color: Theme.colors.text, marginTop: 2 }}>@{t.author}</Text>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 145, backgroundColor: Theme.colors.surface, borderRadius: 8, padding: 8, borderWidth: 1.5, borderColor: Theme.colors.primary }}>
+                      <Text style={{ fontSize: 10.5, fontWeight: '800', color: Theme.colors.primary }}>🔥 {t.role_needed} (0/1 모집중)</Text>
+                      <TouchableOpacity
+                        onPress={() => {
+                          const slotKey = `${t.id}_main`;
+                          setAppliedPartySlots((prev) => ({ ...prev, [slotKey]: true }));
+                          ApiClient.applyToTeam(t.id, {
+                            applicant: username || 'IndieDeveloper',
+                            role: t.role_needed,
+                            portfolio_url: 'https://gamedev-platform-expo-client.vercel.app',
+                            message: `[⚡ 1초 파티 슬롯 지원] @${username || 'IndieDeveloper'}님이 ${t.role_needed} 슬롯에 합류를 희망합니다!`,
+                          }).then((updated) => {
+                            setTeamAppsMap((prev) => ({ ...prev, [String(t.id)]: updated || [] }));
+                          }).catch(() => {});
+                        }}
+                        style={{
+                          marginTop: 5,
+                          backgroundColor: appliedPartySlots[`${t.id}_main`] ? '#10B981' : Theme.colors.primary,
+                          paddingVertical: 4,
+                          paddingHorizontal: 8,
+                          borderRadius: 6,
+                          alignItems: 'center',
+                        }}
+                      >
+                        <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#FFF' }}>
+                          {appliedPartySlots[`${t.id}_main`] ? '✅ 슬롯 지원 완료!' : '⚡ 내 프로필로 1초 합류'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                    <View style={{ flex: 1, minWidth: 135, backgroundColor: Theme.colors.surface, borderRadius: 8, padding: 8, borderWidth: 1, borderColor: Theme.colors.border }}>
+                      <Text style={{ fontSize: 10.5, fontWeight: '800', color: '#F59E0B' }}>🎵 사운드/QA 서포터 (0/1)</Text>
+                      <Text style={{ fontSize: 10.5, color: Theme.colors.textLight, marginTop: 3 }}>
+                        지원자 {(teamAppsMap[String(t.id)]?.length || 1)}명 검토중
+                      </Text>
+                    </View>
+                  </View>
+
                   <View style={{ flexDirection: 'row', gap: 8, flexWrap: 'wrap' }}>
                     <TouchableOpacity
                       onPress={() => t.contact_url && Linking.openURL(t.contact_url)}
