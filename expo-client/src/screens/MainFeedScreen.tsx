@@ -1610,18 +1610,23 @@ public class EnemyFollowOptimized : MonoBehaviour
     <View style={styles.container}>
       <FlatList
         data={activeSection === 'feed' ? sortedLogs : []}
+        key={Platform.OS === 'web' ? 'web-2col' : 'mobile-1col'}
+        numColumns={Platform.OS === 'web' ? 2 : 1}
+        columnWrapperStyle={Platform.OS === 'web' ? { gap: 16 } : undefined}
         keyExtractor={item => item.id}
         ListHeaderComponent={renderHeader}
         renderItem={({ item }) => (
-          <DevLogCard
-            devLog={item}
-            onClick={() => onDevLogClick(item.id)}
-            isBookmarked={bookmarkedIds.includes(String(item.id))}
-            onToggleBookmark={handleToggleBookmark}
-            onTagClick={handleTagClick}
-            selectedTag={selectedTag}
-            onAuthorClick={handleOpenAuthorModal}
-          />
+          <View style={Platform.OS === 'web' ? { flex: 1 } : undefined}>
+            <DevLogCard
+              devLog={item}
+              onClick={() => onDevLogClick(item.id)}
+              isBookmarked={bookmarkedIds.includes(String(item.id))}
+              onToggleBookmark={handleToggleBookmark}
+              onTagClick={handleTagClick}
+              selectedTag={selectedTag}
+              onAuthorClick={handleOpenAuthorModal}
+            />
+          </View>
         )}
         ListEmptyComponent={activeSection !== 'feed' ? null : 
           <View style={{ padding: 40, alignItems: 'center' }}>
