@@ -21,7 +21,7 @@ export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostC
         onPress={() => onTabChange('DevLogs')}
       >
         <Text style={[styles.tabCode, { color: currentTab === 'DevLogs' ? Theme.colors.primary : Theme.colors.textLight }]}>
-          [01 // LOGS]
+          🏠 홈 · 피드
         </Text>
         <Text style={[styles.tabLabel, { color: Theme.colors.text }, currentTab === 'DevLogs' && { color: Theme.colors.primary }]}>
           개발일지 & 공방
@@ -33,7 +33,7 @@ export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostC
         onPress={onPostClick}
         activeOpacity={0.85}
       >
-        <Text style={styles.postButtonIcon}>+ WRITE</Text>
+        <Text style={styles.postButtonIcon}>+ 글쓰기</Text>
       </TouchableOpacity>
 
       <TouchableOpacity
@@ -44,7 +44,7 @@ export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostC
         onPress={() => onTabChange('AssetHub')}
       >
         <Text style={[styles.tabCode, { color: currentTab === 'AssetHub' ? Theme.colors.primary : Theme.colors.textLight }]}>
-          [02 // ASSETS]
+          📦 에셋 허브
         </Text>
         <Text style={[styles.tabLabel, { color: Theme.colors.text }, currentTab === 'AssetHub' && { color: Theme.colors.primary }]}>
           무료 에셋 창고
@@ -59,7 +59,7 @@ export const BottomTabBar: React.FC<Props> = ({ currentTab, onTabChange, onPostC
         onPress={() => onTabChange('Profile')}
       >
         <Text style={[styles.tabCode, { color: currentTab === 'Profile' ? Theme.colors.primary : Theme.colors.textLight }]}>
-          [03 // DEV_ID]
+          👤 프로필
         </Text>
         <Text style={[styles.tabLabel, { color: Theme.colors.text }, currentTab === 'Profile' && { color: Theme.colors.primary }]}>
           내 스튜디오
